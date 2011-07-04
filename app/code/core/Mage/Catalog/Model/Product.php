@@ -81,7 +81,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     protected static $_url;
     protected static $_urlRewrite;
 
-    protected $_errors    = array();
+    protected $_errors = array();
 
     protected $_optionInstance;
 
@@ -191,7 +191,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     /**
      * Get product type identifier
      *
-     * @return int
+     * @return string
      */
     public function getTypeId()
     {
@@ -213,8 +213,8 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
      *
      * Type instance implement type depended logic
      *
-     * @param bool $singleton
-     * @return  Mage_Catalog_Model_Product_Type_Abstract
+     * @param  bool $singleton
+     * @return Mage_Catalog_Model_Product_Type_Abstract
      */
     public function getTypeInstance($singleton = false)
     {
@@ -244,8 +244,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     {
         if ($singleton === true) {
             $this->_typeInstanceSingleton = $instance;
-        }
-        else {
+        } else {
             $this->_typeInstance = $instance;
         }
         return $this;
@@ -313,8 +312,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     {
         if (is_string($ids)) {
             $ids = explode(',', $ids);
-        }
-        elseif (!is_array($ids)) {
+        } elseif (!is_array($ids)) {
             Mage::throwException(Mage::helper('catalog')->__('Invalid category IDs.'));
         }
         foreach ($ids as $i => $v) {
@@ -412,8 +410,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
                     $attributes[] = $attribute;
                 }
             }
-        }
-        else {
+        } else {
             $attributes = $productAttributes;
         }
 
@@ -467,12 +464,10 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
             $this->setHasOptions(true);
             if ($hasRequiredOptions || (bool)$this->getTypeHasRequiredOptions()) {
                 $this->setRequiredOptions(true);
-            }
-            elseif ($this->canAffectOptions()) {
+            } elseif ($this->canAffectOptions()) {
                 $this->setRequiredOptions(false);
             }
-        }
-        elseif ($this->canAffectOptions()) {
+        } elseif ($this->canAffectOptions()) {
             $this->setHasOptions(false);
             $this->setRequiredOptions(false);
         }
@@ -652,13 +647,14 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
      * Sets final price of product
      *
      * This func is equal to magic 'setFinalPrice()', but added as a separate func, because in cart with bundle products it's called
-     * very often in Item->getProduct(). So removing chaing of magic with more cpu consuming algorithms gives nice optimization boost.
+     * very often in Item->getProduct(). So removing chain of magic with more cpu consuming algorithms gives nice optimization boost.
      *
-     * @return array
+     * @return Mage_Catalog_Model_Product
      */
     public function setFinalPrice($price)
     {
         $this->_data['final_price'] = $price;
+        return $this;
     }
 
     /**
@@ -1346,9 +1342,13 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
         return $this;
     }
 
+    /**
+     * @deprecated after 1.4.2.0
+     * @return Mage_Catalog_Model_Product
+     */
     public function loadParentProductIds()
     {
-        return $this->setParentProductIds($this->_getResource()->getParentProductIds($this));
+        return $this->setParentProductIds(array());
     }
 
     public function delete()
@@ -1385,6 +1385,17 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     public function isComposite()
     {
         return $this->getTypeInstance(true)->isComposite($this);
+    }
+
+    /**
+     * Check if product can be configured
+     *
+     * @return bool
+     */
+    public function canConfigure()
+    {
+        $options = $this->getOptions();
+        return !empty($options) || $this->getTypeInstance(true)->canConfigure($this);
     }
 
     /**
@@ -1491,12 +1502,14 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     public function addCustomOption($code, $value, $product=null)
     {
         $product = $product ? $product : $this;
-        $this->_customOptions[$code] = new Varien_Object(array(
-            'product_id'=> $product->getId(),
-            'product'   => $product,
-            'code'      => $code,
-            'value'     => $value,
-        ));
+        $option = Mage::getModel('catalog/product_configuration_item_option')
+            ->addData(array(
+                'product_id'=> $product->getId(),
+                'product'   => $product,
+                'code'      => $code,
+                'value'     => $value,
+            ));
+        $this->_customOptions[$code] = $option;
         return $this;
     }
 
@@ -1668,20 +1681,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
      */
     public function reset()
     {
-        foreach ($this->_data as $data){
-            if (is_object($data) && method_exists($data, 'reset')){
-                $data->reset();
-            }
-        }
-
-        $this->setData(array());
-        $this->setOrigData();
-        $this->_customOptions       = array();
-        $this->_optionInstance      = null;
-        $this->_options             = array();
-        $this->_canAffectOptions    = false;
-        $this->_errors              = array();
-
+        $this->_clearData();
         return $this;
     }
 
@@ -1704,7 +1704,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     }
 
     /**
-     * Check for empty SKU on each product 
+     * Check for empty SKU on each product
      *
      * @param  array $productIds
      * @return boolean|null
@@ -1721,5 +1721,119 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
             return true;
         }
         return null;
+    }
+
+    /**
+     * Parse buyRequest into options values used by product
+     *
+     * @param  Varien_Object $buyRequest
+     * @return Varien_Object
+     */
+    public function processBuyRequest(Varien_Object $buyRequest)
+    {
+        $options = new Varien_Object();
+
+        /* add product custom options data */
+        $customOptions = $buyRequest->getOptions();
+        if (is_array($customOptions)) {
+            $options->setOptions(array_diff($buyRequest->getOptions(), array('')));
+        }
+
+        /* add product type selected options data */
+        $type = $this->getTypeInstance(true);
+        $typeSpecificOptions = $type->processBuyRequest($this, $buyRequest);
+        $options->addData($typeSpecificOptions);
+
+        /* check correctness of product's options */
+        $options->setErrors($type->checkProductConfiguration($this, $buyRequest));
+
+        return $options;
+    }
+
+    /**
+     * Get preconfigured values from product
+     *
+     * @return Varien_Object
+     */
+    public function getPreconfiguredValues()
+    {
+        $preconfiguredValues = $this->getData('preconfigured_values');
+        if (!$preconfiguredValues) {
+            $preconfiguredValues = new Varien_Object();
+        }
+
+        return $preconfiguredValues;
+    }
+
+    /**
+     * Prepare product custom options.
+     * To be sure that all product custom options does not has ID and has product instance
+     *
+     * @return Mage_Catalog_Model_Product
+     */
+    public function prepareCustomOptions()
+    {
+        foreach ($this->getCustomOptions() as $option) {
+            if (!is_object($option->getProduct()) || $option->getId()) {
+                $this->addCustomOption($option->getCode(), $option->getValue());
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clearing references on product
+     *
+     * @return Mage_Catalog_Model_Product
+     */
+    protected function _clearReferences()
+    {
+        $this->_clearOptionReferences();
+        return $this;
+    }
+
+    /**
+     * Clearing product's data
+     *
+     * @return Mage_Catalog_Model_Product
+     */
+    protected function _clearData()
+    {
+        foreach ($this->_data as $data){
+            if (is_object($data) && method_exists($data, 'reset')){
+                $data->reset();
+            }
+        }
+
+        $this->setData(array());
+        $this->setOrigData();
+        $this->_customOptions       = array();
+        $this->_optionInstance      = null;
+        $this->_options             = array();
+        $this->_canAffectOptions    = false;
+        $this->_errors              = array();
+
+        return $this;
+    }
+
+    /**
+     * Clearing references to product from product's options
+     *
+     * @return Mage_Catalog_Model_Product
+     */
+    protected function _clearOptionReferences()
+    {
+        /**
+         * unload product options
+         */
+        if (!empty($this->_options)) {
+            foreach ($this->_options as $key => $option) {
+                $option->setProduct();
+                $option->clearInstance();
+            }
+        }
+
+        return $this;
     }
 }

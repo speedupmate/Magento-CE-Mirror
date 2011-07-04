@@ -27,12 +27,13 @@
 <div class="page-create-order">
 <p class="switcher">
 <label for="currency_switcher"><?php echo Mage::helper('sales')->__('Order Currency:') ?></label>
-<select id="currency_switcher" name="order[currency]" onchange="order.setCurrencyId(this.value)">
+<select id="currency_switcher" name="order[currency]" onchange="order.setCurrencyId(this.value); order.setCurrencySymbol(this.options[this.selectedIndex].getAttribute('symbol'));">
     <?php foreach ($this->getAvailableCurrencies() as $_code): ?>
-    <option value="<?php echo $_code ?>"<?php if($_code==$this->getCurrentCurrencyCode()): ?> selected="selected"<?php endif; ?>><?php echo $this->getCurrencyName($_code) ?></option>
+    <option value="<?php echo $_code ?>"<?php if($_code==$this->getCurrentCurrencyCode()): ?> selected="selected"<?php endif; ?> symbol="<?php echo $this->getCurrencySymbol($_code) ?>"><?php echo $this->getCurrencyName($_code) ?></option>
     <?php endforeach; ?>
 </select>
 </p>
+<script type="text/javascript">order.setCurrencySymbol('<?php echo $this->getCurrencySymbol($this->getCurrentCurrencyCode()) ?>')</script>
 <table cellspacing="0" width="100%">
 <tr>
     <?php if($this->getCustomerId()): ?>
@@ -61,9 +62,8 @@
         </div>
         <?php endif; ?>
 
-        <div id="order-giftmessage">
-        <?php echo $this->getChildHtml('giftmessage') ?>
-        </div>
+        <?php echo $this->getChildHtml('gift_options') ?>
+
         <div class="clear"></div>
         <div class="box-left entry-edit">
             <div class="entry-edit-head"><h4><?php echo Mage::helper('sales')->__('Order History') ?></h4></div>

@@ -172,12 +172,15 @@ class Mage_GiftMessage_Block_Message_Inline extends Mage_Core_Block_Template
     {
         if (!$this->getData('items')) {
             $items = array();
-            foreach ($this->getEntity()->getAllItems() as $item) {
+
+            $entityItems = $this->getEntity()->getAllItems();
+            Mage::dispatchEvent('gift_options_prepare_items', array('items' => $entityItems));
+
+            foreach ($entityItems as $item) {
                 if ($item->getParentItem()) {
                     continue;
                 }
-                $type = substr($this->getType(), 0, 5) == 'multi' ? 'address_item' : 'item';
-                if ($this->helper('giftmessage/message')->isMessagesAvailable($type, $item)) {
+                if ($this->isItemMessagesAvailable($item) || $item->getIsGiftOptionsAvailable()) {
                     $items[] = $item;
                 }
             }
@@ -261,5 +264,16 @@ class Mage_GiftMessage_Block_Message_Inline extends Mage_Core_Block_Template
     public function isMessagesAvailable()
     {
         return Mage::helper('giftmessage/message')->isMessagesAvailable('quote', $this->getEntity());
+    }
+
+    /**
+     * Check availability of giftmessages for specified entity item
+     *
+     * @return bool
+     */
+    public function isItemMessagesAvailable($item)
+    {
+        $type = substr($this->getType(), 0, 5) == 'multi' ? 'address_item' : 'item';
+        return Mage::helper('giftmessage/message')->isMessagesAvailable($type, $item);
     }
 }

@@ -79,6 +79,12 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
     protected $_notRepresentOptions = array('info_buyRequest');
 
     /**
+     * Flag stating that options were successfully saved
+     *
+     */
+    protected $_flagOptionsSaved = null;
+
+    /**
      * Initialize resource model
      *
      */
@@ -289,29 +295,6 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
     }
 
     /**
-     * Retrieve product model object associated with item
-     *
-     * @return Mage_Catalog_Model_Product
-     */
-    public function getProduct()
-    {
-        $product = $this->_getData('product');
-        if (($product === null) && $this->getProductId()) {
-            $product = Mage::getModel('catalog/product')
-                ->setStoreId($this->getQuote()->getStoreId())
-                ->load($this->getProductId());
-            $this->setProduct($product);
-        }
-
-        /**
-         * Reset product final price because it related to custom options
-         */
-        $product->setFinalPrice(null);
-        $product->setCustomOptions($this->_optionsByCode);
-        return $product;
-    }
-
-    /**
      * Check product representation in item
      *
      * @param   Mage_Catalog_Model_Product $product
@@ -320,10 +303,22 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
     public function representProduct($product)
     {
         $itemProduct = $this->getProduct();
-        if ($itemProduct->getId() != $product->getId()) {
+        if (!$product || $itemProduct->getId() != $product->getId()) {
             return false;
         }
 
+        /**
+         * Check maybe product is planned to be a child of some quote item - in this case we limit search
+         * only within same parent item
+         */
+        $stickWithinParent = $product->getStickWithinParent();
+        if ($stickWithinParent) {
+            if ($this->getParentItem() !== $stickWithinParent) {
+                return false;
+            }
+        }
+
+        // Check options
         $itemOptions    = $this->getOptionsByCode();
         $productOptions = $product->getCustomOptions();
 
@@ -597,12 +592,7 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
             return false;
         }
 
-        $result = $this->_getResource()->hasDataChanged($this);
-        if ($result === false) {
-           $this->_saveItemOptions();
-        }
-
-        return $result;
+        return $this->_getResource()->hasDataChanged($this);
     }
 
     /**
@@ -622,7 +612,25 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
             }
         }
 
+        $this->_flagOptionsSaved = true; // Report to watchers that options were saved
+
         return $this;
+    }
+
+    /**
+     * Save model plus its options
+     * Ensures saving options in case when resource model was not changed
+     */
+    public function save()
+    {
+        $hasDataChanges = $this->hasDataChanges();
+        $this->_flagOptionsSaved = false;
+
+        parent::save();
+
+        if ($hasDataChanges && !$this->_flagOptionsSaved) {
+            $this->_saveItemOptions();
+        }
     }
 
     /**
@@ -652,5 +660,23 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
             $this->addOption(clone $option);
         }
         return $this;
+    }
+
+    /**
+     * Returns formatted buy request - object, holding request received from
+     * product view page with keys and options for configured product
+     *
+     * @return Varien_Object
+     */
+    public function getBuyRequest()
+    {
+        $option = $this->getOptionByCode('info_buyRequest');
+        $buyRequest = new Varien_Object($option ? unserialize($option->getValue()) : null);
+
+        // Overwrite standard buy request qty, because item qty could have changed since adding to quote
+        $buyRequest->setOriginalQty($buyRequest->getQty())
+            ->setQty($this->getQty() * 1);
+
+        return $buyRequest;
     }
 }

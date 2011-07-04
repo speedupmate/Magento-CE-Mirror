@@ -16,7 +16,7 @@
  * @package    Zend_Dojo
  * @subpackage View
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
- * @version    $Id: Container.php 21705 2010-03-31 17:38:19Z matthew $
+ * @version    $Id: Container.php 23368 2010-11-18 19:56:30Z bittarman $
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -67,7 +67,7 @@ class Zend_Dojo_View_Helper_Dojo_Container
      * Dojo version to use from CDN
      * @var string
      */
-    protected $_cdnVersion = '1.4.1';
+    protected $_cdnVersion = '1.5.0';
 
     /**
      * Has the dijit loader been registered?
@@ -267,6 +267,12 @@ class Zend_Dojo_View_Helper_Dojo_Container
                 case 'registerdojostylesheet':
                     $this->registerDojoStylesheet($value);
                     break;
+                case 'enable':
+                    if($value) {
+                        $this->enable();
+                    } else {
+                        $this->disable();
+                    }
             }
         }
 
@@ -839,7 +845,7 @@ class Zend_Dojo_View_Helper_Dojo_Container
     public function dijitsToJson()
     {
         #require_once 'Zend/Json.php';
-        return Zend_Json::encode($this->getDijits());
+        return Zend_Json::encode($this->getDijits(), false, array('enableJsonExprFinder' => true));
     }
 
     /**

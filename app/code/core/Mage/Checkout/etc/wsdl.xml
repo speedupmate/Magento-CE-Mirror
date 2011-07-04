@@ -7,14 +7,253 @@
             <import namespace="http://schemas.xmlsoap.org/soap/encoding/" schemaLocation="http://schemas.xmlsoap.org/soap/encoding/" />
 <!--            <complexType name="customerCustomerEntityToCreate">
                 <all>
-                    <element name="customer_id" type="xsd:int" minOccurs="0" />
-                    <element name="email" type="xsd:string" minOccurs="0" />
-                    <element name="firstname" type="xsd:string" minOccurs="0" />
-                    <element name="lastname" type="xsd:string" minOccurs="0" />
-                    <element name="password" type="xsd:string" minOccurs="0" />
-                    <element name="website_id" type="xsd:int" minOccurs="0" />
-                    <element name="store_id" type="xsd:int" minOccurs="0" />
-                    <element name="group_id" type="xsd:int" minOccurs="0" />
+                    <element name="address_id" type="xsd:string" minOccurs="0"/>
+                    <element name="created_at" type="xsd:string" minOccurs="0"/>
+                    <element name="updated_at" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_id" type="xsd:string" minOccurs="0"/>
+                    <element name="save_in_address_book" type="xsd:int" minOccurs="0"/>
+                    <element name="customer_address_id" type="xsd:string" minOccurs="0"/>
+                    <element name="address_type" type="xsd:string" minOccurs="0"/>
+                    <element name="email" type="xsd:string" minOccurs="0"/>
+                    <element name="prefix" type="xsd:string" minOccurs="0"/>
+                    <element name="firstname" type="xsd:string" minOccurs="0"/>
+                    <element name="middlename" type="xsd:string" minOccurs="0"/>
+                    <element name="lastname" type="xsd:string" minOccurs="0"/>
+                    <element name="suffix" type="xsd:string" minOccurs="0"/>
+                    <element name="company" type="xsd:string" minOccurs="0"/>
+                    <element name="street" type="xsd:string" minOccurs="0"/>
+                    <element name="city" type="xsd:string" minOccurs="0"/>
+                    <element name="region" type="xsd:string" minOccurs="0"/>
+                    <element name="region_id" type="xsd:string" minOccurs="0"/>
+                    <element name="postcode" type="xsd:string" minOccurs="0"/>
+                    <element name="country_id" type="xsd:string" minOccurs="0"/>
+                    <element name="telephone" type="xsd:string" minOccurs="0"/>
+                    <element name="fax" type="xsd:string" minOccurs="0"/>
+                    <element name="same_as_billing" type="xsd:int" minOccurs="0"/>
+                    <element name="free_shipping" type="xsd:int" minOccurs="0"/>
+                    <element name="shipping_method" type="xsd:string" minOccurs="0"/>
+                    <element name="shipping_description" type="xsd:string" minOccurs="0"/>
+                    <element name="weight" type="xsd:double" minOccurs="0"/>
+                    <element name="fax" type="xsd:string" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartItemEntity">
+                <all>
+                    <element name="item_id" type="xsd:string" minOccurs="0"/>
+                    <element name="created_at" type="xsd:string" minOccurs="0"/>
+                    <element name="updated_at" type="xsd:string" minOccurs="0"/>
+                    <element name="product_id" type="xsd:string" minOccurs="0"/>
+                    <element name="store_id" type="xsd:string" minOccurs="0"/>
+                    <element name="parent_item_id" type="xsd:string" minOccurs="0"/>
+                    <element name="is_virtual" type="xsd:int" minOccurs="0"/>
+                    <element name="sku" type="xsd:string" minOccurs="0"/>
+                    <element name="name" type="xsd:string" minOccurs="0"/>
+                    <element name="description" type="xsd:string" minOccurs="0"/>
+                    <element name="applied_rule_ids" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_data" type="xsd:string" minOccurs="0"/>
+                    <element name="free_shipping" type="xsd:string" minOccurs="0"/>
+                    <element name="is_qty_decimal" type="xsd:string" minOccurs="0"/>
+                    <element name="no_discount" type="xsd:string" minOccurs="0"/>
+                    <element name="weight" type="xsd:double" minOccurs="0"/>
+                    <element name="qty" type="xsd:double" minOccurs="0"/>
+                    <element name="price" type="xsd:double" minOccurs="0"/>
+                    <element name="base_price" type="xsd:double" minOccurs="0"/>
+                    <element name="custom_price" type="xsd:double" minOccurs="0"/>
+                    <element name="discount_percent" type="xsd:double" minOccurs="0"/>
+                    <element name="discount_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="base_discount_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="tax_percent" type="xsd:double" minOccurs="0"/>
+                    <element name="tax_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="base_tax_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="row_total" type="xsd:double" minOccurs="0"/>
+                    <element name="base_row_total" type="xsd:double" minOccurs="0"/>
+                    <element name="row_total_with_discount" type="xsd:double" minOccurs="0"/>
+                    <element name="row_weight" type="xsd:double" minOccurs="0"/>
+                    <element name="product_type" type="xsd:string" minOccurs="0"/>
+                    <element name="base_tax_before_discount" type="xsd:double" minOccurs="0"/>
+                    <element name="tax_before_discount" type="xsd:double" minOccurs="0"/>
+                    <element name="original_custom_price" type="xsd:double" minOccurs="0"/>
+                    <element name="base_cost" type="xsd:double" minOccurs="0"/>
+                    <element name="price_incl_tax" type="xsd:double" minOccurs="0"/>
+                    <element name="base_price_incl_tax" type="xsd:double" minOccurs="0"/>
+                    <element name="row_total_incl_tax" type="xsd:double" minOccurs="0"/>
+                    <element name="base_row_total_incl_tax" type="xsd:double" minOccurs="0"/>
+                    <element name="gift_message_id" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_message" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_message_available" type="xsd:string" minOccurs="0"/>
+                    <element name="weee_tax_applied" type="xsd:double" minOccurs="0"/>
+                    <element name="weee_tax_applied_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="weee_tax_applied_row_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="base_weee_tax_applied_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="base_weee_tax_applied_row_amount" type="xsd:double" minOccurs="0"/>
+                    <element name="weee_tax_disposition" type="xsd:double" minOccurs="0"/>
+                    <element name="weee_tax_row_disposition" type="xsd:double" minOccurs="0"/>
+                    <element name="base_weee_tax_disposition" type="xsd:double" minOccurs="0"/>
+                    <element name="base_weee_tax_row_disposition" type="xsd:double" minOccurs="0"/>
+                    <element name="tax_class_id" type="xsd:string" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartItemEntityArray">
+                <complexContent>
+                    <restriction base="soapenc:Array">
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartItemEntity[]"/>
+                    </restriction>
+                </complexContent>
+            </complexType>
+            <complexType name="shoppingCartPaymentEntity">
+                <all>
+                    <element name="payment_id" type="xsd:string" minOccurs="0"/>
+                    <element name="created_at" type="xsd:string" minOccurs="0"/>
+                    <element name="updated_at" type="xsd:string" minOccurs="0"/>
+                    <element name="method" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_type" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_number_enc" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_last4" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_cid_enc" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_owner" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_month" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_year" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_owner" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_start_month" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_start_year" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_issue" type="xsd:string" minOccurs="0"/>
+                    <element name="po_number" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_data" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_information" type="xsd:string" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartInfoEntity">
+                <all>
+                    <element name="store_id" type="xsd:string" minOccurs="0"/>
+                    <element name="created_at" type="xsd:string" minOccurs="0"/>
+                    <element name="updated_at" type="xsd:string" minOccurs="0"/>
+                    <element name="converted_at" type="xsd:string" minOccurs="0"/>
+                    <element name="quote_id" type="xsd:int" minOccurs="0"/>
+                    <element name="is_active" type="xsd:int" minOccurs="0"/>
+                    <element name="is_virtual" type="xsd:int" minOccurs="0"/>
+                    <element name="is_multi_shipping" type="xsd:int" minOccurs="0"/>
+                    <element name="items_count" type="xsd:double" minOccurs="0"/>
+                    <element name="items_qty" type="xsd:double" minOccurs="0"/>
+                    <element name="orig_order_id" type="xsd:string" minOccurs="0"/>
+                    <element name="store_to_base_rate" type="xsd:string" minOccurs="0"/>
+                    <element name="store_to_quote_rate" type="xsd:string" minOccurs="0"/>
+                    <element name="base_currency_code" type="xsd:string" minOccurs="0"/>
+                    <element name="store_currency_code" type="xsd:string" minOccurs="0"/>
+                    <element name="quote_currency_code" type="xsd:string" minOccurs="0"/>
+                    <element name="grand_total" type="xsd:string" minOccurs="0"/>
+                    <element name="base_grand_total" type="xsd:string" minOccurs="0"/>
+                    <element name="checkout_method" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_id" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_tax_class_id" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_group_id" type="xsd:int" minOccurs="0"/>
+                    <element name="customer_email" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_prefix" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_firstname" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_middlename" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_lastname" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_suffix" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_note" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_note_notify" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_is_guest" type="xsd:string" minOccurs="0"/>
+                    <element name="applied_rule_ids" type="xsd:string" minOccurs="0"/>
+                    <element name="reserved_order_id" type="xsd:string" minOccurs="0"/>
+                    <element name="password_hash" type="xsd:string" minOccurs="0"/>
+                    <element name="coupon_code" type="xsd:string" minOccurs="0"/>
+                    <element name="global_currency_code" type="xsd:string" minOccurs="0"/>
+                    <element name="base_to_global_rate" type="xsd:double" minOccurs="0"/>
+                    <element name="base_to_quote_rate" type="xsd:double" minOccurs="0"/>
+                    <element name="customer_taxvat" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_gender" type="xsd:string" minOccurs="0"/>
+                    <element name="subtotal" type="xsd:double" minOccurs="0"/>
+                    <element name="base_subtotal" type="xsd:double" minOccurs="0"/>
+                    <element name="subtotal_with_discount" type="xsd:double" minOccurs="0"/>
+                    <element name="base_subtotal_with_discount" type="xsd:double" minOccurs="0"/>
+                    <element name="ext_shipping_info" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_message_id" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_message" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_balance_amount_used" type="xsd:double" minOccurs="0"/>
+                    <element name="base_customer_balance_amount_used" type="xsd:double" minOccurs="0"/>
+                    <element name="use_customer_balance" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_cards_amount" type="xsd:string" minOccurs="0"/>
+                    <element name="base_gift_cards_amount" type="xsd:string" minOccurs="0"/>
+                    <element name="gift_cards_amount_used" type="xsd:string" minOccurs="0"/>
+                    <element name="use_reward_points" type="xsd:string" minOccurs="0"/>
+                    <element name="reward_points_balance" type="xsd:string" minOccurs="0"/>
+                    <element name="base_reward_currency_amount" type="xsd:string" minOccurs="0"/>
+                    <element name="reward_currency_amount" type="xsd:string" minOccurs="0"/>
+                    <element name="shipping_address" type="typens:shoppingCartAddressEntity" minOccurs="0"/>
+                    <element name="billing_address" type="typens:shoppingCartAddressEntity" minOccurs="0"/>
+                    <element name="items" type="typens:shoppingCartItemEntityArray" minOccurs="0"/>
+                    <element name="payment" type="typens:shoppingCartPaymentEntity" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartTotalsEntity">
+                <all>
+                    <element name="title" type="xsd:string" minOccurs="0"/>
+                    <element name="amount" type="xsd:double" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartTotalsEntityArray">
+                <complexContent>
+                    <restriction base="soapenc:Array">
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartTotalsEntity[]"/>
+                    </restriction>
+                </complexContent>
+            </complexType>
+            <complexType name="shoppingCartLicenseEntity">
+                <all>
+                    <element name="agreement_id" type="xsd:string" minOccurs="0"/>
+                    <element name="name" type="xsd:string" minOccurs="0"/>
+                    <element name="content" type="xsd:string" minOccurs="0"/>
+                    <element name="is_active" type="xsd:int" minOccurs="0"/>
+                    <element name="is_html" type="xsd:int" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartLicenseEntityArray">
+                <complexContent>
+                    <restriction base="soapenc:Array">
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartLicenseEntity[]"/>
+                    </restriction>
+                </complexContent>
+            </complexType>
+
+            <complexType name="shoppingCartProductEntity">
+                <all>
+                    <element name="product_id" type="xsd:string" minOccurs="0"/>
+                    <element name="sku" type="xsd:string" minOccurs="0"/>
+                    <element name="qty" type="xsd:double" minOccurs="0"/>
+                    <element name="options" type="typens:associativeArray" minOccurs="0"/>
+                    <element name="bundle_options" type="typens:associativeArray" minOccurs="0"/>
+                    <element name="bundle_options_qty" type="typens:associativeArray" minOccurs="0"/>
+                    <element name="links" type="typens:ArrayOfString" minOccurs="0"/>
+                </all>
+            </complexType>
+            <complexType name="shoppingCartProductEntityArray">
+                <complexContent>
+                    <restriction base="soapenc:Array">
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartProductEntity[]"/>
+                    </restriction>
+                </complexContent>
+            </complexType>
+            <complexType name="shoppingCartProductResponseEntityArray">
+                <complexContent>
+                    <restriction base="soapenc:Array">
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:catalogProductEntity[]"/>
+                    </restriction>
+                </complexContent>
+            </complexType>
+            <complexType name="shoppingCartCustomerEntity">
+                <all>
+                    <element name="mode" type="xsd:string" minOccurs="0"/>
+                    <element name="customer_id" type="xsd:int" minOccurs="0"/>
+                    <element name="email" type="xsd:string" minOccurs="0"/>
+                    <element name="firstname" type="xsd:string" minOccurs="0"/>
+                    <element name="lastname" type="xsd:string" minOccurs="0"/>
+                    <element name="password" type="xsd:string" minOccurs="0"/>
+                    <element name="confirmation" type="xsd:string" minOccurs="0"/>
+                    <element name="website_id" type="xsd:int" minOccurs="0"/>
+                    <element name="store_id" type="xsd:int" minOccurs="0"/>
+                    <element name="group_id" type="xsd:int" minOccurs="0"/>
                 </all>
             </complexType>-->
 <!--            <complexType name="customerCustomerEntity">
@@ -39,10 +278,10 @@
                     <element name="password_hash" type="xsd:string" minOccurs="0" />
                 </all>
             </complexType>
-            <complexType name="customerCustomerEntityArray">
+            <complexType name="shoppingCartCustomerAddressEntityArray">
                 <complexContent>
                     <restriction base="soapenc:Array">
-                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:customerCustomerEntity[]" />
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartCustomerAddressEntity[]"/>
                     </restriction>
                 </complexContent>
             </complexType>
@@ -52,10 +291,10 @@
                     <element name="customer_group_code" type="xsd:string" />
                 </all>
             </complexType>
-            <complexType name="customerGroupEntityArray">
+            <complexType name="shoppingCartShippingMethodEntityArray">
                 <complexContent>
                     <restriction base="soapenc:Array">
-                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:customerGroupEntity[]" />
+                        <attribute ref="soapenc:arrayType" wsdl:arrayType="typens:shoppingCartShippingMethodEntity[]"/>
                     </restriction>
                 </complexContent>
             </complexType>
@@ -131,16 +370,16 @@
         <part name="customerId" type="xsd:int" />
         <part name="attributes" type="typens:ArrayOfString" />
     </message>
-    <message name="customerCustomerInfoResponse">
-        <part name="customerInfo" type="typens:customerCustomerEntity" />
+    <message name="shoppingCartInfoResponse">
+        <part name="result" type="typens:shoppingCartInfoEntity"/>
     </message>
     <message name="customerCustomerUpdateRequest">
         <part name="sessionId" type="xsd:string" />
         <part name="customerId" type="xsd:int" />
         <part name="customerData" type="typens:customerCustomerEntityToCreate" />
     </message>
-    <message name="customerCustomerUpdateResponse">
-        <part name="result" type="xsd:boolean" />
+    <message name="shoppingCartTotalsResponse">
+        <part name="result" type="typens:shoppingCartTotalsEntityArray"/>
     </message>
     <message name="customerCustomerDeleteRequest">
         <part name="sessionId" type="xsd:string" />

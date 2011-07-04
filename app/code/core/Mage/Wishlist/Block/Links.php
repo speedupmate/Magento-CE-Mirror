@@ -35,13 +35,6 @@
 class Mage_Wishlist_Block_Links extends Mage_Page_Block_Template_Links_Block
 {
     /**
-     * Message after link text
-     *
-     * @var string
-     */
-    protected $_afterText = 'class="top-link-wishlist"';
-
-    /**
      * Position in link list
      * @var int
      */
@@ -69,5 +62,16 @@ class Mage_Wishlist_Block_Links extends Mage_Page_Block_Template_Links_Block
 
             parent::__construct();
         }
+    }
+
+    /**
+     * @deprecated after 1.4.2.0
+     * @see Mage_Wishlist_Block_Links::__construct
+     *
+     * @return array
+     */
+    public function addWishlistLink()
+    {
+        return $this;
     }
 }

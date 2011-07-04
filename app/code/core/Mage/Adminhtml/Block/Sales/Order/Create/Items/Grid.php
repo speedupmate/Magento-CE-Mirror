@@ -136,12 +136,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
 
     public function getSubtotal()
     {
-        if ($this->getQuote()->isVirtual()) {
-            $address = $this->getQuote()->getBillingAddress();
-        }
-        else {
-            $address = $this->getQuote()->getShippingAddress();
-        }
+        $address = $this->getQuoteAddress();
         if ($this->displayTotalsIncludeTax()) {
             if ($address->getSubtotalInclTax()) {
                 return $address->getSubtotalInclTax();
@@ -155,7 +150,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
 
     public function getSubtotalWithDiscount()
     {
-        $address = $this->getQuote()->getShippingAddress();
+        $address = $this->getQuoteAddress();
         if ($this->displayTotalsIncludeTax()) {
             return $address->getSubtotal()+$address->getTaxAmount()+$this->getDiscountAmount();
         } else {
@@ -166,6 +161,21 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
     public function getDiscountAmount()
     {
         return $this->getQuote()->getShippingAddress()->getDiscountAmount();
+    }
+
+    /**
+     * Retrive quote address
+     *
+     * @return Mage_Sales_Model_Quote_Address
+     */
+    public function getQuoteAddress()
+    {
+        if ($this->getQuote()->isVirtual()) {
+            return $this->getQuote()->getBillingAddress();
+        }
+        else {
+            return $this->getQuote()->getShippingAddress();
+        }
     }
 
     public function usedCustomPriceForItem($item)
@@ -247,15 +257,19 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
 
     public function displaySubtotalInclTax($item)
     {
-        $tax = ($item->getTaxBeforeDiscount() ? $item->getTaxBeforeDiscount() : ($item->getTaxAmount() ? $item->getTaxAmount() : 0));
-        return $this->formatPrice($item->getRowTotal()+$tax);
+        if ($item->getTaxBeforeDiscount()) {
+            $tax = $item->getTaxBeforeDiscount();
+        } else {
+            $tax = $item->getTaxAmount() ? $item->getTaxAmount() : 0;
+        }
+        return $this->formatPrice($item->getRowTotal() + $tax);
     }
 
     public function displayOriginalPriceInclTax($item)
     {
         $tax = 0;
         if ($item->getTaxPercent()) {
-            $tax = $item->getPrice()*($item->getTaxPercent()/100);
+            $tax = $item->getPrice() * ($item->getTaxPercent() / 100);
         }
         return $this->convertPrice($item->getPrice()+($tax/$item->getQty()));
     }
@@ -278,5 +292,54 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
     public function getStore()
     {
         return $this->getQuote()->getStore();
+    }
+
+    /**
+     * Return html button which calls configure window
+     *
+     * @param  $item
+     * @return string
+     */
+    public function getConfigureButtonHtml($item)
+    {
+        $product = $item->getProduct();
+
+        $options = array(
+            'label' => Mage::helper('sales')->__('Configure'),
+            'title' => Mage::helper('sales')->__('This product does not have any configurable options.')
+        );
+        if ($product->canConfigure()) {
+            $options['onclick'] = sprintf('order.showQuoteItemConfiguration(%s)', $item->getId());
+        } else {
+            $options['class'] = ' disabled';
+        }
+
+        return $this->getLayout()->createBlock('adminhtml/widget_button')
+            ->setData($options)
+            ->toHtml();
+    }
+
+    /**
+     * Get order item extra info block
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return Mage_Core_Block_Abstract
+     */
+    public function getItemExtraInfo($item)
+    {
+        return $this->getLayout()
+            ->getBlock('order_item_extra_info')
+            ->setItem($item);
+    }
+
+    /**
+     * Returns whether moving to wishlist is allowed for this item
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return bool
+     */
+    public function isMoveToWishlistAllowed($item)
+    {
+        return $item->getProduct()->isVisibleInSiteVisibility();
     }
 }

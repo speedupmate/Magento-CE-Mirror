@@ -78,31 +78,28 @@ class Mage_GoogleAnalytics_Block_Ga extends Mage_Core_Block_Text
      * Render regular page tracking javascript code
      * The custom "page name" may be set from layout or somewhere else. It must start from slash.
      *
-     * @see http://code.google.com/apis/analytics/docs/gaJS/gaJSApiBasicConfiguration.html#_gat.GA_Tracker_._trackPageview
-     * @see http://code.google.com/apis/analytics/docs/gaJS/gaJSApi_gaq.html
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApiBasicConfiguration.html#_gat.GA_Tracker_._trackPageview
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApi_gaq.html
      * @param string $accountId
      * @return string
      */
     protected function _getPageTrackingCode($accountId)
     {
-        $optPageURL = trim($this->getPageName());
-        if ($optPageURL && preg_match('/^\/.*/i', $optPageURL)) {
-            $optPageURL = "'{$this->jsQuoteEscape($optPageURL)}'";
+        $pageName   = trim($this->getPageName());
+        $optPageURL = '';
+        if ($pageName && preg_match('/^\/.*/i', $pageName)) {
+            $optPageURL = ", '{$this->jsQuoteEscape($pageName)}'";
         }
-        // the code compatible with google checkout shortcut (it requires a global pageTracker variable)
         return "
-_gaq.push(function() {
-    // the global variable is created intentionally
-    pageTracker = _gat._getTracker('{$this->jsQuoteEscape($accountId)}');
-    pageTracker._trackPageview({$optPageURL});
-});
+_gaq.push(['_setAccount', '{$this->jsQuoteEscape($accountId)}']);
+_gaq.push(['_trackPageview'{$optPageURL}]);
 ";
     }
 
     /**
      * Render information about specified orders and their items
      *
-     * @see http://code.google.com/apis/analytics/docs/gaJS/gaJSApiEcommerce.html#_gat.GA_Tracker_._addTrans
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApiEcommerce.html#_gat.GA_Tracker_._addTrans
      * @return string
      */
     protected function _getOrdersTrackingCode()

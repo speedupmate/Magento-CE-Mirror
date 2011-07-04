@@ -26,11 +26,9 @@
 ?>
 <?php if($this->canDisplayGiftmessage()): ?>
 <?php $_required = $this->getMessage()->getMessage() != ''?>
-<div id="<?php echo $this->getHtmlId() ?>" class="giftmessage-whole-order-container">
+<div id="<?php echo $this->getHtmlId() ?>" class="box-left giftmessage-whole-order-container">
     <div class="entry-edit">
-        <div class="entry-edit-head">
-            <h4><?php echo Mage::helper('sales')->__('Gift Message for the Entire Order') ?></h4>
-        </div>
+        <div><?php echo Mage::helper('sales')->__('Gift Message for the Entire Order') ?></div><br />
         <form id="<?php echo $this->getFieldId('form') ?>" action="<?php echo $this->getSaveUrl() ?>">
           <fieldset>
               <input type="hidden" id="<?php echo $this->getFieldId('type') ?>" name="<?php echo $this->getFieldName('type') ?>" value="order" />

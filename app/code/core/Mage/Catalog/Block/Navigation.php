@@ -37,6 +37,13 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
     protected $_categoryInstance = null;
 
     /**
+     * Current category key
+     *
+     * @var string
+     */
+    protected $_currentCategoryKey;
+
+    /**
      * Array of level position counters
      *
      * @var array
@@ -65,7 +72,8 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
             Mage::getDesign()->getTheme('template'),
             Mage::getSingleton('customer/session')->getCustomerGroupId(),
             'template' => $this->getTemplate(),
-            'name' => $this->getNameInLayout()
+            'name' => $this->getNameInLayout(),
+            $this->getCurrenCategoryKey()
         );
         $cacheId = $shortCacheId;
 
@@ -79,13 +87,23 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
         return $cacheId;
     }
 
+    /**
+     * Get current category key
+     *
+     * @return mixed
+     */
     public function getCurrenCategoryKey()
     {
-        if ($category = Mage::registry('current_category')) {
-            return $category->getPath();
-        } else {
-            return Mage::app()->getStore()->getRootCategoryId();
+        if (!$this->_currentCategoryKey) {
+            $category = Mage::registry('current_category');
+            if ($category) {
+                $this->_currentCategoryKey = $category->getPath();
+            } else {
+                $this->_currentCategoryKey = Mage::app()->getStore()->getRootCategoryId();
+            }
         }
+
+        return $this->_currentCategoryKey;
     }
 
     /**

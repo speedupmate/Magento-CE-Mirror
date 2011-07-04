@@ -81,9 +81,7 @@
     </div>
     <?php endif; ?>
     <div class="clear"></div>
-
-    <?php echo $this->getGiftmessageHtml() ?>
-
+    <?php echo $this->getGiftOptionsHtml() ?>
     <div class="clear"></div>
     <div class="entry-edit">
         <div class="entry-edit-head">
@@ -107,3 +105,26 @@
     </div>
     <div class="clear"></div>
 </div>
+
+<?php echo $this->getChildHtml('popup_window');?>
+<script type="text/javascript">
+//<![CDATA[
+    /**
+     * Retrieve gift options tooltip content
+     */
+    function getGiftOptionsTooltipContent(itemId) {
+        var contentLines = [];
+        var contentLine = null;
+
+        $$('#gift_options_data_' + itemId + ' .gift-options-tooltip-content').each(function (element) {
+            contentLine = element.innerHTML;
+            if (contentLine.length > 70) {
+                contentLine = contentLine.slice(0,67) + '...';
+            }
+            contentLines.push(contentLine);
+        });
+        return contentLines.join('<br/>');
+    }
+    giftOptionsTooltip.setTooltipContentLoaderFunction(getGiftOptionsTooltipContent);
+//]]>
+</script>

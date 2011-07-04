@@ -61,11 +61,56 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
     }
 
     /**
+     * Returns additional params for processing options
+     *
+     * @return Varien_Object
+     */
+    protected function _getProcessingParams()
+    {
+        $buyRequest = $this->getRequest();
+        $params = $buyRequest->getData('_processing_params');
+        /*
+         * Notice check for params to be Varien_Object - by using object we protect from
+         * params being forged and contain data from user frontend input
+         */
+        if ($params instanceof Varien_Object) {
+            return $params;
+        }
+        return new Varien_Object();
+    }
+
+    /**
+     * Returns file info array if we need to get file from already existing file.
+     * Or returns null, if we need to get file from uploaded array.
+     *
+     * @return null|array
+     */
+    protected function _getCurrentConfigFileInfo()
+    {
+        $option = $this->getOption();
+        $optionId = $option->getId();
+        $processingParams = $this->_getProcessingParams();
+        $buyRequest = $this->getRequest();
+
+        // Check maybe restore file from config requested
+        $optionActionKey = 'options_' . $optionId . '_file_action';
+        if ($buyRequest->getData($optionActionKey) == 'save_old') {
+            $fileInfo = array();
+            $currentConfig = $processingParams->getCurrentConfig();
+            if ($currentConfig) {
+                $fileInfo = $currentConfig->getData('options/' . $optionId);
+            }
+            return $fileInfo;
+        }
+        return null;
+    }
+
+    /**
      * Validate user input for option
      *
      * @throws Mage_Core_Exception
      * @param array $values All product option values, i.e. array (option_id => mixed, option_id => mixed...)
-     * @return Mage_Catalog_Model_Product_Option_Type_Default
+     * @return Mage_Catalog_Model_Product_Option_Type_File
      */
     public function validateUserValue($values)
     {
@@ -73,35 +118,62 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
 
         $this->setIsValid(true);
         $option = $this->getOption();
-        // Set option value from request (Admin/Front reorders)
+
+        /*
+         * Check whether we receive uploaded file or restore file by: reorder/edit configuration or
+         * previous configuration with no newly uploaded file
+         */
+        $fileInfo = null;
         if (isset($values[$option->getId()]) && is_array($values[$option->getId()])) {
-            if (isset($values[$option->getId()]['order_path'])) {
-                $relPath = $this->getUseQuotePath()
-                    ? $values[$option->getId()]['quote_path']
-                    : $values[$option->getId()]['order_path'];
-                $orderFileFullPath = Mage::getBaseDir() . $relPath;
+            // Legacy style, file info comes in array with option id index
+            $fileInfo = $values[$option->getId()];
+        } else {
+            /*
+             * New recommended style - file info comes in request processing parameters and we
+             * sure that this file info originates from Magento, not from manually formed POST request
+             */
+            $fileInfo = $this->_getCurrentConfigFileInfo();
+        }
+        if ($fileInfo !== null) {
+            if (is_array($fileInfo) && $this->_validateFile($fileInfo)) {
+                $value = $fileInfo;
             } else {
-                $this->setUserValue(null);
-                return $this;
+                $value = null;
             }
-
-            $ok = is_file($orderFileFullPath) && is_readable($orderFileFullPath)
-                && isset($values[$option->getId()]['secret_key'])
-                && substr(md5(file_get_contents($orderFileFullPath)), 0, 20) == $values[$option->getId()]['secret_key'];
-
-            $this->setUserValue($ok ? $values[$option->getId()] : null);
-            return $this;
-        } elseif ($this->getProduct()->getSkipCheckRequiredOption()) {
-            $this->setUserValue(null);
+            $this->setUserValue($value);
             return $this;
         }
+
+        // Process new uploaded file
+        try {
+            $this->_validateUploadedFile();
+        } catch (Exception $e) {
+            if ($this->getSkipCheckRequiredOption()) {
+                $this->setUserValue(null);
+                return $this;
+            } else {
+                Mage::throwException($e->getMessage());
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Validate uploaded file
+     *
+     * @throws Mage_Core_Exception
+     * @return Mage_Catalog_Model_Product_Option_Type_File
+     */
+    protected function _validateUploadedFile()
+    {
+        $option = $this->getOption();
+        $processingParams = $this->_getProcessingParams();
 
         /**
          * Upload init
          */
-        $upload = new Zend_File_Transfer_Adapter_Http();
-        $file = 'options_' . $option->getId() . '_file';
-
+        $upload   = new Zend_File_Transfer_Adapter_Http();
+        $file = $processingParams->getFilesPrefix() . 'options_' . $option->getId() . '_file';
         try {
             $runValidation = $option->getIsRequire() || $upload->isUploaded($file);
             if (!$runValidation) {
@@ -111,18 +183,27 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
 
             $fileInfo = $upload->getFileInfo($file);
             $fileInfo = $fileInfo[$file];
+            $fileInfo['title'] = $fileInfo['name'];
 
         } catch (Exception $e) {
             // when file exceeds the upload_max_filesize, $_FILES is empty
             if (isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > $this->_getUploadMaxFilesize()) {
                 $this->setIsValid(false);
                 Mage::throwException(
-                    Mage::helper('catalog')->__("The file you uploaded is larger than %s Megabytes allowed by server",
-                        $this->_bytesToMbytes($this->_getUploadMaxFilesize())
-                    )
+                    Mage::helper('catalog')->__("The file you uploaded is larger than %s Megabytes allowed by server", $this->_bytesToMbytes($this->_getUploadMaxFilesize()))
                 );
             } else {
-                $this->setUserValue(null);
+                switch($this->getProcessMode())
+                {
+                    case Mage_Catalog_Model_Product_Type_Abstract::PROCESS_MODE_FULL:
+                        Mage::throwException(
+                            Mage::helper('catalog')->__('Please specify the product\'s required option(s).')
+                        );
+                        break;
+                    default:
+                        $this->setUserValue(null);
+                        break;
+                }
                 return $this;
             }
         }
@@ -133,10 +214,10 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
 
         // Image dimensions
         $_dimentions = array();
-        if ($option->getImageSizeX() > 0 && $this->_isImage($fileInfo)) {
+        if ($option->getImageSizeX() > 0) {
             $_dimentions['maxwidth'] = $option->getImageSizeX();
         }
-        if ($option->getImageSizeY() > 0 && $this->_isImage($fileInfo)) {
+        if ($option->getImageSizeY() > 0) {
             $_dimentions['maxheight'] = $option->getImageSizeY();
         }
         if (count($_dimentions) > 0) {
@@ -171,31 +252,31 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
             $dispersion = Varien_File_Uploader::getDispretionPath($fileName);
 
             $filePath = $dispersion;
-            $destination = $this->getQuoteTargetDir() . $filePath;
-            $this->_createWriteableDir($destination);
-            $upload->setDestination($destination);
-
             $fileHash = md5(file_get_contents($fileInfo['tmp_name']));
             $filePath .= DS . $fileHash . '.' . $extension;
-
             $fileFullPath = $this->getQuoteTargetDir() . $filePath;
 
             $upload->addFilter('Rename', array(
                 'target' => $fileFullPath,
                 'overwrite' => true
             ));
-            if (!$upload->receive($file)) {
-                $this->setIsValid(false);
-                Mage::throwException(Mage::helper('catalog')->__("File upload failed"));
-            }
 
-            $_imageSize = @getimagesize($fileFullPath);
-            if (is_array($_imageSize) && count($_imageSize) > 0) {
-                $_width = $_imageSize[0];
-                $_height = $_imageSize[1];
-            } else {
-                $_width = 0;
-                $_height = 0;
+            $this->getProduct()->getTypeInstance(true)->addFileQueue(array(
+                'operation' => 'receive_uploaded_file',
+                'src_name'  => $file,
+                'dst_name'  => $fileFullPath,
+                'uploader'  => $upload,
+                'option'    => $this,
+            ));
+
+            $_width = 0;
+            $_height = 0;
+            if (is_readable($fileInfo['tmp_name'])) {
+                $_imageSize = getimagesize($fileInfo['tmp_name']);
+                if ($_imageSize) {
+                    $_width = $_imageSize[0];
+                    $_height = $_imageSize[1];
+                }
             }
 
             $this->setUserValue(array(
@@ -207,37 +288,12 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
                 'size'          => $fileInfo['size'],
                 'width'         => $_width,
                 'height'        => $_height,
-                'secret_key'    => substr($fileHash, 0, 20)
+                'secret_key'    => substr($fileHash, 0, 20),
             ));
 
         } elseif ($upload->getErrors()) {
-            $errors = array();
-            foreach ($upload->getErrors() as $errorCode) {
-                if ($errorCode == Zend_Validate_File_ExcludeExtension::FALSE_EXTENSION) {
-                    $errors[] = Mage::helper('catalog')->__("The file '%s' for '%s' has an invalid extension",
-                        $fileInfo['name'],
-                        $option->getTitle()
-                    );
-                } elseif ($errorCode == Zend_Validate_File_Extension::FALSE_EXTENSION) {
-                    $errors[] = Mage::helper('catalog')->__("The file '%s' for '%s' has an invalid extension",
-                        $fileInfo['name'],
-                        $option->getTitle()
-                    );
-                } elseif ($errorCode == Zend_Validate_File_ImageSize::WIDTH_TOO_BIG
-                    || $errorCode == Zend_Validate_File_ImageSize::HEIGHT_TOO_BIG)
-                {
-                    $errors[] = Mage::helper('catalog')->__("Maximum allowed image size for '%s' is %sx%s px.",
-                        $option->getTitle(),
-                        $option->getImageSizeX(),
-                        $option->getImageSizeY()
-                    );
-                } elseif ($errorCode == Zend_Validate_File_FilesSize::TOO_BIG) {
-                    $errors[] = Mage::helper('catalog')->__("The file '%s' you uploaded is larger than %s Megabytes allowed by server",
-                        $fileInfo['name'],
-                        $this->_bytesToMbytes($this->_getUploadMaxFilesize())
-                    );
-                }
-            }
+            $errors = $this->_getValidatorErrors($upload->getErrors(), $fileInfo);
+
             if (count($errors) > 0) {
                 $this->setIsValid(false);
                 Mage::throwException( implode("\n", $errors) );
@@ -250,22 +306,160 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
     }
 
     /**
+     * Validate file
+     *
+     * @throws Mage_Core_Exception
+     * @param array $optionValue
+     * @return Mage_Catalog_Model_Product_Option_Type_Default
+     */
+    protected function _validateFile($optionValue)
+    {
+        $option = $this->getOption();
+        /**
+         * @see Mage_Catalog_Model_Product_Option_Type_File::_validateUploadFile() - there setUserValue() sets correct \n
+         * fileFullPath only for quote_path. So we must form both full paths manually and check them.
+         */
+        $checkPaths = array();
+        if (isset($optionValue['quote_path'])) {
+            $checkPaths[] = Mage::getBaseDir() . $optionValue['quote_path'];
+        }
+        if (isset($optionValue['order_path']) && !$this->getUseQuotePath()) {
+            $checkPaths[] = Mage::getBaseDir() . $optionValue['order_path'];
+        }
+
+        $fileFullPath = null;
+        foreach ($checkPaths as $path) {
+            if (!is_file($path)) {
+                if (!Mage::helper('core/file_storage_database')->saveFileToFilesystem($fileFullPath)) {
+                    continue;
+                }
+            }
+            $fileFullPath = $path;
+            break;
+        }
+
+        if ($fileFullPath === null) {
+            return false;
+        }
+
+        $validatorChain = new Zend_Validate();
+
+        $_dimentions = array();
+
+        if ($option->getImageSizeX() > 0) {
+            $_dimentions['maxwidth'] = $option->getImageSizeX();
+        }
+        if ($option->getImageSizeY() > 0) {
+            $_dimentions['maxheight'] = $option->getImageSizeY();
+        }
+        if (count($_dimentions) > 0 && !$this->_isImage($fileFullPath)) {
+            return false;
+        }
+        if (count($_dimentions) > 0) {
+            $validatorChain->addValidator(
+                new Zend_Validate_File_ImageSize($_dimentions)
+            );
+        }
+
+        // File extension
+        $_allowed = $this->_parseExtensionsString($option->getFileExtension());
+        if ($_allowed !== null) {
+            $validatorChain->addValidator(new Zend_Validate_File_Extension($_allowed));
+        } else {
+            $_forbidden = $this->_parseExtensionsString($this->getConfigData('forbidden_extensions'));
+            if ($_forbidden !== null) {
+                $validatorChain->addValidator(new Zend_Validate_File_ExcludeExtension($_forbidden));
+            }
+        }
+
+        // Maximum filesize
+        $validatorChain->addValidator(
+                new Zend_Validate_File_FilesSize(array('max' => $this->_getUploadMaxFilesize()))
+        );
+
+
+        if ($validatorChain->isValid($fileFullPath)) {
+            $ok = is_readable($fileFullPath)
+                && isset($optionValue['secret_key'])
+                && substr(md5(file_get_contents($fileFullPath)), 0, 20) == $optionValue['secret_key'];
+
+            return $ok;
+        } elseif ($validatorChain->getErrors()) {
+            $errors = $this->_getValidatorErrors($validatorChain->getErrors(), $optionValue);
+
+            if (count($errors) > 0) {
+                $this->setIsValid(false);
+                Mage::throwException( implode("\n", $errors) );
+            }
+        } else {
+            $this->setIsValid(false);
+            Mage::throwException(Mage::helper('catalog')->__('Please specify the product required option(s)'));
+        }
+    }
+
+    /**
+     * Get Error messages for validator Errors
+     * @param array $errors Array of validation failure message codes @see Zend_Validate::getErrors()
+     * @param array $fileInfo File info
+     * @return array Array of error messages
+     */
+    protected function _getValidatorErrors($errors, $fileInfo)
+    {
+        $option = $this->getOption();
+        $result = array();
+        foreach ($errors as $errorCode) {
+            if ($errorCode == Zend_Validate_File_ExcludeExtension::FALSE_EXTENSION) {
+                $result[] = Mage::helper('catalog')->__("The file '%s' for '%s' has an invalid extension", $fileInfo['title'], $option->getTitle());
+            } elseif ($errorCode == Zend_Validate_File_Extension::FALSE_EXTENSION) {
+                $result[] = Mage::helper('catalog')->__("The file '%s' for '%s' has an invalid extension", $fileInfo['title'], $option->getTitle());
+            } elseif ($errorCode == Zend_Validate_File_ImageSize::WIDTH_TOO_BIG
+                || $errorCode == Zend_Validate_File_ImageSize::HEIGHT_TOO_BIG)
+            {
+                $result[] = Mage::helper('catalog')->__("Maximum allowed image size for '%s' is %sx%s px.", $option->getTitle(), $option->getImageSizeX(), $option->getImageSizeY());
+            } elseif ($errorCode == Zend_Validate_File_FilesSize::TOO_BIG) {
+                $result[] = Mage::helper('catalog')->__("The file '%s' you uploaded is larger than %s Megabytes allowed by server", $fileInfo['title'], $this->_bytesToMbytes($this->_getUploadMaxFilesize()));
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Prepare option value for cart
      *
      * @return mixed Prepared option value
      */
     public function prepareForCart()
     {
+        $option = $this->getOption();
+        $optionId = $option->getId();
+        $buyRequest = $this->getRequest();
+
+        // Prepare value and fill buyRequest with option
+        $requestOptions = $buyRequest->getOptions();
         if ($this->getIsValid() && $this->getUserValue() !== null) {
             $value = $this->getUserValue();
+
             // Save option in request, because we have no $_FILES['options']
-            $requestOptions = $this->getRequest()->getOptions();
             $requestOptions[$this->getOption()->getId()] = $value;
-            $this->getRequest()->setOptions($requestOptions);
-            return serialize($value);
+            $result = serialize($value);
         } else {
-            return null;
+            /*
+             * Clear option info from request, so it won't be stored in our db upon
+             * unsuccessful validation. Otherwise some bad file data can happen in buyRequest
+             * and be used later in reorders and reconfigurations.
+             */
+            if (is_array($requestOptions)) {
+                unset($requestOptions[$this->getOption()->getId()]);
+            }
+            $result = null;
         }
+        $buyRequest->setOptions($requestOptions);
+
+        // Clear action key from buy request - we won't need it anymore
+        $optionActionKey = 'options_' . $optionId . '_file_action';
+        $buyRequest->unsetData($optionActionKey);
+
+        return $result;
     }
 
     /**
@@ -283,16 +477,15 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
                 $customOptionUrlParams = $this->getCustomOptionUrlParams()
                     ? $this->getCustomOptionUrlParams()
                     : array(
-                        'id'  => $this->getQuoteItemOption()->getId(),
+                        'id'  => $this->getConfigurationItemOption()->getId(),
                         'key' => $value['secret_key']
                     );
 
                 $value['url'] = array('route' => $this->_customOptionDownloadUrl, 'params' => $customOptionUrlParams);
 
                 $this->_formattedOptionValue = $this->_getOptionHtml($value);
-                $this->getQuoteItemOption()->setValue(serialize($value));
+                $this->getConfigurationItemOption()->setValue(serialize($value));
                 return $this->_formattedOptionValue;
-
             } catch (Exception $e) {
                 return $optionValue;
             }
@@ -352,7 +545,7 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
             $value = unserialize($optionValue);
             return sprintf('%s [%d]',
                 Mage::helper('core')->htmlEscape($value['title']),
-                $this->getQuoteItemOption()->getId()
+                $this->getConfigurationItemOption()->getId()
             );
 
         } catch (Exception $e) {
@@ -371,8 +564,8 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
     {
         // search quote item option Id in option value
         if (preg_match('/\[([0-9]+)\]/', $optionValue, $matches)) {
-            $quoteItemOptionId = $matches[1];
-            $option = Mage::getModel('sales/quote_item_option')->load($quoteItemOptionId);
+            $confItemOptionId = $matches[1];
+            $option = Mage::getModel('sales/quote_item_option')->load($confItemOptionId);
             try {
                 unserialize($option->getValue());
                 return $option->getValue();
@@ -420,6 +613,7 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
             $orderFileFullPath = Mage::getBaseDir() . $value['order_path'];
             $dir = pathinfo($orderFileFullPath, PATHINFO_DIRNAME);
             $this->_createWriteableDir($dir);
+            Mage::helper('core/file_storage_database')->copyFile($quoteFileFullPath, $orderFileFullPath);
             @copy($quoteFileFullPath, $orderFileFullPath);
         } catch (Exception $e) {
             return $this;
@@ -536,22 +730,25 @@ class Mage_Catalog_Model_Product_Option_Type_File extends Mage_Catalog_Model_Pro
     /**
      * Simple check if file is image
      *
-     * @param array $fileInfo File data from Zend_File_Transfer
+     * @param array|string $fileInfo - either file data from Zend_File_Transfer or file path
      * @return boolean
      */
     protected function _isImage($fileInfo)
     {
-        try {
-
+        // Maybe array with file info came in
+        if (is_array($fileInfo)) {
             return strstr($fileInfo['type'], 'image/');
+        }
 
-            // We can use Zend Validator, but the lack of mime types
-            // $validator = new Zend_Validate_File_IsImage();
-            // return $validator->isValid($fileInfo['tmp_name'], $fileInfo);
-
-        } catch (Exception $e) {
+        // File path came in - check the physical file
+        if (!is_readable($fileInfo)) {
             return false;
         }
+        $imageInfo = getimagesize($fileInfo);
+        if (!$imageInfo) {
+            return false;
+        }
+        return true;
     }
 
     /**

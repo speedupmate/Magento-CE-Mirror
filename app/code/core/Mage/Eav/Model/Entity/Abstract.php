@@ -84,7 +84,7 @@ abstract class Mage_Eav_Model_Entity_Abstract
      * @var array
      */
     protected $_staticAttributes = array();
-    
+
     /**
      * Default Attributes that are static
      *
@@ -412,7 +412,7 @@ abstract class Mage_Eav_Model_Entity_Abstract
 
         return $attribute;
     }
-    
+
     /**
      * Return default static virtual attribute that doesn't exists in EAV attributes
      *
@@ -628,6 +628,10 @@ abstract class Mage_Eav_Model_Entity_Abstract
                     break;
             }
 
+            if (!$this->_isCallableAttributeInstance($instance, $method, $args)) {
+                continue;
+            }
+
             try {
                 $results[$attrCode] = call_user_func_array(array($instance, $method), $args);
             }
@@ -641,6 +645,23 @@ abstract class Mage_Eav_Model_Entity_Abstract
             }
         }
         return $results;
+    }
+
+    /**
+     * Check whether attribute instance (attribute, backend, frontend or source) has method and applicable
+     *
+     * @param Mage_Eav_Model_Entity_Attribute_Abstract|Mage_Eav_Model_Entity_Attribute_Backend_Abstract|Mage_Eav_Model_Entity_Attribute_Frontend_Abstract|Mage_Eav_Model_Entity_Attribute_Source_Abstract $instance
+     * @param string $method
+     * @param array $args array of arguments
+     * @return boolean
+     */
+    protected function _isCallableAttributeInstance($instance, $method, $args)
+    {
+        if (!is_object($instance) || !method_exists($instance, $method)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1089,7 +1110,7 @@ abstract class Mage_Eav_Model_Entity_Abstract
             /**
              * Check comparability for attribute value
              */
-            if (array_key_exists($k, $origData)) {
+            if ($this->_canUpdateAttribute($attribute, $v, $origData)) {
                 if ($this->_isAttributeValueEmpty($attribute, $v)) {
                     $delete[$attribute->getBackend()->getTable()][] = array(
                         'attribute_id'  => $attrId,
@@ -1108,6 +1129,19 @@ abstract class Mage_Eav_Model_Entity_Abstract
 
         $result = compact('newObject', 'entityRow', 'insert', 'update', 'delete');
         return $result;
+    }
+
+    /**
+     * Return if attribute exists in original data array.
+     *
+     * @param Mage_Eav_Model_Entity_Attribute_Abstract $attribute
+     * @param mixed $value New value of the attribute. Can be used in subclasses.
+     * @param array $origData
+     * @return bool
+     */
+    protected function _canUpdateAttribute(Mage_Eav_Model_Entity_Attribute_Abstract $attribute, $value, array &$origData)
+    {
+        return array_key_exists($attribute->getAttributeCode(), $origData);
     }
 
     /**
@@ -1405,19 +1439,17 @@ abstract class Mage_Eav_Model_Entity_Abstract
 
             if ($origValueId === false && !is_null($newValue)) {
                 $this->_insertAttribute($object, $attribute, $newValue);
-                $backend->setValueId($this->_getWriteAdapter()->lastInsertId());
             } elseif ($origValueId !== false && !is_null($newValue)) {
                 $this->_updateAttribute($object, $attribute, $origValueId, $newValue);
             } elseif ($origValueId !== false && is_null($newValue)) {
                 $this->_getWriteAdapter()->delete($table, $where);
             }
+            $this->_processAttributeValues();
             $this->_getWriteAdapter()->commit();
         } catch (Exception $e) {
             $this->_getWriteAdapter()->rollback();
             throw $e;
         }
-
-        $this->_processAttributeValues();
 
         return $this;
     }

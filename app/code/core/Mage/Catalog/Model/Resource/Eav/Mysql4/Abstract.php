@@ -68,6 +68,30 @@ abstract class Mage_Catalog_Model_Resource_Eav_Mysql4_Abstract extends Mage_Eav_
     }
 
     /**
+     * Check whether attribute instance (attribute, backend, frontend or source) has method and applicable
+     *
+     * @param Mage_Eav_Model_Entity_Attribute_Abstract|Mage_Eav_Model_Entity_Attribute_Backend_Abstract|Mage_Eav_Model_Entity_Attribute_Frontend_Abstract|Mage_Eav_Model_Entity_Attribute_Source_Abstract $instance
+     * @param string $method
+     * @param array $args array of arguments
+     * @return boolean
+     */
+    protected function _isCallableAttributeInstance($instance, $method, $args)
+    {
+        if ($instance instanceof Mage_Eav_Model_Entity_Attribute_Backend_Abstract
+            && ($method == 'beforeSave' || $method = 'afterSave')
+        ) {
+            $attributeCode = $instance->getAttribute()->getAttributeCode();
+            if (isset($args[0]) && $args[0] instanceof Varien_Object && $args[0]->getData($attributeCode) === false) {
+                return false;
+            }
+        }
+
+        return parent::_isCallableAttributeInstance($instance, $method, $args);
+    }
+
+
+
+    /**
      * Retrieve select object for loading entity attributes values
      *
      * Join attribute store value
@@ -441,7 +465,7 @@ abstract class Mage_Catalog_Model_Resource_Eav_Mysql4_Abstract extends Mage_Eav_
             $delCondition = $condition
                 . $this->_getWriteAdapter()->quoteInto(' AND attribute_id IN(?)', $storeAttributes)
                 . $this->_getWriteAdapter()->quoteInto(' AND store_id =?', $object->getStoreId());
-            $this->_getWriteAdapter()->delete($table, $delCondition);;
+            $this->_getWriteAdapter()->delete($table, $delCondition);
         }
         return $this;
     }
@@ -522,6 +546,30 @@ abstract class Mage_Catalog_Model_Resource_Eav_Mysql4_Abstract extends Mage_Eav_
     protected function _isAttributeValueEmpty(Mage_Eav_Model_Entity_Attribute_Abstract $attribute, $value)
     {
         return $value === false;
+    }
+
+    /**
+     * Return if attribute exists in original data array.
+     * Checks also attribute's store scope:
+     * We should insert on duplicate key update values if we unchecked 'STORE VIEW' checkbox in store view.
+     *
+     * @param Mage_Eav_Model_Entity_Attribute_Abstract $attribute
+     * @param mixed $value New value of the attribute.
+     * @param array $origData
+     * @return bool
+     */
+    protected function _canUpdateAttribute(Mage_Eav_Model_Entity_Attribute_Abstract $attribute, $value, array &$origData)
+    {
+        $result = parent::_canUpdateAttribute($attribute, $value, $origData);
+        if ($result &&
+            ($attribute->isScopeStore() || $attribute->isScopeWebsite()) &&
+            !$this->_isAttributeValueEmpty($attribute, $value) &&
+            $value == $origData[$attribute->getAttributeCode()] &&
+            isset($origData['store_id']) && $origData['store_id'] != $this->getDefaultStoreId()
+        ) {
+            return false;
+        }
+        return $result;
     }
 
     /**

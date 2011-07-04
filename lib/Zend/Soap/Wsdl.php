@@ -16,7 +16,7 @@
  * @package    Zend_Soap
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Wsdl.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: Wsdl.php 23342 2010-11-15 15:29:20Z alexander $
  */
 
 /**
@@ -317,11 +317,17 @@ class Zend_Soap_Wsdl
 
         if (is_array($fault)) {
             $node = $this->_dom->createElement('fault');
+            /**
+             * Note. Do we really need name attribute to be also set at wsdl:fault node???
+             * W3C standard doesn't mention it (http://www.w3.org/TR/wsdl#_soap:fault)
+             * But some real world WSDLs use it, so it may be required for compatibility reasons.
+             */
             if (isset($fault['name'])) {
                 $node->setAttribute('name', $fault['name']);
             }
-            $soap_node = $this->_dom->createElement('soap:body');
-            foreach ($output as $name => $value) {
+
+            $soap_node = $this->_dom->createElement('soap:fault');
+            foreach ($fault as $name => $value) {
                 $soap_node->setAttribute($name, $value);
             }
             $node->appendChild($soap_node);
@@ -424,7 +430,7 @@ class Zend_Soap_Wsdl
         }
 
         $doc = $this->_dom->createElement('documentation');
-        $doc_cdata = $this->_dom->createTextNode($documentation);
+        $doc_cdata = $this->_dom->createTextNode(str_replace(array("\r\n", "\r"), "\n", $documentation));
         $doc->appendChild($doc_cdata);
 
         if($node->hasChildNodes()) {

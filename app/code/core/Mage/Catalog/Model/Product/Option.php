@@ -178,7 +178,7 @@ class Mage_Catalog_Model_Product_Option extends Mage_Core_Model_Abstract
      * Get group name of option by given option type
      *
      * @param string $type
-     * @return array
+     * @return string
      */
     public function getGroupByType($type = null)
     {
@@ -431,5 +431,32 @@ class Mage_Catalog_Model_Product_Option extends Mage_Core_Model_Abstract
     public function getSearchableData($productId, $storeId)
     {
         return $this->_getResource()->getSearchableData($productId, $storeId);
+    }
+
+    /**
+     * Clearing object's data
+     *
+     * @return Mage_Catalog_Model_Product_Option
+     */
+    protected function _clearData()
+    {
+        $this->_data = array();
+        $this->_values = array();
+        return $this;
+    }
+
+    /**
+     * Clearing cyclic references
+     *
+     * @return Mage_Catalog_Model_Product_Option
+     */
+    protected function _clearReferences()
+    {
+        if (!empty($this->_values)) {
+            foreach ($this->_values as $value) {
+                $value->unsetOption();
+            }
+        }
+        return $this;
     }
 }
