@@ -3,6 +3,7 @@
 "Add","Add"
 "Apply","Apply"
 "Description: %s","Description: %s"
+"End Date should be greater than Start Date","End Date should be greater than Start Date"
 "Expire at: %s","Expire at: %s"
 "FALSE","FALSE"
 "If %s of these conditions are %s:","If %s of these conditions are %s:"

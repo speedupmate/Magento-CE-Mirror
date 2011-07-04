@@ -14,23 +14,33 @@
  *
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Action.php 16541 2009-07-07 06:59:03Z bkarwin $
  */
 
-/** Zend_Controller_Action_HelperBroker */
+/**
+ * @see Zend_Controller_Action_HelperBroker
+ */
 #require_once 'Zend/Controller/Action/HelperBroker.php';
 
-/** Zend_Controller_Front */
+/**
+ * @see Zend_Controller_Action_Interface
+ */
+#require_once 'Zend/Controller/Action/Interface.php';
+
+/**
+ * @see Zend_Controller_Front
+ */
 #require_once 'Zend/Controller/Front.php';
 
 /**
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-abstract class Zend_Controller_Action
+abstract class Zend_Controller_Action implements Zend_Controller_Action_Interface
 {
     /**
      * @var array of existing class methods
@@ -462,19 +472,19 @@ abstract class Zend_Controller_Action
      * overridden to implement magic (dynamic) actions, or provide run-time
      * dispatching.
      *
-     * @param string $methodName
-     * @param array $args
+     * @param  string $methodName
+     * @param  array $args
+     * @return void
+     * @throws Zend_Controller_Action_Exception
      */
     public function __call($methodName, $args)
     {
+        #require_once 'Zend/Controller/Action/Exception.php';
         if ('Action' == substr($methodName, -6)) {
-            #require_once 'Zend/Controller/Action/Exception.php';
             $action = substr($methodName, 0, strlen($methodName) - 6);
-            #require_once 'Zend/Controller/Action/Exception.php';
             throw new Zend_Controller_Action_Exception(sprintf('Action "%s" does not exist and was not trapped in __call()', $action), 404);
         }
 
-        #require_once 'Zend/Controller/Action/Exception.php';
         throw new Zend_Controller_Action_Exception(sprintf('Method "%s" does not exist and was not trapped in __call()', $methodName), 500);
     }
 

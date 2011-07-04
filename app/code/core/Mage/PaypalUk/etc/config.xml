@@ -19,10 +19,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_PaypalUk
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_PaypalUk
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 -->
 <config>
@@ -31,7 +31,6 @@
             <version>0.7.0</version>
         </Mage_PaypalUk>
     </modules>
-
     <global>
         <models>
             <paypaluk>
@@ -55,35 +54,11 @@
                 <setup>
                     <module>Mage_PaypalUk</module>
                 </setup>
-                <connection>
-                    <use>core_setup</use>
-                </connection>
             </paypaluk_setup>
-            <paypaluk_write>
-                <connection>
-                    <use>core_write</use>
-                </connection>
-            </paypaluk_write>
-            <paypaluk_read>
-                <connection>
-                    <use>core_read</use>
-                </connection>
-            </paypaluk_read>
         </resources>
         <blocks>
             <paypaluk><class>Mage_PaypalUk_Block</class></paypaluk>
         </blocks>
-        <payment>
-            <cc>
-                <types>
-                    <SS>
-                        <code>SS</code>
-                        <name>Switch/Solo</name>
-                        <order>40</order>
-                    </SS>
-                </types>
-            </cc>
-        </payment>
     </global>
     <frontend>
         <secure_url>
@@ -116,17 +91,6 @@
         </layout>
     </frontend>
     <adminhtml>
-        <events>
-            <payment_info_block_prepare_specific_information>
-                <observers>
-                    <paypaluk>
-                        <type>model</type>
-                        <class>paypaluk/observer</class>
-                        <method>paymentInfoBlockPrepareSpecificInformation</method>
-                    </paypaluk>
-                </observers>
-            </payment_info_block_prepare_specific_information>
-        </events>
         <translate>
             <modules>
                 <Mage_PaypalUk>
@@ -141,7 +105,6 @@
     <default>
         <paypal>
             <wpuk>
-                <url>https://pilot-payflowpro.verisign.com/transaction</url>
                 <partner>PayPalUK</partner>
                 <user backend_model="adminhtml/system_config_backend_encrypted"/>
                 <pwd backend_model="adminhtml/system_config_backend_encrypted"/>

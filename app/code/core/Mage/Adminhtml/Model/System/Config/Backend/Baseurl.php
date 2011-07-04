@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -43,11 +43,36 @@ class Mage_Adminhtml_Model_System_Config_Backend_Baseurl extends Mage_Core_Model
          * If value is special ({{}}) we don't need add slash
          */
         if (!preg_match('#}}$#', $value)) {
-        	$value.= '/';
+            $value.= '/';
         }
-         
+
 
         $this->setValue($value);
         return $this;
+    }
+
+    /**
+     * Clean compiled JS/CSS when updating base url configuration settings
+     */
+    protected function _afterSave()
+    {
+        $unsecureUrl = $this->getData('groups/unsecure/fields/base_url/value');
+        $secureUrl = $this->getData('groups/secure/fields/base_url/value');
+
+        $oldUnsecureUrl = Mage::getConfig()->getNode(
+            Mage_Core_Model_Url::XML_PATH_UNSECURE_URL,
+            $this->getScope(),
+            $this->getScopeId()
+        );
+
+        $oldSecureUrl = Mage::getConfig()->getNode(
+            Mage_Core_Model_Url::XML_PATH_SECURE_URL,
+            $this->getScope(),
+            $this->getScopeId()
+        );
+
+        if ($unsecureUrl != $oldUnsecureUrl || $secureUrl != $oldSecureUrl) {
+            Mage::getModel('core/design_package')->cleanMergedJsCss();
+        }
     }
 }

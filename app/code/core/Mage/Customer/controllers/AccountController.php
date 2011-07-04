@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -137,13 +137,10 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                     if ($session->getCustomer()->getIsJustConfirmed()) {
                         $this->_welcomeCustomer($session->getCustomer(), true);
                     }
-                }
-                catch (Exception $e) {
+                } catch (Mage_Core_Exception $e) {
                     switch ($e->getCode()) {
                         case Mage_Customer_Model_Customer::EXCEPTION_EMAIL_NOT_CONFIRMED:
-                            $message = Mage::helper('customer')->__('This account is not confirmed. <a href="%s">Click here</a> to resend confirmation email.',
-                                Mage::helper('customer')->getEmailConfirmationUrl($login['username'])
-                            );
+                            $message = Mage::helper('customer')->__('This account is not confirmed. <a href="%s">Click here</a> to resend confirmation email.', Mage::helper('customer')->getEmailConfirmationUrl($login['username']));
                             break;
                         case Mage_Customer_Model_Customer::EXCEPTION_INVALID_EMAIL_OR_PASSWORD:
                             $message = $e->getMessage();
@@ -153,6 +150,8 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                     }
                     $session->addError($message);
                     $session->setUsername($login['username']);
+                } catch (Exception $e) {
+                    // Mage::logException($e); // PA DSS violation: this exception log can disclose customer password
                 }
             } else {
                 $session->addError($this->__('Login and password are required'));
@@ -185,11 +184,23 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                         }
                     }
                 }
+                else if ($session->getAfterAuthUrl()) {
+                    $session->setBeforeAuthUrl($session->getAfterAuthUrl(true));
+                }
             } else {
                 $session->setBeforeAuthUrl(Mage::helper('customer')->getLoginUrl());
             }
+        } else if ($session->getBeforeAuthUrl() == Mage::helper('customer')->getLogoutUrl()) {
+            $session->setBeforeAuthUrl(Mage::helper('customer')->getDashboardUrl());
         }
-
+        else {
+            if (!$session->getAfterAuthUrl()) {
+                $session->setAfterAuthUrl($session->getBeforeAuthUrl());
+            }
+            if ($session->isLoggedIn()) {
+                $session->setBeforeAuthUrl($session->getAfterAuthUrl(true));
+            }
+        }
         $this->_redirectUrl($session->getBeforeAuthUrl(true));
     }
 
@@ -233,10 +244,12 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
      */
     public function createPostAction()
     {
-        if ($this->_getSession()->isLoggedIn()) {
+        $session = $this->_getSession();
+        if ($session->isLoggedIn()) {
             $this->_redirect('*/*/');
             return;
         }
+        $session->setEscapeMessages(true); // prevent XSS injection in user input
         if ($this->getRequest()->isPost()) {
             $errors = array();
 
@@ -244,9 +257,14 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                 $customer = Mage::getModel('customer/customer')->setId(null);
             }
 
+            $data = $this->_filterPostData($this->getRequest()->getPost());
+
             foreach (Mage::getConfig()->getFieldset('customer_account') as $code=>$node) {
-                if ($node->is('create') && ($value = $this->getRequest()->getParam($code)) !== null) {
-                    $customer->setData($code, $value);
+                if ($node->is('create') && isset($data[$code])) {
+                    if ($code == 'email') {
+                        $data[$code] = trim($data[$code]);
+                    }
+                    $customer->setData($code, $data[$code]);
                 }
             }
 
@@ -284,45 +302,47 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                     $customer->save();
 
                     if ($customer->isConfirmationRequired()) {
-                        $customer->sendNewAccountEmail('confirmation', $this->_getSession()->getBeforeAuthUrl());
-                        $this->_getSession()->addSuccess($this->__('Account confirmation is required. Please, check your e-mail for confirmation link. To resend confirmation email please <a href="%s">click here</a>.',
-                            Mage::helper('customer')->getEmailConfirmationUrl($customer->getEmail())
-                        ));
+                        $customer->sendNewAccountEmail('confirmation', $session->getBeforeAuthUrl());
+                        $session->addSuccess($this->__('Account confirmation is required. Please, check your e-mail for confirmation link. To resend confirmation email please <a href="%s">click here</a>.', Mage::helper('customer')->getEmailConfirmationUrl($customer->getEmail())));
                         $this->_redirectSuccess(Mage::getUrl('*/*/index', array('_secure'=>true)));
                         return;
                     }
                     else {
-                        $this->_getSession()->setCustomerAsLoggedIn($customer);
+                        $session->setCustomerAsLoggedIn($customer);
                         $url = $this->_welcomeCustomer($customer);
                         $this->_redirectSuccess($url);
                         return;
                     }
                 } else {
-                    $this->_getSession()->setCustomerFormData($this->getRequest()->getPost());
+                    $session->setCustomerFormData($this->getRequest()->getPost());
                     if (is_array($errors)) {
                         foreach ($errors as $errorMessage) {
-                            $this->_getSession()->addError($errorMessage);
+                            $session->addError($errorMessage);
                         }
                     }
                     else {
-                        $this->_getSession()->addError($this->__('Invalid customer data'));
+                        $session->addError($this->__('Invalid customer data'));
                     }
                 }
             }
             catch (Mage_Core_Exception $e) {
-                $this->_getSession()->addError($e->getMessage())
-                    ->setCustomerFormData($this->getRequest()->getPost());
+                $session->setCustomerFormData($this->getRequest()->getPost());
+                if ($e->getCode() === Mage_Customer_Model_Customer::EXCEPTION_EMAIL_EXISTS) {
+                    $url = Mage::getUrl('customer/account/forgotpassword');
+                    $message = $this->__('There is already an account with this emails address. If you are sure that it is your email address, <a href="%s">click here</a> to get your password and access your account.', $url);
+                    $session->setEscapeMessages(false);
+                }
+                else {
+                    $message = $e->getMessage();
+                }
+                $session->addError($message);
             }
             catch (Exception $e) {
-                $this->_getSession()->setCustomerFormData($this->getRequest()->getPost())
+                $session->setCustomerFormData($this->getRequest()->getPost())
                     ->addException($e, $this->__('Can\'t save customer'));
             }
         }
-        /**
-         * Protect XSS injection in user input
-         */
-        $this->_getSession()->setEscapeMessages(true);
-        $this->_redirectError(Mage::getUrl('*/*/create', array('_secure'=>true)));
+        $this->_redirectError(Mage::getUrl('*/*/create', array('_secure' => true)));
     }
 
     /**
@@ -335,7 +355,7 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
      */
     protected function _welcomeCustomer(Mage_Customer_Model_Customer $customer, $isJustConfirmed = false)
     {
-        $this->_getSession()->addSuccess($this->__('Thank you for registering with %s', Mage::app()->getStore()->getName()));
+        $this->_getSession()->addSuccess($this->__('Thank you for registering with %s', Mage::app()->getStore()->getFrontendName()));
 
         $customer->sendNewAccountEmail($isJustConfirmed ? 'confirmed' : 'registered');
 
@@ -556,9 +576,11 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                 ->setWebsiteId($this->_getSession()->getCustomer()->getWebsiteId());
 
             $fields = Mage::getConfig()->getFieldset('customer_account');
+            $data = $this->_filterPostData($this->getRequest()->getPost());
+
             foreach ($fields as $code=>$node) {
-                if ($node->is('update') && ($value = $this->getRequest()->getParam($code)) !== null) {
-                    $customer->setData($code, $value);
+                if ($node->is('update') && isset($data[$code])) {
+                    $customer->setData($code, $data[$code]);
                 }
             }
 
@@ -610,7 +632,6 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                 return $this;
             }
 
-
             try {
                 $customer->save();
                 $this->_getSession()->setCustomer($customer)
@@ -630,5 +651,17 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
         }
 
         $this->_redirect('*/*/edit');
+    }
+
+    /**
+     * Filtering posted data. Converting localized data if needed
+     *
+     * @param array
+     * @return array
+     */
+    protected function _filterPostData($data)
+    {
+        $data = $this->_filterDates($data, array('dob'));
+        return $data;
     }
 }

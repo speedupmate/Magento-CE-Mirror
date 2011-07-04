@@ -53,7 +53,7 @@ class Mage_Centinel_Model_State_Mastercard extends Mage_Centinel_Model_StateAbst
      */
     public function isAuthenticateAllowed()
     {
-        return $this->_isLookupStrictSuccessful() && is_null($this->getAuthenticateEciFlag());
+        return $this->_isLookupStrictSuccessful();
     }
 
     /**

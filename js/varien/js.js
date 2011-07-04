@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Varien
+ * @package     js
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 function popWin(url,win,para) {
     var win = window.open(url,win,para);
@@ -193,6 +195,22 @@ function decorateDataList(list) {
 }
 
 /**
+ * Parse SID and produces the correct URL
+ */
+function parseSidUrl(baseUrl, urlExt) {
+    sidPos = baseUrl.indexOf('/?SID=');
+    sid = '';
+    urlExt = (urlExt != undefined) ? urlExt : '';
+
+    if(sidPos > -1) {
+        sid = '?' + baseUrl.substring(sidPos + 2);
+        baseUrl = baseUrl.substring(0, sidPos + 1);
+    }
+
+    return baseUrl+urlExt+sid;
+}
+
+/**
  * Formats currency using patern
  * format - JSON (pattern, decimal, decimalsDelimeter, groupsDelimeter)
  * showPlus - true (always show '+'or '-'),
@@ -324,13 +342,14 @@ Varien.searchForm.prototype = {
             url,
             {
                 paramName: this.field.name,
+                method: 'get',
                 minChars: 2,
                 updateElement: this._selectAutocompleteItem.bind(this),
-                onShow : function(element, update) { 
+                onShow : function(element, update) {
                     if(!update.style.position || update.style.position=='absolute') {
                         update.style.position = 'absolute';
                         Position.clone(element, update, {
-                            setHeight: false, 
+                            setHeight: false,
                             offsetTop: element.offsetHeight
                         });
                     }
@@ -467,3 +486,24 @@ function truncateOptions() {
 Event.observe(window, 'load', function(){
    truncateOptions();
 });
+
+Element.addMethods({
+    getInnerText: function(element)
+    {
+        element = $(element);
+        if(element.innerText && !Prototype.Browser.Opera) {
+            return element.innerText
+        }
+        return element.innerHTML.stripScripts().unescapeHTML().replace(/[\n\r\s]+/g, ' ');
+    }
+});
+
+if (!("console" in window) || !("firebug" in console))
+{
+    var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
+    "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
+
+    window.console = {};
+    for (var i = 0; i < names.length; ++i)
+        window.console[names[i]] = function() {}
+}

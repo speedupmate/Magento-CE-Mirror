@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
 {
@@ -29,7 +29,7 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
     protected function _initAction()
     {
         $this->loadLayout()
-            ->_setActiveMenu('api/users')
+            ->_setActiveMenu('system/services/users')
             ->_addBreadcrumb($this->__('Web Services'), $this->__('Web Services'))
             ->_addBreadcrumb($this->__('Permissions'), $this->__('Permissions'))
             ->_addBreadcrumb($this->__('Users'), $this->__('Users'))
@@ -39,6 +39,10 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
 
     public function indexAction()
     {
+        $this->_title($this->__('System'))
+             ->_title($this->__('Web Services'))
+             ->_title($this->__('Users'));
+
         $this->_initAction()
             ->_addContent($this->getLayout()->createBlock('adminhtml/api_user'))
             ->renderLayout();
@@ -51,6 +55,10 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
 
     public function editAction()
     {
+        $this->_title($this->__('System'))
+             ->_title($this->__('Web Services'))
+             ->_title($this->__('Users'));
+
         $id = $this->getRequest()->getParam('user_id');
         $model = Mage::getModel('api/user');
 
@@ -62,6 +70,9 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
                 return;
             }
         }
+
+        $this->_title($model->getId() ? $model->getName() : $this->__('New User'));
+
         // Restore previously entered form data from session
         $data = Mage::getSingleton('adminhtml/session')->getUserData(true);
         if (!empty($data)) {
@@ -82,7 +93,13 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
     public function saveAction()
     {
         if ($data = $this->getRequest()->getPost()) {
-            $model = Mage::getModel('api/user');
+            $id = $this->getRequest()->getPost('user_id', false);
+            $model = Mage::getModel('api/user')->load($id);
+            if (!$model->getId() && $id) {
+                Mage::getSingleton('adminhtml/session')->addError($this->__('This User no longer exists'));
+                $this->_redirect('*/*/');
+                return;
+            }
             $model->setData($data);
             try {
                 $model->save();
@@ -120,8 +137,7 @@ class Mage_Adminhtml_Api_UserController extends Mage_Adminhtml_Controller_Action
         if ($id = $this->getRequest()->getParam('user_id')) {
 
             try {
-                $model = Mage::getModel('api/user');
-                $model->setId($id);
+                $model = Mage::getModel('api/user')->load($id);
                 $model->delete();
                 Mage::getSingleton('adminhtml/session')->addSuccess($this->__('User was successfully deleted'));
                 $this->_redirect('*/*/');

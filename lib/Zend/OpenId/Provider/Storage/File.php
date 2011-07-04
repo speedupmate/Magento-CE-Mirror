@@ -16,9 +16,9 @@
  * @category   Zend
  * @package    Zend_OpenId
  * @subpackage Zend_OpenId_Provider
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: File.php 8456 2008-02-29 11:01:12Z dmitry $
+ * @version    $Id: File.php 16212 2009-06-21 19:24:49Z thomas $
  */
 
 /**
@@ -32,7 +32,7 @@
  * @category   Zend
  * @package    Zend_OpenId
  * @subpackage Zend_OpenId_Provider
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_OpenId_Provider_Storage_File extends Zend_OpenId_Provider_Storage
@@ -53,7 +53,7 @@ class Zend_OpenId_Provider_Storage_File extends Zend_OpenId_Provider_Storage
      */
     public function __construct($dir = null)
     {
-        if (is_null($dir)) {
+        if ($dir === null) {
             $tmp = getenv('TMP');
             if (empty($tmp)) {
                 $tmp = getenv('TEMP');
@@ -378,7 +378,7 @@ class Zend_OpenId_Provider_Storage_File extends Zend_OpenId_Provider_Storage
         if (!empty($data)) {
             list($storedId, $storedPassword, $sites) = unserialize($data);
             if ($id === $storedId) {
-                if (is_null($trusted)) {
+                if ($trusted === null) {
                     unset($sites[$site]);
                 } else {
                     $sites[$site] = $trusted;

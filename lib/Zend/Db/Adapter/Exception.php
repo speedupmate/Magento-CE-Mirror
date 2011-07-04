@@ -15,8 +15,9 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Exception.php 17860 2009-08-27 22:48:48Z beberlei $
  */
 
 /**
@@ -28,7 +29,7 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Db_Adapter_Exception extends Zend_Db_Exception
@@ -42,6 +43,11 @@ class Zend_Db_Adapter_Exception extends Zend_Db_Exception
             $this->code = $e->getCode();
         }
         parent::__construct($message);
+    }
+
+    public function hasChainedException()
+    {
+        return ($this->_chainedException!==null);
     }
 
     public function getChainedException()

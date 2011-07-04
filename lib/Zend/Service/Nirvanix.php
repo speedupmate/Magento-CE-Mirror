@@ -15,14 +15,10 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Nirvanix
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Nirvanix.php 18951 2009-11-12 16:26:19Z alexander $
  */
- 
-/**
- * @see Zend_Loader
- */
-#require_once 'Zend/Loader.php';
 
 /**
  * @see Zend_Http_Client
@@ -37,7 +33,7 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Nirvanix
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Nirvanix
@@ -49,7 +45,7 @@ class Zend_Service_Nirvanix
     protected $_options;
 
     /**
-     * Class constructor.  Authenticates with Nirvanix to receive a 
+     * Class constructor.  Authenticates with Nirvanix to receive a
      * sessionToken, which is then passed to each future request.
      *
      * @param  array  $authParams  Authentication POST parameters.  This
@@ -68,7 +64,7 @@ class Zend_Service_Nirvanix
         // login and save sessionToken to default POST params
         $resp = $this->getService('Authentication')->login($authParams);
         $this->_options['defaults']['sessionToken'] = (string)$resp->SessionToken;
-    }    
+    }
 
     /**
      * Nirvanix divides its service into namespaces, with each namespace
@@ -91,10 +87,13 @@ class Zend_Service_Nirvanix
         $options['namespace'] = ucfirst($namespace);
         $options = array_merge($this->_options, $options);
 
-        #Zend_Loader::loadClass($class);
+        if (!class_exists($class)) {
+            #require_once 'Zend/Loader.php';
+            Zend_Loader::loadClass($class);
+        }
         return new $class($options);
     }
-    
+
     /**
      * Get the configured options.
      *

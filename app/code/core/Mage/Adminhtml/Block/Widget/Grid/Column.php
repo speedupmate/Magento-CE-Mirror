@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -82,6 +82,9 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
             if ($this->hasData('column_css_class')) {
                 $this->_cssClass .= ' '. $this->getData('column_css_class');
             }
+            if ($this->getEditable()) {
+                $this->_cssClass .= ' editable';
+            }
         }
 
         return $this->_cssClass;
@@ -96,7 +99,7 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
     {
         $class = $this->getData('header_css_class');
         if (($this->getSortable()===false) || ($this->getGrid()->getSortable()===false)) {
-            $class .= 'no-link';
+            $class .= ' no-link';
         }
         if ($this->isLast()) {
             $class .= ' last';
@@ -110,9 +113,6 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
         if ($class = $this->getHeaderCssClass()) {
             $str.= ' class="'.$class.'"';
         }
-        if ($this->getEditable()) {
-            $str.= ' colspan="2"';
-        }
 
         return $str;
     }
@@ -125,7 +125,24 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
      */
     public function getRowField(Varien_Object $row)
     {
-        return $this->getRenderer()->render($row);
+        $renderedValue = $this->getRenderer()->render($row);
+        if ($this->getHtmlDecorators()) {
+            $renderedValue = $this->_applyDecorators($renderedValue, $this->getHtmlDecorators());
+        }
+
+        /*
+         * if column has determined callback for framing call
+         * it before give away rendered value
+         *
+         * callback_function($renderedValue, $row, $column, $isExport)
+         * should return new version of rendered value
+         */
+        $frameCallback = $this->getFrameCallback();
+        if (is_array($frameCallback)) {
+            $renderedValue = call_user_func($frameCallback, $renderedValue, $row, $this, false);
+        }
+
+        return $renderedValue;
     }
 
     /**
@@ -136,7 +153,49 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
      */
     public function getRowFieldExport(Varien_Object $row)
     {
-        return $this->getRenderer()->renderExport($row);
+        $renderedValue = $this->getRenderer()->renderExport($row);
+
+        /*
+         * if column has determined callback for framing call
+         * it before give away rendered value
+         *
+         * callback_function($renderedValue, $row, $column, $isExport)
+         * should return new version of rendered value
+         */
+        $frameCallback = $this->getFrameCallback();
+        if (is_array($frameCallback)) {
+            $renderedValue = call_user_func($frameCallback, $renderedValue, $row, $this, true);
+        }
+
+        return $renderedValue;
+    }
+
+    /**
+     * Decorate rendered cell value
+     *
+     * @param string $value
+     * @param array|string $decorators
+     * @return string
+     */
+    protected function &_applyDecorators($value, $decorators)
+    {
+        if (!is_array($decorators)) {
+            if (is_string($decorators)) {
+                $decorators = explode(' ', $decorators);
+            }
+        }
+        if ((!is_array($decorators)) || empty($decorators)) {
+            return $value;
+        }
+        switch (array_shift($decorators)) {
+            case 'nobr':
+                $value = '<span class="nobr">' . $value . '</span>';
+                break;
+        }
+        if (!empty($decorators)) {
+            return $this->_applyDecorators($value, $decorators);
+        }
+        return $value;
     }
 
     public function setRenderer($renderer)
@@ -205,6 +264,9 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
                 break;
             case 'wrapline':
                 $rendererClass = 'adminhtml/widget_grid_column_renderer_wrapline';
+                break;
+            case 'theme':
+                $rendererClass = 'adminhtml/widget_grid_column_renderer_theme';
                 break;
             default:
                 $rendererClass = 'adminhtml/widget_grid_column_renderer_text';
@@ -278,6 +340,9 @@ class Mage_Adminhtml_Block_Widget_Grid_Column extends Mage_Adminhtml_Block_Widge
                 break;
             case 'store':
                 $filterClass = 'adminhtml/widget_grid_column_filter_store';
+                break;
+            case 'theme':
+                $filterClass = 'adminhtml/widget_grid_column_filter_theme';
                 break;
             default:
                 $filterClass = 'adminhtml/widget_grid_column_filter_text';

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -154,19 +154,31 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
     {
         $xml = $this->getUpdate()->asSimplexml();
         $removeInstructions = $xml->xpath("//remove");
-        foreach ($removeInstructions as $infoNode) {
-            $attributes = $infoNode->attributes();
-            if ($acl = (string)$attributes->acl && !Mage::getSingleton('admin/session')->isAllowed($acl)) {
-                $block->addAttribute('ignore', true);
-            }
-            if ($blockName = (string)$attributes->name) {
-                $ignoreNodes = $xml->xpath("//block[@name='".$blockName."']");
-                foreach ($ignoreNodes as $block) {
-                    $block->addAttribute('ignore', true);
-                }
-                $ignoreNodes = $xml->xpath("//reference[@name='".$blockName."']");
-                foreach ($ignoreNodes as $block) {
-                    $block->addAttribute('ignore', true);
+
+        if (is_array($removeInstructions)) {
+            foreach ($removeInstructions as $infoNode) {
+                $attributes = $infoNode->attributes();
+                if ($blockName = (string)$attributes->name) {
+                    $ignoreNodes = $xml->xpath("//block[@name='".$blockName."']");
+                    if (!is_array($ignoreNodes)) {
+                        continue;
+                    }
+                    $ignoreReferences = $xml->xpath("//reference[@name='".$blockName."']");
+                    if (is_array($ignoreReferences)) {
+                        $ignoreNodes = array_merge($ignoreNodes, $ignoreReferences);
+                    }
+
+                    foreach ($ignoreNodes as $block) {
+                        if ($block->getAttribute('ignore') !== null) {
+                            continue;
+                        }
+                        if (($acl = (string)$attributes->acl) && Mage::getSingleton('admin/session')->isAllowed($acl)) {
+                            continue;
+                        }
+                        if (!isset($block->attributes()->ignore)) {
+                            $block->addAttribute('ignore', true);
+                        }
+                    }
                 }
             }
         }
@@ -318,7 +330,7 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
                          */
                         $arr = array();
                         foreach($arg as $subkey => $value) {
-                            $arr[(string)$subkey] = (string)$value;
+                            $arr[(string)$subkey] = $value->asArray();
                         }
                         if (!empty($arr)) {
                             $args[$key] = $arr;
@@ -330,7 +342,7 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
             if (isset($node['json'])) {
                 $json = explode(' ', (string)$node['json']);
                 foreach ($json as $arg) {
-                    $args[$arg] = Zend_Json::decode($args[$arg]);
+                    $args[$arg] = Mage::helper('core')->jsonDecode($args[$arg]);
                 }
             }
 
@@ -358,7 +370,7 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
                     $args[$arg] = Mage::helper((string)$node['module'])->__($args[$arg]);
                 }
                 else {
-                    $args[$arg] = __($args[$arg]);
+                    $args[$arg] = Mage::helper('core')->__($args[$arg]);
                 }
             }
         }
@@ -456,9 +468,7 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
                     Mage::throwException(Mage::helper('core')->__('Invalid block type: %s', $block));
                 }
             }
-            $fileName = mageFindClassFile($block);
-            if ($fileName!==false) {
-                //include_once ($fileName);
+            if (class_exists($block, false) || mageFindClassFile($block)) {
                 $block = new $block($attributes);
             }
         }
@@ -575,11 +585,40 @@ class Mage_Core_Model_Layout extends Varien_Simplexml_Config
      */
     public function helper($name)
     {
-        $helper = Mage::app()->getHelper($name);
+        $helper = Mage::helper($name);
         if (!$helper) {
             return false;
         }
         return $helper->setLayout($this);
+    }
+
+    /**
+     * Lookup module name for translation from current specified layout node
+     *
+     * Priorities:
+     * 1) "module" attribute in the element
+     * 2) "module" attribute in any ancestor element
+     * 3) layout handle name - first 1 or 2 parts (namespace is determined automatically)
+     *
+     * @param Varien_Simplexml_Element $node
+     * @return string
+     */
+    public static function findTranslationModuleName(Varien_Simplexml_Element $node)
+    {
+        if ($result = $node->getAttribute('module')) {
+            return (string)$result;
+        }
+        foreach (array_reverse($node->xpath('ancestor::*[@module]')) as $element) {
+            if ($result = $element->getAttribute('module')) {
+                return (string)$result;
+            }
+        }
+        foreach ($node->xpath('ancestor-or-self::*[last()-1]') as $handle) {
+            if ($name = Mage::getConfig()->determineOmittedNamespace($handle->getName())) {
+                return $name;
+            }
+        }
+        return 'core';
     }
 
     /*public function setBlockCache($frontend='Core', $backend='File',

@@ -42,15 +42,6 @@
                     </centinel>
                 </observers>
             </sales_convert_quote_to_order>
-            <sales_order_payment_place_end>
-                <observers>
-                    <centinel>
-                        <type>model</type>
-                        <class>centinel/observer</class>
-                        <method>salesOrderPaymentPlaceEnd</method>
-                    </centinel>
-                </observers>
-            </sales_order_payment_place_end>
         </events>
     </global>
     <frontend>
@@ -122,25 +113,6 @@
                 </centinel>
             </updates>
         </layout>
-        <acl>
-            <resources>
-                <admin>
-                    <children>
-                        <system>
-                            <children>
-                                <config>
-                                    <children>
-                                        <payment_services translate="title" module="payment">
-                                            <title>Payment Services</title>
-                                        </payment_services>
-                                    </children>
-                                </config>
-                            </children>
-                        </system>
-                    </children>
-                </admin>
-            </resources>
-        </acl>
     </adminhtml>
     <admin>
          <routers>
@@ -171,20 +143,6 @@
                             </centinel>
                         </validator>
                     </MC>
-                    <JCB>
-                        <validator>
-                            <centinel>
-                                <state>centinel/state_jcb</state>
-                            </centinel>
-                        </validator>
-                    </JCB>
-                    <MCI>
-                        <validator>
-                            <centinel>
-                                <state>centinel/state_mastercard</state>
-                            </centinel>
-                        </validator>
-                    </MCI>
                 </types>
             </cc>
         </payment>

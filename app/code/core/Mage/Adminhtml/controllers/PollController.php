@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -36,6 +36,8 @@ class Mage_Adminhtml_PollController extends Mage_Adminhtml_Controller_Action
 
     public function indexAction()
     {
+        $this->_title($this->__('CMS'))->_title($this->__('Polls'));
+
         $this->loadLayout();
         $this->_setActiveMenu('cms/poll');
         $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Poll Manager'), Mage::helper('adminhtml')->__('Poll Manager'));
@@ -46,10 +48,13 @@ class Mage_Adminhtml_PollController extends Mage_Adminhtml_Controller_Action
 
     public function editAction()
     {
+        $this->_title($this->__('CMS'))->_title($this->__('Polls'));
+
         $pollId     = $this->getRequest()->getParam('id');
         $pollModel  = Mage::getModel('poll/poll')->load($pollId);
 
         if ($pollModel->getId() || $pollId == 0) {
+            $this->_title($pollModel->getId() ? $pollModel->getPollTitle() : $this->__('New Poll'));
 
             Mage::register('poll_data', $pollModel);
 
@@ -170,6 +175,8 @@ class Mage_Adminhtml_PollController extends Mage_Adminhtml_Controller_Action
                 }
 
                 $pollModel->save();
+
+                Mage::register('current_poll_model', $pollModel);
 
                 $answersDelete = $this->getRequest()->getParam('deleteAnswer');
                 if( is_array($answersDelete) ) {

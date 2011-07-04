@@ -24,14 +24,8 @@
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-<div class="centinel">
-    <div class="authentication">
-        <iframe id="<?php echo $this->getContainerId() ?>" src="" style="display:none;"></iframe>
-    </div>
-</div>
+<iframe id="<?php echo $this->getContainerId() ?>" src="" style="width:99.5%; height:400px; position:relative; font-size:12px; background:#fff; font-weight:bold; white-space:nowrap; border:1px solid #ccc; display: none;" ></iframe>
 <button onclick="cardValidator.validate()" class="scalable" type="button"><span><?php echo $this->__('Start/Reset Validation...')?></span></button>
 <script type="text/javascript">
-//<![CDATA[
 cardValidator = new centinelValidator('<?php echo $this->getMethodCode() ?>', '<?php echo $this->getFrameUrl() ?>', '<?php echo $this->getContainerId() ?>');
-//]]>
 </script>

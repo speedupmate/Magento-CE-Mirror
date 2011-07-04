@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -31,7 +31,9 @@
  */
 class Mage_Catalog_Helper_Product extends Mage_Core_Helper_Url
 {
-    const XML_PATH_PRODUCT_URL_SUFFIX   = 'catalog/seo/product_url_suffix';
+    const XML_PATH_PRODUCT_URL_SUFFIX           = 'catalog/seo/product_url_suffix';
+    const XML_PATH_PRODUCT_URL_USE_CATEGORY     = 'catalog/seo/product_use_categories';
+    const XML_PATH_USE_PRODUCT_CANONICAL_TAG    = 'catalog/seo/product_canonical_tag';
 
     /**
      * Cache for product rewrite suffix
@@ -185,5 +187,16 @@ class Mage_Catalog_Helper_Product extends Mage_Core_Helper_Url
             $this->_productUrlSuffix[$storeId] = Mage::getStoreConfig(self::XML_PATH_PRODUCT_URL_SUFFIX, $storeId);
         }
         return $this->_productUrlSuffix[$storeId];
+    }
+
+    /**
+     * Check if <link rel="canonical"> can be used for product
+     *
+     * @param $store
+     * @return bool
+     */
+    public function canUseCanonicalTag($store = null)
+    {
+        return Mage::getStoreConfig(self::XML_PATH_USE_PRODUCT_CANONICAL_TAG, $store);
     }
 }

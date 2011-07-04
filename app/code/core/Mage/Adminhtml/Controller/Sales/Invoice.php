@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -55,10 +55,23 @@ class Mage_Adminhtml_Controller_Sales_Invoice extends Mage_Adminhtml_Controller_
     }
 
     /**
+     * Order grid
+     */
+    public function gridAction()
+    {
+        $this->loadLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/sales_invoice_grid')->toHtml()
+        );
+    }
+
+    /**
      * Invoices grid
      */
     public function indexAction()
     {
+        $this->_title($this->__('Sales'))->_title($this->__('Invoices'));
+
         $this->_initAction()
             ->_addContent($this->getLayout()->createBlock('adminhtml/sales_invoice'))
             ->renderLayout();
@@ -73,6 +86,23 @@ class Mage_Adminhtml_Controller_Sales_Invoice extends Mage_Adminhtml_Controller_
             $this->_forward('view', 'sales_order_invoice', null, array('come_from'=>'invoice'));
         } else {
             $this->_forward('noRoute');
+        }
+    }
+
+    /**
+     * Notify user
+     */
+    public function emailAction()
+    {
+        if ($invoiceId = $this->getRequest()->getParam('invoice_id')) {
+            if ($invoice = Mage::getModel('sales/order_invoice')->load($invoiceId)) {
+                $invoice->sendEmail();
+                $this->_getSession()->addSuccess(Mage::helper('sales')->__('Message was successfully sent'));
+                $this->_redirect('*/sales_invoice/view', array(
+                    'order_id'  => $invoice->getOrder()->getId(),
+                    'invoice_id'=> $invoiceId,
+                ));
+            }
         }
     }
 
@@ -115,4 +145,5 @@ class Mage_Adminhtml_Controller_Sales_Invoice extends Mage_Adminhtml_Controller_
     {
         return Mage::getSingleton('admin/session')->isAllowed('sales/invoice');
     }
+
 }

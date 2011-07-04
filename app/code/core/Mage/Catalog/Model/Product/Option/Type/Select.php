@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -116,11 +116,34 @@ class Mage_Catalog_Model_Product_Option_Type_Select extends Mage_Catalog_Model_P
         $result = '';
         if (!$this->_isSingleSelection()) {
             foreach (explode(',', $optionValue) as $_value) {
-                $result .= $option->getValueById($_value)->getTitle() . ', ';
+                if ($_result = $option->getValueById($_value)) {
+                    $result .= $_result->getTitle() . ', ';
+                } else {
+                    if ($this->getListener()) {
+                        $this->getListener()
+                                ->setHasError(true)
+                                ->setMessage(
+                                    Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                                );
+                        $result = '';
+                        break;
+                    }
+                }
             }
             $result = Mage::helper('core/string')->substr($result, 0, -2);
         } elseif ($this->_isSingleSelection()) {
-            $result = $option->getValueById($optionValue)->getTitle();
+            if ($_result = $option->getValueById($optionValue)) {
+                $result = $_result->getTitle();
+            } else {
+                if ($this->getListener()) {
+                    $this->getListener()
+                            ->setHasError(true)
+                            ->setMessage(
+                                Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                            );
+                }
+                $result = '';
+            }
         } else {
             $result = $optionValue;
         }
@@ -181,18 +204,39 @@ class Mage_Catalog_Model_Product_Option_Type_Select extends Mage_Catalog_Model_P
 
         if (!$this->_isSingleSelection()) {
             foreach(explode(',', $optionValue) as $value) {
-                $result += $this->_getChargableOptionPrice(
-                    $option->getValueById($value)->getPrice(),
-                    $option->getValueById($value)->getPriceType() == 'percent',
-                    $basePrice
-                );
+                if ($_result = $option->getValueById($value)) {
+                    $result += $this->_getChargableOptionPrice(
+                        $_result->getPrice(),
+                        $_result->getPriceType() == 'percent',
+                        $basePrice
+                    );
+                } else {
+                    if ($this->getListener()) {
+                        $this->getListener()
+                                ->setHasError(true)
+                                ->setMessage(
+                                    Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                                );
+                        break;
+                    }
+                }
             }
         } elseif ($this->_isSingleSelection()) {
-            $result = $this->_getChargableOptionPrice(
-                $option->getValueById($optionValue)->getPrice(),
-                $option->getValueById($optionValue)->getPriceType() == 'percent',
-                $basePrice
-            );
+            if ($_result = $option->getValueById($optionValue)) {
+                $result = $this->_getChargableOptionPrice(
+                    $_result->getPrice(),
+                    $_result->getPriceType() == 'percent',
+                    $basePrice
+                );
+            } else {
+                if ($this->getListener()) {
+                    $this->getListener()
+                            ->setHasError(true)
+                            ->setMessage(
+                                Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                            );
+                }
+            }
         }
 
         return $result;
@@ -212,13 +256,33 @@ class Mage_Catalog_Model_Product_Option_Type_Select extends Mage_Catalog_Model_P
         if (!$this->_isSingleSelection()) {
             $skus = array();
             foreach(explode(',', $optionValue) as $value) {
-                if ($optionSku = $option->getValueById($value)->getSku()) {
-                    $skus[] = $optionSku;
+                if ($optionSku = $option->getValueById($value)) {
+                    $skus[] = $optionSku->getSku();
+                } else {
+                    if ($this->getListener()) {
+                        $this->getListener()
+                                ->setHasError(true)
+                                ->setMessage(
+                                    Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                                );
+                        break;
+                    }
                 }
             }
             $result = implode($skuDelimiter, $skus);
         } elseif ($this->_isSingleSelection()) {
-            $result = $option->getValueById($optionValue)->getSku();
+            if ($result = $option->getValueById($optionValue)) {
+                return $result->getSku();
+            } else {
+                if ($this->getListener()) {
+                    $this->getListener()
+                            ->setHasError(true)
+                            ->setMessage(
+                                Mage::helper('catalog')->__('Some of the products below don\'t have all the required options. Please remove them and add again with all the required options.')
+                            );
+                }
+                return '';
+            }
         } else {
             $result = parent::getOptionSku($optionValue, $skuDelimiter);
         }

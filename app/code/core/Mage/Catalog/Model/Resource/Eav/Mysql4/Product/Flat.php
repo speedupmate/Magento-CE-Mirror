@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -53,7 +53,17 @@ class Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Flat
     }
 
     /**
-     * Set store scope for resource model
+     * Retrieve store for resource model
+     *
+     * @return int
+     */
+    public function getStoreId()
+    {
+        return $this->_storeId;
+    }
+
+    /**
+     * Set store for resource model
      *
      * @param mixed $store
      * @return Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Flat
@@ -72,8 +82,8 @@ class Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Flat
      */
     public function getFlatTableName($store = null)
     {
-        if (!is_numeric($store)) {
-            $store = Mage::app()->getStore($store)->getId();
+        if (is_null($store)) {
+            $store = $this->getStoreId();
         }
         return $this->getTable('catalog/product_flat') . '_' . $store;
     }
@@ -192,5 +202,15 @@ class Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Flat
     {
         return Mage::getSingleton('catalog/config')
             ->getAttribute('catalog_product', $attribute);
+    }
+
+    /**
+     * Retrieve main resource table name
+     *
+     * @return string
+     */
+    public function getMainTable()
+    {
+        return $this->getFlatTableName($this->getStoreId());
     }
 }

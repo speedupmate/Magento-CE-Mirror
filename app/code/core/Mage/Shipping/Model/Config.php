@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Shipping
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Shipping
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -41,7 +41,10 @@ class Mage_Shipping_Model_Config extends Varien_Object
         $config = Mage::getStoreConfig('carriers', $store);
         foreach ($config as $code => $carrierConfig) {
             if (Mage::getStoreConfigFlag('carriers/'.$code.'/active', $store)) {
-                $carriers[$code] = $this->_getCarrier($code, $carrierConfig, $store);
+                $carrierModel = $this->_getCarrier($code, $carrierConfig, $store);
+                if ($carrierModel) {
+                    $carriers[$code] = $carrierModel;
+                }
             }
         }
         return $carriers;
@@ -58,7 +61,10 @@ class Mage_Shipping_Model_Config extends Varien_Object
         $carriers = array();
         $config = Mage::getStoreConfig('carriers', $store);
         foreach ($config as $code => $carrierConfig) {
-            $carriers[$code] = $this->_getCarrier($code, $carrierConfig, $store);
+            $model = $this->_getCarrier($code, $carrierConfig, $store);
+            if ($model) {
+                $carriers[$code] = $model;
+            }
         }
         return $carriers;
     }
@@ -79,6 +85,14 @@ class Mage_Shipping_Model_Config extends Varien_Object
         return false;
     }
 
+    /**
+     * Get carrier model object
+     *
+     * @param string $code
+     * @param array $config
+     * @param mixed $store
+     * @return Mage_Shipping_Model_Carrier_Abstract
+     */
     protected function _getCarrier($code, $config, $store=null)
     {
 /*
@@ -90,7 +104,17 @@ class Mage_Shipping_Model_Config extends Varien_Object
             throw Mage::exception('Mage_Shipping', 'Invalid model for shipping method: '.$code);
         }
         $modelName = $config['model'];
-        $carrier = Mage::getModel($modelName);
+
+        /**
+         * Added protection from not existing models usage.
+         * Related with module uninstall process
+         */
+        try {
+            $carrier = Mage::getModel($modelName);
+        } catch (Exception $e) {
+            Mage::logException($e);
+            return false;
+        }
         $carrier->setId($code)->setStore($store);
         self::$_carriers[$code] = $carrier;
         return self::$_carriers[$code];

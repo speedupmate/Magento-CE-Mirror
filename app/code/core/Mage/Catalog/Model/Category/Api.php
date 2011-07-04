@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -121,18 +121,15 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      */
     public function tree($parentId = null, $store = null)
     {
-        $tree = Mage::getResourceSingleton('catalog/category_tree')
-                ->load();
-
         if (is_null($parentId) && !is_null($store)) {
             $parentId = Mage::app()->getStore($this->_getStoreId($store))->getRootCategoryId();
         } elseif (is_null($parentId)) {
             $parentId = 1;
         }
 
+        /* @var $tree Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Tree */
         $tree = Mage::getResourceSingleton('catalog/category_tree')
             ->load();
-        /* @var $tree Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Tree */
 
         $root = $tree->getNodeById($parentId);
 
@@ -236,7 +233,7 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      */
     public function create($parentId, $categoryData, $store = null)
     {
-        $parent_category = $this->_initCategory($parentId);
+        $parent_category = $this->_initCategory($parentId, $store);
         $category = Mage::getModel('catalog/category')
             ->setStoreId($this->_getStoreId($store));
 
@@ -392,16 +389,26 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      * @param int|string $productId
      * @return int
      */
-    protected function _getProductId($productId)
+    protected function _getProductId($productId, $identifierType = null)
     {
+        $loadByIdOnFalse = false;
+        if ($identifierType === null) {
+            $identifierType = 'sku';
+            $loadByIdOnFalse = true;
+        }
         $product = Mage::getModel('catalog/product');
 
-        $idBySku = $product->getIdBySku($productId);
-        if ($idBySku) {
-            $productId = $idBySku;
+        if ($identifierType == 'sku') {
+            $idBySku = $product->getIdBySku($productId);
+            if ($idBySku) {
+                $productId = $idBySku;
+            }
+            if ($idBySku || $loadByIdOnFalse) {
+                $product->load($productId);
+            }
+        } elseif ($identifierType == 'id') {
+            $product->load($productId);
         }
-
-        $product->load($productId);
 
         if (!$product->getId()) {
             $this->_fault('not_exists','Product not exists.');
@@ -449,7 +456,7 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      * @param int $position
      * @return boolean
      */
-    public function assignProduct($categoryId, $productId, $position = null)
+    public function assignProduct($categoryId, $productId, $position = null, $identifierType = null)
     {
         $category = $this->_initCategory($categoryId);
         $positions = $category->getProductsPosition();
@@ -475,11 +482,11 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      * @param int $position
      * @return boolean
      */
-    public function updateProduct($categoryId, $productId, $position = null)
+    public function updateProduct($categoryId, $productId, $position = null, $identifierType = null)
     {
         $category = $this->_initCategory($categoryId);
         $positions = $category->getProductsPosition();
-        $productId = $this->_getProductId($productId);
+        $productId = $this->_getProductId($productId, $identifierType);
         if (!isset($positions[$productId])) {
             $this->_fault('product_not_assigned');
         }
@@ -502,11 +509,11 @@ class Mage_Catalog_Model_Category_Api extends Mage_Catalog_Model_Api_Resource
      * @param int $productId
      * @return boolean
      */
-    public function removeProduct($categoryId, $productId)
+    public function removeProduct($categoryId, $productId, $identifierType = null)
     {
         $category = $this->_initCategory($categoryId);
         $positions = $category->getProductsPosition();
-        $productId = $this->_getProductId($productId);
+        $productId = $this->_getProductId($productId, $identifierType);
         if (!isset($positions[$productId])) {
             $this->_fault('product_not_assigned');
         }

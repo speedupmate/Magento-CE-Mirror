@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -45,17 +45,20 @@ class Mage_Adminhtml_Block_Widget_Form extends Mage_Adminhtml_Block_Widget
      * Class constructor
      *
      */
-    public function __construct()
+    protected function _construct()
     {
-        parent::__construct();
+        parent::_construct();
         $this->setTemplate('widget/form.phtml');
         $this->setDestElementId('edit_form');
         $this->setShowGlobalIcon(false);
     }
-
+    
     /**
-     * Prepare block children and data
+     * Preparing global layout
      *
+     * You can redefine this method in child classes for changin layout
+     *
+     * @return Mage_Core_Block_Abstract
      */
     protected function _prepareLayout()
     {
@@ -68,6 +71,8 @@ class Mage_Adminhtml_Block_Widget_Form extends Mage_Adminhtml_Block_Widget
         Varien_Data_Form::setFieldsetElementRenderer(
             $this->getLayout()->createBlock('adminhtml/widget_form_renderer_fieldset_element')
         );
+        
+        return parent::_prepareLayout();
     }
 
     /**
@@ -164,7 +169,7 @@ class Mage_Adminhtml_Block_Widget_Form extends Mage_Adminhtml_Block_Widget
         $this->_addElementTypes($fieldset);
         foreach ($attributes as $attribute) {
             /* @var $attribute Mage_Eav_Model_Entity_Attribute */
-            if (!$attribute || !$attribute->getIsVisible()) {
+            if (!$attribute || ($attribute->hasIsVisible() && !$attribute->getIsVisible())) {
                 continue;
             }
             if ( ($inputType = $attribute->getFrontend()->getInputType())
@@ -182,7 +187,7 @@ class Mage_Adminhtml_Block_Widget_Form extends Mage_Adminhtml_Block_Widget
                 $element = $fieldset->addField($attribute->getAttributeCode(), $fieldType,
                     array(
                         'name'      => $attribute->getAttributeCode(),
-                        'label'     => __($attribute->getFrontend()->getLabel()),
+                        'label'     => $attribute->getFrontend()->getLabel(),
                         'class'     => $attribute->getFrontend()->getClass(),
                         'required'  => $attribute->getIsRequired(),
                         'note'      => $attribute->getNote(),

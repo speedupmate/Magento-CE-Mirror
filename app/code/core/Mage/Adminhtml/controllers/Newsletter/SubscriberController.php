@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -36,6 +36,8 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
 
     public function indexAction()
     {
+        $this->_title($this->__('Newsletter'))->_title($this->__('Newsletter Subscribers'));
+
         if ($this->getRequest()->getParam('ajax')) {
             $this->_forward('grid');
             return;
@@ -70,7 +72,7 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
     {
         $fileName   = 'subscribers.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -82,7 +84,7 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
     {
         $fileName   = 'subscribers.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')
-            ->getXml();
+            ->getExcelFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -117,6 +119,31 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
                 Mage::getSingleton('adminhtml/session')->addSuccess(
                     Mage::helper('adminhtml')->__(
                         'Total of %d record(s) were successfully updated', count($subscribersIds)
+                    )
+                );
+            } catch (Exception $e) {
+                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            }
+        }
+
+        $this->_redirect('*/*/index');
+    }
+
+    public function massDeleteAction()
+    {
+        $subscribersIds = $this->getRequest()->getParam('subscriber');
+        if (!is_array($subscribersIds)) {
+             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('newsletter')->__('Please select subscriber(s)'));
+        }
+        else {
+            try {
+                foreach ($subscribersIds as $subscriberId) {
+                    $subscriber = Mage::getModel('newsletter/subscriber')->load($subscriberId);
+                    $subscriber->delete();
+                }
+                Mage::getSingleton('adminhtml/session')->addSuccess(
+                    Mage::helper('adminhtml')->__(
+                        'Total of %d record(s) were deleted', count($subscribersIds)
                     )
                 );
             } catch (Exception $e) {

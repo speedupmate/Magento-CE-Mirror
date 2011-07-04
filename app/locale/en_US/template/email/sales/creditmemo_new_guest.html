@@ -1,8 +1,21 @@
-<!--@subject {{var order.getStoreGroupName()}}: Credit Memo # {{var creditmemo.increment_id}} for Order # {{var order.increment_id}} @-->
-
-<style type="text/css">
-    body,td { color:#2f2f2f; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; }
-</style>
+<!--@subject {{var store.getFrontendName()}}: Credit Memo # {{var creditmemo.increment_id}} for Order # {{var order.increment_id}} @-->
+<!--@vars
+{"store url=\"\"":"Store Url",
+"skin url=\"images/logo_email.gif\" _area='frontend'":"Email Logo Image",
+"htmlescape var=$billing.getName()":"Guest Customer Name (Billing)",
+"var store.getFrontendName()":"Store Name",
+"var creditmemo.increment_id":"Credit Memo Id",
+"var order.increment_id":"Order Id",
+"var order.billing_address.format('html')":"Billing Address",
+"var payment_html":"Payment Details",
+"var order.shipping_address.format('html')":"Shipping Address",
+"var order.shipping_description":"Shipping Description",
+"layout handle=\"sales_email_order_creditmemo_items\" creditmemo=$creditmemo order=$order":"Credit Memo Items Grid",
+"var comment":"Credit Memo Comment"}
+@-->
+<!--@styles
+body,td { color:#2f2f2f; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; }
+@-->
 
 <div style="font:11px/1.35em Verdana, Arial, Helvetica, sans-serif;">
 <table cellspacing="0" cellpadding="0" border="0" width="98%" style="margin-top:10px; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; margin-bottom:10px;">
@@ -11,7 +24,7 @@
         <!-- [ header starts here] -->
         <table cellspacing="0" cellpadding="0" border="0" width="650">
             <tr>
-                <td valign="top"><a href="{{store url=""}}"><img src="{{skin url="images/logo_email.gif" _area='frontend'}}" alt="Magento"  style="margin-bottom:10px;" border="0"/></a></td>
+                <td valign="top"><a href="{{store url=""}}"><img src="{{skin url="images/logo_email.gif" _area='frontend'}}" alt="{{var store.getFrontendName()}}"  style="margin-bottom:10px;" border="0"/></a></td>
             </tr>
         </table>
         <!-- [ middle starts here] -->
@@ -20,8 +33,8 @@
                 <td valign="top">
                     <p>
                         <strong>Hello {{htmlescape var=$billing.getName()}}</strong>,<br/>
-                        Thank you for your order from {{var order.getStoreGroupName()}}.
-                        If you have any questions about your order please contact us at <a href="mailto:dummyemail@magentocommerce.com" style="color:#1E7EC8;">dummyemail@magentocommerce.com</a> or call us at <span class="nobr">(555) 555-0123</span> Monday - Friday, 8am - 5pm PST.
+                        Thank you for your order from {{var store.getFrontendName()}}.
+                        If you have any questions about your order please contact us at <a href="mailto:{{config path='trans_email/ident_support/email'}}" style="color:#1E7EC8;">{{config path='trans_email/ident_support/email'}}</a> or call us at <span class="nobr">{{config path='general/store_information/phone'}}</span> Monday - Friday, 8am - 5pm PST.
                     </p>
                     <h3 style="border-bottom:2px solid #eee; font-size:1.05em; padding-bottom:1px; ">
                         Your Credit Memo #{{var creditmemo.increment_id}} for Order #{{var order.increment_id}}
@@ -77,7 +90,7 @@
 
                     <p>{{var comment}}</p>
                     <p>
-                        Thank you again,<br/><strong>{{var order.getStoreGroupName()}}</strong>
+                        Thank you again,<br/><strong>{{var store.getFrontendName()}}</strong>
                     </p>
                 </td>
             </tr>

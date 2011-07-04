@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -104,12 +104,12 @@ class Mage_Sales_Block_Items_Abstract extends Mage_Core_Block_Template
     }
 
     /**
-     * Get item row html
+     * Return product type for quote/order item
      *
-     * @param   Varien_Object $item
-     * @return  string
+     * @param Varien_Object $item
+     * @return string
      */
-    public function getItemHtml(Varien_Object $item)
+    protected function _getItemType(Varien_Object $item)
     {
         if ($item->getOrderItem()) {
             $type = $item->getOrderItem()->getProductType();
@@ -118,6 +118,18 @@ class Mage_Sales_Block_Items_Abstract extends Mage_Core_Block_Template
         } else {
             $type = $item->getProductType();
         }
+        return $type;
+    }
+
+    /**
+     * Get item row html
+     *
+     * @param   Varien_Object $item
+     * @return  string
+     */
+    public function getItemHtml(Varien_Object $item)
+    {
+        $type = $this->_getItemType($item);
 
         $block = $this->getItemRenderer($type)
             ->setItem($item);

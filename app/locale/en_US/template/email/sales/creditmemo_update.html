@@ -1,5 +1,18 @@
-<!--@subject {{var order.getStoreGroupName()}}: Credit Memo # {{var creditmemo.increment_id}} update @-->
-<style type="text/css">body,td { color:#2f2f2f; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; }</style>
+<!--@subject {{var store.getFrontendName()}}: Credit Memo # {{var creditmemo.increment_id}} update @-->
+<!--@vars
+{"store url=\"\"":"Store Url",
+"skin url=\"images/logo_email.gif\" _area='frontend'":"Email Logo Image",
+"htmlescape var=$order.getCustomerName()":"Customer Name",
+"var order.increment_id":"Order Id",
+"var order.getStatusLabel()":"Order Status",
+"store url=\"customer/account/\"":"Customer Account Url",
+"var comment":"Credit Memo Comment",
+"var store.getFrontendName()":"Store Name"}
+@-->
+<!--@styles
+body,td { color:#2f2f2f; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; }
+@-->
+
 <div style="font:11px/1.35em Verdana, Arial, Helvetica, sans-serif;">
 <table cellspacing="0" cellpadding="0" border="0" width="98%" style="margin-top:10px; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; margin-bottom:10px;">
 <tr>
@@ -7,7 +20,7 @@
         <!-- [ header starts here] -->
         <table cellspacing="0" cellpadding="0" border="0" width="650">
         <tr>
-            <td valign="top"><a href="{{store url=""}}"><img src="{{skin url="images/logo_email.gif" _area='frontend'}}" alt="Magento"  style="margin-bottom:10px;" border="0"/></a></td>
+            <td valign="top"><a href="{{store url=""}}"><img src="{{skin url="images/logo_email.gif" _area='frontend'}}" alt="{{var store.getFrontendName()}}"  style="margin-bottom:10px;" border="0"/></a></td>
         </tr>
         </table>
 
@@ -24,10 +37,10 @@
                 <p>{{var comment}}</p>
                 <p>
                     If you have any questions, please feel free to contact us at
-                    <a href="mailto:magento@varien.com" style="color:#1E7EC8;">dummyemail@magentocommerce.com</a>
-                    or by phone at (555) 555-0123.
+                    <a href="mailto:{{config path='trans_email/ident_support/email'}}" style="color:#1E7EC8;">{{config path='trans_email/ident_support/email'}}</a>
+                    or by phone at {{config path='general/store_information/phone'}}.
                 </p>
-                <p>Thank you again,<br/><strong>{{var order.getStoreGroupName()}}</strong></p>
+                <p>Thank you again,<br/><strong>{{var store.getFrontendName()}}</strong></p>
             </td>
         </tr>
         </table>

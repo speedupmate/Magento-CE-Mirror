@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
 var giftMessagesController = {
@@ -27,6 +29,13 @@ var giftMessagesController = {
         if(!$(source).value.blank()) {
             objects.each(function(item) {
                $(item).addClassName('required-entry');
+               var label = findFieldLabel($(item));
+               if (label) {
+                   var span = label.down('span');
+                   if (!span) {
+                       Element.insert(label, {bottom: '&nbsp;<span class="required">*</span>'});
+                   }
+               }
             });
         } else {
             objects.each(function(item) {
@@ -34,6 +43,13 @@ var giftMessagesController = {
                     $(source).formObj.validator.reset(item);
                 }
                 $(item).removeClassName('required-entry');
+                var label = findFieldLabel($(item));
+                if (label) {
+                    var span = label.down('span');
+                    if (span) {
+                        Element.remove(span);
+                    }
+                }
             });
         }
     },
@@ -108,4 +124,19 @@ var giftMessagesController = {
         return container + '_' + name;
     }
 };
+
+function findFieldLabel(field) {
+    var tdField = $(field).up('td');
+    if (tdField) {
+       var tdLabel = tdField.previous('td');
+       if (tdLabel) {
+           var label = tdLabel.down('label');
+           if (label) {
+               return label;
+           }
+       }
+    }
+
+    return false;
+}
 

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Sales
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 $installer = $this;
 /* @var $installer Mage_Sales_Model_Entity_Setup */
@@ -50,12 +50,14 @@ $installer->getConnection()->dropColumn($this->getTable('sales_quote_temp_int'),
 $installer->getConnection()->dropColumn($this->getTable('sales_quote_temp_text'), 'store_id');
 $installer->getConnection()->dropColumn($this->getTable('sales_quote_temp_varchar'), 'store_id');
 
-$installer->run("
-ALTER TABLE {$this->getTable('sales_order_entity')}
-    ADD CONSTRAINT `FK_SALE_ORDER_ENTITY_STORE` FOREIGN KEY `FK_SALE_ORDER_ENTITY_STORE` (`store_id`)
-    REFERENCES {$this->getTable('core_store')} (`store_id`)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE;
-");
+$installer->getConnection()->addConstraint(
+    'SALE_ORDER_ENTITY_STORE', 
+    $this->getTable('sales_order_entity'),
+    'store_id',
+    $this->getTable('core_store'),
+    'store_id',
+    'SET NULL'
+);
+
 $installer->installEntities();
 $installer->endSetup();

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_CatalogSearch
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_CatalogSearch
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -81,8 +81,10 @@ class Mage_CatalogSearch_Helper_Data extends Mage_Core_Helper_Abstract
     {
         if (!$this->_query) {
             $this->_query = Mage::getModel('catalogsearch/query')
-                ->loadByQuery($this->getQueryText())
-                ->setQueryText($this->getQueryText());
+                ->loadByQuery($this->getQueryText());
+            if (!$this->_query->getId()) {
+                $this->_query->setQueryText($this->getQueryText());
+            }
         }
         return $this->_query;
     }
@@ -152,16 +154,18 @@ class Mage_CatalogSearch_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
-     * Retrieve result page url
+     * Retrieve result page url and set "secure" param to avoid confirm
+     * message when we submit form from secure page to unsecure
      *
      * @param   string $query
      * @return  string
      */
     public function getResultUrl($query = null)
     {
-        return $this->_getUrl('catalogsearch/result', array('_query' => array(
-            self::QUERY_VAR_NAME => $query
-        )));
+        return $this->_getUrl('catalogsearch/result', array(
+            '_query' => array(self::QUERY_VAR_NAME => $query),
+            '_secure' => Mage::app()->getFrontController()->getRequest()->isSecure()
+        ));
     }
 
     /**

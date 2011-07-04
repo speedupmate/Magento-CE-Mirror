@@ -18,12 +18,12 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
- 
+
 /**
  * Installation ending block
  *
@@ -31,12 +31,12 @@
  */
 class Mage_Install_Block_End extends Mage_Install_Block_Abstract
 {
-    public function __construct() 
+    public function __construct()
     {
         parent::__construct();
         $this->setTemplate('install/end.phtml');
     }
-    
+
     public function getEncryptionKey()
     {
         $key = $this->getData('encryption_key');
@@ -45,5 +45,20 @@ class Mage_Install_Block_End extends Mage_Install_Block_Abstract
             $this->setData('encryption_key', $key);
         }
         return $key;
+    }
+
+    /**
+     * Return url for iframe source
+     *
+     * @return string
+     */
+    public function getIframeSourceUrl()
+    {
+        if (!Mage_AdminNotification_Model_Survey::isSurveyUrlValid()
+            || Mage::getSingleton('install/installer')->getHideIframe())
+        {
+            return null;
+        }
+        return Mage_AdminNotification_Model_Survey::getSurveyUrl();
     }
 }

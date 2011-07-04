@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Shipping
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Shipping
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -120,10 +120,18 @@ class Mage_Shipping_Model_Mysql4_Carrier_Tablerate extends Mage_Core_Model_Mysql
         return $row;
     }
 
-
+    /**
+     * Upload table rate file and import data from it
+     *
+     * @param Varien_Object $object
+     * @return bool|Mage_Shipping_Model_Mysql4_Carrier_Tablerate
+     */
     public function uploadAndImport(Varien_Object $object)
     {
-        $csvFile = $_FILES["groups"]["tmp_name"]["tablerate"]["fields"]["import"]["value"];
+        if (!isset($_FILES['groups'])) {
+            return false;
+        }
+        $csvFile = $_FILES['groups']['tmp_name']['tablerate']['fields']['import']['value'];
 
         if (!empty($csvFile)) {
 
@@ -261,6 +269,7 @@ class Mage_Shipping_Model_Mysql4_Carrier_Tablerate extends Mage_Core_Model_Mysql
                 }
             }
         }
+        return $this;
     }
 
     protected function _getCsvValues($string, $separator=",")

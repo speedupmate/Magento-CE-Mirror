@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_CatalogInventory
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_CatalogInventory
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -79,10 +79,23 @@ class Mage_CatalogInventory_Model_Mysql4_Stock_Item extends Mage_Core_Model_Mysq
     public function addCatalogInventoryToProductCollection($productCollection)
     {
         $isStockManagedInConfig = (int) Mage::getStoreConfig(Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK);
+        $inventoryTable = $this->getTable('cataloginventory/stock_item');
         $productCollection->joinTable('cataloginventory/stock_item',
             'product_id=entity_id',
             array(
-                'is_saleable' => new Zend_Db_Expr('(IF(IF(use_config_manage_stock, ' . $isStockManagedInConfig . ', manage_stock), is_in_stock, 1))'),
+                'is_saleable' => new Zend_Db_Expr(
+                    "(
+                        IF(
+                            IF(
+                                $inventoryTable.use_config_manage_stock,
+                                 $isStockManagedInConfig,
+                                $inventoryTable.manage_stock
+                            ), 
+                            $inventoryTable.is_in_stock,
+                            1
+                        )
+                     )"
+            ),
                 'inventory_in_stock' => 'is_in_stock'
             ),
             null, 'left');

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Payment
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Payment
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -49,7 +49,11 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
             ->setCcNumber($data->getCcNumber())
             ->setCcCid($data->getCcCid())
             ->setCcExpMonth($data->getCcExpMonth())
-            ->setCcExpYear($data->getCcExpYear());
+            ->setCcExpYear($data->getCcExpYear())
+            ->setCcSsIssue($data->getCcSsIssue())
+            ->setCcSsStartMonth($data->getCcSsStartMonth())
+            ->setCcSsStartYear($data->getCcSsStartYear())
+            ;
         return $this;
     }
 
@@ -95,10 +99,7 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
 
         $ccType = '';
 
-        if (!$this->_validateExpDate($info->getCcExpYear(), $info->getCcExpMonth())) {
-            $errorCode = 'ccsave_expiration,ccsave_expiration_yr';
-            $errorMsg = $this->_getHelper()->__('Incorrect credit card expiration date');
-        }
+
 
         if (in_array($info->getCcType(), $availableTypes)){
             if ($this->validateCcNum($ccNumber)
@@ -137,8 +138,8 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
             $errorMsg = $this->_getHelper()->__('Credit card type is not allowed for this payment method');
         }
 
-								//validate credit card verification number
-        if ($errorMsg === false && $this->hasVerification()) {
+        //validate credit card verification number
+        if ($errorMsg === false && $this->hasVerification() && $ccType != 'SS') {
             $verifcationRegEx = $this->getVerificationRegEx();
             $regExp = isset($verifcationRegEx[$info->getCcType()]) ? $verifcationRegEx[$info->getCcType()] : '';
             if (!$info->getCcCid() || !$regExp || !preg_match($regExp ,$info->getCcCid())){
@@ -151,6 +152,11 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
             //throw Mage::exception('Mage_Payment', $errorMsg, $errorCode);
         }
 
+        if ($ccType != 'SS' && !$this->_validateExpDate($info->getCcExpYear(), $info->getCcExpMonth())) {
+            $errorCode = 'ccsave_expiration,ccsave_expiration_yr';
+            $errorMsg = $this->_getHelper()->__('Incorrect credit card expiration date');
+        }
+
         //This must be after all validation conditions
         if ($this->getIsCentinelValidationEnabled()) {
             $this->getCentinelValidator()->validate($this->getCentinelValidationData());
@@ -159,7 +165,7 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
         return $this;
     }
 
-				public function hasVerification()
+    public function hasVerification()
     {
         $configData = $this->getConfigData('useccv');
         if(is_null($configData)){
@@ -168,16 +174,15 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
         return (bool) $configData;
     }
 
-				public function getVerificationRegEx()
+    public function getVerificationRegEx()
     {
         $verificationExpList = array(
             'VI' => '/^[0-9]{3}$/', // Visa
             'MC' => '/^[0-9]{3}$/',       // Master Card
             'AE' => '/^[0-9]{4}$/',        // American Express
             'DI' => '/^[0-9]{3}$/',          // Discovery
-            'SS' => '/^[0-9]{4}$/',
-            'OT' => '/^[0-9]{3,4}$/',
-            'JCB' => '/^[0-9]{4}$/' //JCB
+            'SS' => '/^[0-9]{3,4}$/',
+            'OT' => '/^[0-9]{3,4}$/'
         );
         return $verificationExpList;
     }
@@ -244,6 +249,17 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
     public function validateCcNumOther($ccNumber)
     {
         return preg_match('/^\\d+$/', $ccNumber);
+    }
+
+    /**
+     * Check whether there are CC types set in configuration
+     *
+     * @return bool
+     */
+    public function isAvailable($quote = null)
+    {
+        return $this->getConfigData('cctypes', ($quote ? $quote->getStoreId() : null))
+            && parent::isAvailable($quote);
     }
 
     /**
@@ -358,3 +374,5 @@ class Mage_Payment_Model_Method_Cc extends Mage_Payment_Model_Method_Abstract
         }
     }
 }
+
+

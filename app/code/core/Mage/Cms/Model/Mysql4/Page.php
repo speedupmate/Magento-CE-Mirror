@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Cms
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Cms
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -34,6 +34,13 @@
 
 class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
 {
+    /**
+     * Store model
+     *
+     * @var null|Mage_Core_Model_Store
+     */
+    protected $_store = null;
+
     /**
      * Initialize resource model
      */
@@ -49,24 +56,24 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
      */
     protected function _beforeSave(Mage_Core_Model_Abstract $object)
     {
-        $format = Mage::app()->getLocale()->getDateFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT);
+        /*
+         * For two attributes which represent datetime data in DB
+         * we should make converting such as:
+         * If they are empty we need to convert them into DB
+         * type NULL so in DB they will be empty and not some default value.
+         */
         foreach (array('custom_theme_from', 'custom_theme_to') as $dataKey) {
-            if ($date = $object->getData($dataKey)) {
-                $object->setData($dataKey, Mage::app()->getLocale()->date($date, $format, null, false)
-                    ->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
-                );
-            }
-            else {
+            if (!$object->getData($dataKey)) {
                 $object->setData($dataKey, new Zend_Db_Expr('NULL'));
             }
         }
 
         if (!$this->getIsUniquePageToStores($object)) {
-            Mage::throwException(Mage::helper('cms')->__('Page Identifier for specified store already exist.'));
+            Mage::throwException(Mage::helper('cms')->__('Page URL Key for specified store already exist.'));
         }
 
         if ($this->isNumericPageIdentifier($object)) {
-            Mage::throwException(Mage::helper('cms')->__('Page Identifier cannot consist only of numbers.'));
+            Mage::throwException(Mage::helper('cms')->__('Page URL Key cannot consist only of numbers.'));
         }
 
         if (! $object->getId()) {
@@ -142,7 +149,7 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
                         array('cps' => $this->getTable('cms/page_store')),
                         $this->getMainTable().'.page_id = `cps`.page_id'
                     )
-                    ->where('is_active=1 AND `cps`.store_id in (0, ?) ', $object->getStoreId())
+                    ->where('is_active=1 AND `cps`.store_id in (' . Mage_Core_Model_App::ADMIN_STORE_ID . ', ?) ', $object->getStoreId())
                     ->order('store_id DESC')
                     ->limit(1);
         }
@@ -164,7 +171,11 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
         if ($object->getId()) {
             $select->where($this->getMainTable().'.page_id <> ?',$object->getId());
         }
-        $select->where('`cps`.store_id IN (?)', (array)$object->getData('stores'));
+        $stores = (array)$object->getData('stores');
+        if (Mage::app()->isSingleStoreMode()) {
+            $stores = array(Mage_Core_Model_App::ADMIN_STORE_ID);
+        }
+        $select->where('`cps`.store_id IN (?)', $stores);
 
         if ($this->_getWriteAdapter()->fetchRow($select)) {
             return false;
@@ -177,8 +188,8 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
      *  Check whether page identifier is numeric
      *
      *  @param    Mage_Core_Model_Abstract $object
-     *  @return	  bool
-     *  @date	  Wed Mar 26 18:12:28 EET 2008
+     *  @return      bool
+     *  @date      Wed Mar 26 18:12:28 EET 2008
      */
     protected function isNumericPageIdentifier (Mage_Core_Model_Abstract $object)
     {
@@ -201,9 +212,59 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
                 'main_table.page_id = `cps`.page_id'
             )
             ->where('main_table.identifier=?', $identifier)
-            ->where('main_table.is_active=1 AND `cps`.store_id in (0, ?) ', $storeId)
+            ->where('main_table.is_active=1 AND `cps`.store_id in (' . Mage_Core_Model_App::ADMIN_STORE_ID . ', ?) ', $storeId)
             ->order('store_id DESC');
 
+        return $this->_getReadAdapter()->fetchOne($select);
+    }
+
+    /**
+     * Retrieves cms page title from DB by passed identifier.
+     *
+     * @param string $identifier
+     * @return string|false
+     */
+    public function getCmsPageTitleByIdentifier($identifier)
+    {
+        $select = $this->_getReadAdapter()->select();
+        /* @var $select Zend_Db_Select */
+        $joinExpr = $this->_getReadAdapter()->quoteInto(
+            'main_table.page_id = cps.page_id AND (cps.store_id = ' . Mage_Core_Model_App::ADMIN_STORE_ID . ' OR cps.store_id = ?)', $this->getStore()->getId()
+        );
+        $select->from(array('main_table' => $this->getMainTable()), 'title')
+        ->joinLeft(array('cps' => $this->getTable('cms/page_store')), $joinExpr ,array())
+            ->where('main_table.identifier = ?', $identifier)
+            ->order('cps.store_id DESC');
+        return $this->_getReadAdapter()->fetchOne($select);
+    }
+
+    /**
+     * Retrieves cms page title from DB by passed id.
+     *
+     * @param string $id
+     * @return string|false
+     */
+    public function getCmsPageTitleById($id)
+    {
+        $select = $this->_getReadAdapter()->select();
+        /* @var $select Zend_Db_Select */
+        $select->from(array('main_table' => $this->getMainTable()), 'title')
+            ->where('main_table.page_id = ?', $id);
+        return $this->_getReadAdapter()->fetchOne($select);
+    }
+
+    /**
+     * Retrieves cms page identifier from DB by passed id.
+     *
+     * @param string $id
+     * @return string|false
+     */
+    public function getCmsPageIdentifierById($id)
+    {
+        $select = $this->_getReadAdapter()->select();
+        /* @var $select Zend_Db_Select */
+        $select->from(array('main_table' => $this->getMainTable()), 'identifier')
+            ->where('main_table.page_id = ?', $id);
         return $this->_getReadAdapter()->fetchOne($select);
     }
 
@@ -219,5 +280,27 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
             ->from($this->getTable('cms/page_store'), 'store_id')
             ->where("{$this->getIdFieldName()} = ?", $id)
         );
+    }
+
+    /**
+     * Set store model
+     *
+     * @param Mage_Core_Model_Store $store
+     * @return Mage_Cms_Model_Mysql4_Page
+     */
+    public function setStore($store)
+    {
+        $this->_store = $store;
+        return $this;
+    }
+
+    /**
+     * Retrieve store model
+     *
+     * @return Mage_Core_Model_Store
+     */
+    public function getStore()
+    {
+        return Mage::app()->getStore($this->_store);
     }
 }

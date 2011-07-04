@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -45,7 +45,7 @@ class Mage_Sales_Model_Mysql4_Quote_Payment extends Mage_Sales_Model_Mysql4_Abst
      */
     protected function _beforeSave(Mage_Core_Model_Abstract $payment)
     {
-        $additionalInformation = $payment->getData('additional_information');
+        $additionalInformation = $payment->getData('additional_information');        
         if (empty($additionalInformation)) {
             $payment->setData('additional_information', null);
         } elseif (is_array($additionalInformation)) {
@@ -89,4 +89,5 @@ class Mage_Sales_Model_Mysql4_Quote_Payment extends Mage_Sales_Model_Mysql4_Abst
             $payment->setData('additional_information', unserialize($additionalInformation));
         }
     }
+    
 }

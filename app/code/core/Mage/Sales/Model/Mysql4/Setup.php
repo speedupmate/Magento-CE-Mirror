@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Sales
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -143,6 +143,7 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'customer_is_guest' => array('type'=>'static'),
                     'customer_taxvat'   => array('type'=>'static'),
                     'customer_dob'      => array('type'=>'static'),
+                    'customer_gender'   => array('type'=>'static'),
                 ),
             ),
 
@@ -343,7 +344,6 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
 
                     'coupon_code'       => array(),
                     'applied_rule_ids'  => array(),
-                    'giftcert_code'     => array(),
 
                     'global_currency_code'   => array(),
                     'base_currency_code'    => array(),
@@ -364,7 +364,6 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'shipping_amount'   => array('type'=>'static'),
                     'shipping_tax_amount'   => array('type'=>'static'),
                     'discount_amount'   => array('type'=>'static'),
-                    'giftcert_amount'   => array('type'=>'decimal'),
 
                     'subtotal'          => array('type'=>'static'),
                     'grand_total'       => array('type'=>'static'),
@@ -383,7 +382,6 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'base_shipping_amount'   => array('type'=>'static'),
                     'base_shipping_tax_amount'   => array('type'=>'static'),
                     'base_discount_amount'   => array('type'=>'static'),
-                    'base_giftcert_amount'   => array('type'=>'decimal'),
 
                     'base_subtotal'          => array('type'=>'static'),
                     'base_grand_total'       => array('type'=>'static'),
@@ -423,6 +421,8 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'base_shipping_canceled'     => array('type'=>'static'),
                     'base_shipping_invoiced'     => array('type'=>'static'),
 
+                    'protect_code' => array('type' => 'static'),
+
                     'customer_id'       => array('type'=>'static', 'visible'=>false),
                     'customer_group_id' => array('type'=>'int', 'visible'=>false),
                     'customer_email'    => array('type'=>'varchar', 'visible'=>false),
@@ -437,6 +437,7 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'email_sent' => array('type'=>'int', 'visible'=>false),
                     'customer_taxvat'   => array('type'=>'varchar', 'visible'=>false),
                     'customer_dob'      => array('type'=>'datetime', 'backend'=>'eav/entity_attribute_backend_datetime'),
+                    'customer_gender'   => array('type'=>'int', 'visible'=>false),
                 ),
             ),
             'order_address' => array(
@@ -581,8 +582,10 @@ class Mage_Sales_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup
                     'base_amount_ordered'    => array('type'=>'decimal'),
                     'base_amount_authorized' => array('type'=>'decimal'),
                     'base_amount_paid'       => array('type'=>'decimal'),
+                    'base_amount_paid_online' => array('type'=>'decimal'),
                     'base_amount_canceled'   => array('type'=>'decimal'),
                     'base_amount_refunded'   => array('type'=>'decimal'),
+                    'base_amount_refunded_online' => array('type'=>'decimal'),
                     'base_shipping_amount'   => array('type'=>'decimal'),
                     'base_shipping_captured' => array('type'=>'decimal'),
                     'base_shipping_refunded' => array('type'=>'decimal'),

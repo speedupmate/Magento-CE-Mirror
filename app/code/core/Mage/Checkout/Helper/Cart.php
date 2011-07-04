@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -31,6 +31,8 @@
  */
 class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
 {
+    const XML_PATH_REDIRECT_TO_CART         = 'checkout/cart/redirect_to_cart';
+
     /**
      * Retrieve cart instance
      *
@@ -49,42 +51,29 @@ class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
      */
     public function getAddUrl($product, $additional = array())
     {
-        /**
-         * Identify continue shopping url
-         */
-//        if ($currentProduct = Mage::registry('current_product')) {
-//            /**
-//             * go to product view page
-//            */
-//            $continueShoppingUrl = $currentProduct->getProductUrl();
-//        } elseif ($currentCategory = Mage::registry('current_category')) {
-//            /**
-//             * go to category view page
-//             */
-//
-//            $continueShoppingUrl = $currentCategory->getUrl().(count($this->_getRequest()->getQuery())!=0?'?'.http_build_qu//ery($this->_getRequest()->getQuery(), '', '&amp;'):'');
-//
-//       } else {
-//            $continueShoppingUrl = $this->_getUrl('*/*/*', array('_current'=>true));
-//        }
+        $continueUrl    = Mage::helper('core')->urlEncode($this->getCurrentUrl());
+        $urlParamName   = Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED;
 
-		$continueShoppingUrl = $this->getCurrentUrl();
-
-        $params = array(
-            Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED => Mage::helper('core')->urlEncode($continueShoppingUrl),
-            'product' => $product->getId()
+        $routeParams = array(
+            $urlParamName   => $continueUrl,
+            'product'       => $product->getEntityId()
         );
+
+        if (!empty($additional)) {
+            $routeParams = array_merge($routeParams, $additional);
+        }
+
+        if ($product->hasUrlDataObject()) {
+            $routeParams['_store'] = $product->getUrlDataObject()->getStoreId();
+            $routeParams['_store_to_url'] = true;
+        }
 
         if ($this->_getRequest()->getRouteName() == 'checkout'
             && $this->_getRequest()->getControllerName() == 'cart') {
-            $params['in_cart'] = 1;
+            $routeParams['in_cart'] = 1;
         }
 
-        if (count($additional)){
-            $params = array_merge($params, $additional);
-        }
-
-        return $this->_getUrl('checkout/cart/add', $params);
+        return $this->_getUrl('checkout/cart/add', $routeParams);
     }
 
     /**
@@ -160,5 +149,16 @@ class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
     public function getIsVirtualQuote()
     {
         return $this->getQuote()->isVirtual();
+    }
+
+    /**
+     * Checks if customer should be redirected to shopping cart after adding a product
+     *
+     * @param int|string|Mage_Core_Model_Store $store
+     * @return bool
+     */
+    public function getShouldRedirectToCart($store = null)
+    {
+        return Mage::getStoreConfigFlag(self::XML_PATH_REDIRECT_TO_CART, $store);
     }
 }

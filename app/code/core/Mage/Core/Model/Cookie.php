@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -100,11 +100,21 @@ class Mage_Core_Model_Cookie
      */
     public function getDomain()
     {
-        $domain = Mage::getStoreConfig(self::XML_PATH_COOKIE_DOMAIN, $this->getStore());
+        $domain = $this->getConfigDomain();
         if (empty($domain)) {
             $domain = $this->_getRequest()->getHttpHost();
         }
         return $domain;
+    }
+
+    /**
+     * Retrieve Config Domain for cookie
+     *
+     * @return string
+     */
+    public function getConfigDomain()
+    {
+        return (string)Mage::getStoreConfig(self::XML_PATH_COOKIE_DOMAIN, $this->getStore());
     }
 
     /**
@@ -128,10 +138,9 @@ class Mage_Core_Model_Cookie
      */
     public function getLifetime()
     {
-        if (null !== $this->_lifetime) {
+        if (!is_null($this->_lifetime)) {
             $lifetime = $this->_lifetime;
-        }
-        else {
+        } else {
             $lifetime = Mage::getStoreConfig(self::XML_PATH_COOKIE_LIFETIME, $this->getStore());
         }
         if (!is_numeric($lifetime)) {
@@ -227,6 +236,28 @@ class Mage_Core_Model_Cookie
 
         setcookie($name, $value, $expire, $path, $domain, $secure, $httponly);
 
+        return $this;
+    }
+
+    /**
+     * Postpone cookie expiration time if cookie value defined
+     *
+     * @param string $name The cookie name
+     * @param int $period Lifetime period
+     * @param string $path
+     * @param string $domain
+     * @param int|bool $secure
+     * @return Mage_Core_Model_Cookie
+     */
+    public function renew($name, $period = null, $path = null, $domain = null, $secure = null, $httponly = null)
+    {
+        if (($period === null) && !$this->getLifetime()) {
+            return $this;
+        }
+        $value = $this->_getRequest()->getCookie($name, false);
+        if ($value !== false) {
+            $this->set($name, $value, $period, $path, $domain, $secure, $httponly);
+        }
         return $this;
     }
 

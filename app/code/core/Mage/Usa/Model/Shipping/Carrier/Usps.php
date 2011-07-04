@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Usa
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Usa
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -377,25 +377,40 @@ class Mage_Usa_Model_Shipping_Carrier_Usps
 */
 
             'service_to_code'=>array(
-                'First-Class'                      => 'FIRST CLASS',
-                'Express Mail'                     => 'EXPRESS',
-                'Express Mail PO to PO'            => 'EXPRESS',
-                'Priority Mail'                    => 'PRIORITY',
+                'First-Class'                                   => 'FIRST CLASS',
+                'First-Class Mail International Large Envelope' => 'FIRST CLASS',
+                'First-Class Mail International Letters'        => 'FIRST CLASS',
+                'First-Class Mail International Package'        => 'FIRST CLASS',
+                'First-Class Mail'                 => 'FIRST CLASS',
+                'First-Class Mail Flat'            => 'FIRST CLASS',
+                'First-Class Mail International'   => 'FIRST CLASS',
+                'First-Class Mail Letter'          => 'FIRST CLASS',
+                'First-Class Mail Parcel'          => 'FIRST CLASS',
                 'Parcel Post'                      => 'PARCEL',
-                'Express Mail Flat-Rate Envelope'  => 'EXPRESS',
-                'Priority Mail Flat-Rate Box'      => 'PRIORITY',
                 'Bound Printed Matter'             => 'BPM',
                 'Media Mail'                       => 'MEDIA',
                 'Library Mail'                     => 'LIBRARY',
-                'Priority Mail Flat-Rate Envelope' => 'PRIORITY',
-                'Global Express Guaranteed'        => 'EXPRESS',
+                'Express Mail'                     => 'EXPRESS',
+                'Express Mail PO to PO'            => 'EXPRESS',
+                'Express Mail Flat Rate Envelope'  => 'EXPRESS',
+                'Express Mail Flat Rate Envelope Hold For Pickup'  => 'EXPRESS',
+                'Global Express Guaranteed (GXG)'                  => 'EXPRESS',
                 'Global Express Guaranteed Non-Document Rectangular'     => 'EXPRESS',
                 'Global Express Guaranteed Non-Document Non-Rectangular' => 'EXPRESS',
-                'Express Mail International (EMS)'                       => 'EXPRESS',
-                'Express Mail International (EMS) Flat-Rate Envelope'    => 'EXPRESS',
+                'Express Mail International'                       => 'EXPRESS',
+                'Express Mail International Flat Rate Envelope'    => 'EXPRESS',
+                'Priority Mail'                        => 'PRIORITY',
+                'Priority Mail Small Flat Rate Box'    => 'PRIORITY',
+                'Priority Mail Medium Flat Rate Box'   => 'PRIORITY',
+                'Priority Mail Large Flat Rate Box'    => 'PRIORITY',
+                'Priority Mail Flat Rate Box'          => 'PRIORITY',
+                'Priority Mail Flat Rate Envelope'     => 'PRIORITY',
                 'Priority Mail International'                            => 'PRIORITY',
-                'Priority Mail International Flat-Rate Box'              => 'PRIORITY',
-                'Priority Mail International Large Flat-Rate Box'        => 'PRIORITY'
+                'Priority Mail International Flat Rate Envelope'         => 'PRIORITY',
+                'Priority Mail International Small Flat Rate Box'        => 'PRIORITY',
+                'Priority Mail International Medium Flat Rate Box'       => 'PRIORITY',
+                'Priority Mail International Large Flat Rate Box'        => 'PRIORITY',
+                'Priority Mail International Flat Rate Box'              => 'PRIORITY'
             ),
 
             'first_class_mail_type'=>array(

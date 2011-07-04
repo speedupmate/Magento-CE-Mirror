@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -47,6 +47,10 @@ class Mage_Adminhtml_Report_ReviewController extends Mage_Adminhtml_Controller_A
 
     public function customerAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Reviews'))
+             ->_title($this->__('Customer Reviews'));
+
         $this->_initAction()
             ->_setActiveMenu('report/review/customer')
             ->_addBreadcrumb(Mage::helper('reports')->__('Customers Report'), Mage::helper('reports')->__('Customers Report'))
@@ -80,6 +84,10 @@ class Mage_Adminhtml_Report_ReviewController extends Mage_Adminhtml_Controller_A
 
     public function productAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Reviews'))
+             ->_title($this->__('Product Reviews'));
+
         $this->_initAction()
             ->_setActiveMenu('report/review/product')
             ->_addBreadcrumb(Mage::helper('reports')->__('Products Report'), Mage::helper('reports')->__('Products Report'))
@@ -113,6 +121,11 @@ class Mage_Adminhtml_Report_ReviewController extends Mage_Adminhtml_Controller_A
 
     public function productDetailAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Reviews'))
+             ->_title($this->__('Product Reviews'))
+             ->_title($this->__('Details'));
+
         $this->_initAction()
             ->_setActiveMenu('report/review/productDetail')
             ->_addBreadcrumb(Mage::helper('reports')->__('Products Report'), Mage::helper('reports')->__('Products Report'))
@@ -147,7 +160,7 @@ class Mage_Adminhtml_Report_ReviewController extends Mage_Adminhtml_Controller_A
 
     protected function _isAllowed()
     {
-	    switch ($this->getRequest()->getActionName()) {
+        switch ($this->getRequest()->getActionName()) {
             case 'customer':
                 return Mage::getSingleton('admin/session')->isAllowed('report/review/customer');
                 break;

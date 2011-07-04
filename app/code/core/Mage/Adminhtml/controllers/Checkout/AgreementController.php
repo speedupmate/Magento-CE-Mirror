@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -35,6 +35,8 @@ class Mage_Adminhtml_Checkout_AgreementController extends Mage_Adminhtml_Control
 {
     public function indexAction()
     {
+        $this->_title($this->__('Sales'))->_title($this->__('Terms and Conditions'));
+
         $this->_initAction()
             ->_addContent($this->getLayout()->createBlock('adminhtml/checkout_agreement'))
             ->renderLayout();
@@ -48,6 +50,8 @@ class Mage_Adminhtml_Checkout_AgreementController extends Mage_Adminhtml_Control
 
     public function editAction()
     {
+        $this->_title($this->__('Sales'))->_title($this->__('Terms and Conditions'));
+
         $id  = $this->getRequest()->getParam('id');
         $agreementModel  = Mage::getModel('checkout/agreement');
         $hlp = Mage::helper('checkout');
@@ -59,6 +63,8 @@ class Mage_Adminhtml_Checkout_AgreementController extends Mage_Adminhtml_Control
                 return;
             }
         }
+
+        $this->_title($agreementModel->getId() ? $agreementModel->getName() : $this->__('New Condition'));
 
         $data = Mage::getSingleton('adminhtml/session')->getAgreementData(true);
         if (!empty($data)) {
@@ -145,6 +151,6 @@ class Mage_Adminhtml_Checkout_AgreementController extends Mage_Adminhtml_Control
 
     protected function _isAllowed()
     {
-	    return Mage::getSingleton('admin/session')->isAllowed('sales/checkoutagreement');
+        return Mage::getSingleton('admin/session')->isAllowed('sales/checkoutagreement');
     }
 }

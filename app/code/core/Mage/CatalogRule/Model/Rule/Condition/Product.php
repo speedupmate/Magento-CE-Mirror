@@ -18,15 +18,40 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_CatalogRule
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_CatalogRule
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Condition_Abstract
 {
+    /**
+     * All attribute values as array in form:
+     * array(
+     *   [entity_id_1] => array(
+     *          [store_id_1] => store_value_1,
+     *          [store_id_2] => store_value_2,
+     *          ...
+     *          [store_id_n] => store_value_n
+     *   ),
+     *   ...
+     * )
+     *
+     * Will be set only for not global scope attribute
+     *
+     * @var array
+     */
+    protected $_entityAttributeValues = null;
+
+    /**
+     * Attribute data key that indicates whether it should be used for rules
+     *
+     * @var string
+     */
+    protected $_isUsedForRuleProperty = 'is_used_for_price_rules';
+
     /**
      * Retrieve attribute object
      *
@@ -71,7 +96,7 @@ class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Cond
         $attributes = array();
         foreach ($productAttributes as $attribute) {
             /* @var $attribute Mage_Catalog_Model_Resource_Eav_Attribute */
-            if (!$attribute->isAllowedForRuleCondition() || !$attribute->getIsUsedForPriceRules()) {
+            if (!$attribute->isAllowedForRuleCondition() || !$attribute->getDataUsingMethod($this->_isUsedForRuleProperty)) {
                 continue;
             }
             $attributes[$attribute->getAttributeCode()] = $attribute->getFrontendLabel();
@@ -193,10 +218,18 @@ class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Cond
      */
     public function collectValidatedAttributes($productCollection)
     {
-        $attributes = $this->getRule()->getCollectedAttributes();
-        $attributes[$this->getAttribute()] = true;
-        $this->getRule()->setCollectedAttributes($attributes);
-        $productCollection->addAttributeToSelect($this->getAttribute(), 'left');
+        $attribute = $this->getAttribute();
+        if ('category_ids' != $attribute) {
+            if ($this->getAttributeObject()->isScopeGlobal()) {
+                $attributes = $this->getRule()->getCollectedAttributes();
+                $attributes[$attribute] = true;
+                $this->getRule()->setCollectedAttributes($attributes);
+                $productCollection->addAttributeToSelect($attribute, 'left');
+            } else {
+                $this->_entityAttributeValues = $productCollection->getAllAttributeValues($attribute);
+            }
+        }
+
         return $this;
     }
 
@@ -342,27 +375,47 @@ class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Cond
      */
     public function validate(Varien_Object $object)
     {
-        $attr = $object->getResource()->getAttribute($this->getAttribute());
-        if ($attr && $attr->getBackendType()=='datetime' && !is_int($this->getValue())) {
-            $this->setValue(strtotime($this->getValue()));
-            $value = strtotime($object->getData($this->getAttribute()));
-            return $this->validateAttribute($value);
-        }
+        $attrCode = $this->getAttribute();
 
-        if ($this->getAttribute() == 'category_ids') {
+        if ('category_ids' == $attrCode) {
             return $this->validateAttribute($object->getAvailableInCategories());
-        }
+        } elseif (! isset($this->_entityAttributeValues[$object->getId()])) {
+            $attr = $object->getResource()->getAttribute($attrCode);
 
-        if ($attr && $attr->getFrontendInput() == 'multiselect') {
-            $value = $object->getData($this->getAttribute());
-            if (!strlen($value)) {
-                $value = array();
-            } else {
-                $value = split(',', $value);
+            if ($attr && $attr->getBackendType() == 'datetime' && ! is_int($this->getValue())) {
+                $this->setValue(strtotime($this->getValue()));
+                $value = strtotime($object->getData($attrCode));
+                return $this->validateAttribute($value);
             }
-            return $this->validateAttribute($value);
-        }
 
-        return parent::validate($object);
+            if ($attr && $attr->getFrontendInput() == 'multiselect') {
+                $value = $object->getData($attrCode);
+                $value = strlen($value) ? explode(',', $value) : array();
+                return $this->validateAttribute($value);
+            }
+
+            return parent::validate($object);
+        } else {
+            $result = false; // any valid value will set it to TRUE
+            $oldAttrValue = $object->hasData($attrCode) ? $object->getData($attrCode) : null; // remember old attribute state
+
+            foreach ($this->_entityAttributeValues[$object->getId()] as $storeId => $value) {
+                $object->setData($attrCode, $value);
+
+                $result |= parent::validate($object);
+
+                if ($result) {
+                    break;
+                }
+            }
+
+            if (is_null($oldAttrValue)) {
+                $object->unsetData($attrCode);
+            } else {
+                $object->setData($attrCode, $oldAttrValue);
+            }
+
+            return (bool) $result;
+        }
     }
 }

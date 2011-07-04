@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Review
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Review
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -34,6 +34,19 @@
 
 class Mage_Review_CustomerController extends Mage_Core_Controller_Front_Action
 {
+    /**
+     * Action predispatch
+     *
+     * Check customer authentication for some actions
+     */
+    public function preDispatch()
+    {
+        parent::preDispatch();
+        if (!Mage::getSingleton('customer/session')->authenticate($this)) {
+            $this->setFlag('', self::FLAG_NO_DISPATCH, true);
+        }
+    }
+
     public function indexAction()
     {
         $this->loadLayout();

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -42,7 +42,7 @@
  * @package    Mage_Core
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Core_Model_Email_Template extends Varien_Object
+class Mage_Core_Model_Email_Template extends Mage_Core_Model_Abstract
 {
     /**
      * Types of template
@@ -54,7 +54,9 @@ class Mage_Core_Model_Email_Template extends Varien_Object
      * Configuration path for default email templates
      *
      */
-    const XML_PATH_TEMPLATE_EMAIL = 'global/template/email';
+    const XML_PATH_TEMPLATE_EMAIL          = 'global/template/email';
+    const XML_PATH_SENDING_SET_RETURN_PATH = 'system/smtp/set_return_path';
+    const XML_PATH_SENDING_RETURN_PATH_EMAIL = 'system/smtp/return_path_email';
 
     protected $_templateFilter;
     protected $_preprocessFlag = false;
@@ -70,13 +72,12 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     protected $_designConfig;
 
     /**
-     * Return resource of template model.
+     * Initialize email template model
      *
-     * @return Mage_Newsletter_Model_Mysql4_Template
      */
-    public function getResource()
+    protected function _construct()
     {
-        return Mage::getResourceSingleton('core/email_template');
+        $this->_init('core/email_template');
     }
 
     /**
@@ -113,28 +114,17 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     {
         if (empty($this->_templateFilter)) {
             $this->_templateFilter = Mage::getModel('core/email_template_filter');
-            $this->_templateFilter->setUseAbsoluteLinks($this->getUseAbsoluteLinks());
+            $this->_templateFilter->setUseAbsoluteLinks($this->getUseAbsoluteLinks())
+                ->setStoreId($this->getDesignConfig()->getStore());
         }
         return $this->_templateFilter;
-    }
-
-    /**
-     * Load template by id
-     *
-     * @param   int $templateId
-     * return   Mage_Newsletter_Model_Template
-     */
-    public function load($templateId)
-    {
-        $this->addData($this->getResource()->load($templateId));
-        return $this;
     }
 
     /**
      * Load template by code
      *
      * @param   string $templateCode
-     * return   Mage_Newsletter_Model_Template
+     * @return   Mage_Core_Model_Email_Template
      */
     public function loadByCode($templateCode)
     {
@@ -163,7 +153,17 @@ class Mage_Core_Model_Email_Template extends Varien_Object
         );
 
         if (preg_match('/<!--@subject\s*(.*?)\s*@-->/', $templateText, $matches)) {
-           $this->setTemplateSubject($matches[1]);
+            $this->setTemplateSubject($matches[1]);
+            $templateText = str_replace($matches[0], '', $templateText);
+        }
+
+        if (preg_match('/<!--@vars\n((?:.)*?)\n@-->/us', $templateText, $matches)) {
+            $this->setData('orig_template_variables', str_replace("\n", '', $matches[1]));
+            $templateText = str_replace($matches[0], '', $templateText);
+        }
+
+        if (preg_match('/<!--@styles\s*(.*?)\s*@-->/sm', $templateText, $matches)) {
+           $this->setTemplateStyles($matches[1]);
            $templateText = str_replace($matches[0], '', $templateText);
         }
 
@@ -203,8 +203,18 @@ class Mage_Core_Model_Email_Template extends Varien_Object
             array('value'=>'', 'label'=> '')
         );
 
-        foreach (self::getDefaultTemplates() as $templateId=>$value) {
-            $options[] = array('value'=>$templateId, 'label'=>$value['label']);
+        $idLabel = array();
+        foreach (self::getDefaultTemplates() as $templateId => $row) {
+            if (isset($row['@']) && isset($row['@']['module'])) {
+                $module = $row['@']['module'];
+            } else {
+                $module = 'adminhtml';
+            }
+            $idLabel[$templateId] = Mage::helper($module)->__($row['label']);
+        }
+        asort($idLabel);
+        foreach ($idLabel as $templateId => $label) {
+            $options[] = array('value' => $templateId, 'label' => $label);
         }
 
         return $options;
@@ -252,15 +262,6 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     }
 
     /**
-     * Save template
-     */
-    public function save()
-    {
-        $this->getResource()->save($this);
-        return $this;
-    }
-
-    /**
      * Process email template code
      *
      * @param   array $variables
@@ -269,7 +270,8 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     public function getProcessedTemplate(array $variables = array())
     {
         $processor = $this->getTemplateFilter();
-        $processor->setUseSessionInUrl(false);
+        $processor->setUseSessionInUrl(false)
+            ->setPlainTemplateMode($this->isPlain());
 
         if(!$this->_preprocessFlag) {
             $variables['this'] = $this;
@@ -280,7 +282,7 @@ class Mage_Core_Model_Email_Template extends Varien_Object
 
         $this->_applyDesignConfig();
         try{
-            $processedResult = $processor->filter($this->getTemplateText());
+            $processedResult = $processor->filter($this->getPreparedTemplateText());
         }
         catch ( Exception $e)   {
             $this->_cancelDesignConfig();
@@ -288,6 +290,21 @@ class Mage_Core_Model_Email_Template extends Varien_Object
         }
         $this->_cancelDesignConfig();
         return $processedResult;
+    }
+
+    /**
+     * Makes additional text preparations for HTML templates
+     *
+     * @return string
+     */
+    public function getPreparedTemplateText()
+    {
+        if ($this->isPlain() || !$this->getTemplateStyles()) {
+            return $this->getTemplateText();
+        }
+        // wrap styles into style tag
+        $html = "<style type=\"text/css\">\n%s\n</style>\n%s";
+        return sprintf($html, $this->getTemplateStyles(), $this->getTemplateText());
     }
 
     /**
@@ -315,9 +332,10 @@ class Mage_Core_Model_Email_Template extends Varien_Object
      * @param   array       $variables    template variables
      * @return  boolean
      **/
-    public function send($email, $name=null, array $variables = array())
+    public function send($email, $name = null, array $variables = array())
     {
-        if(!$this->isValidForSend()) {
+        if (!$this->isValidForSend()) {
+            Mage::logException(new Exception('This letter cannot be sent.')); // translation is intentionally omitted
             return false;
         }
 
@@ -332,6 +350,24 @@ class Mage_Core_Model_Email_Template extends Varien_Object
         ini_set('smtp_port', Mage::getStoreConfig('system/smtp/port'));
 
         $mail = $this->getMail();
+
+        $setReturnPath = Mage::getStoreConfig(self::XML_PATH_SENDING_SET_RETURN_PATH);
+        switch ($setReturnPath) {
+            case 1:
+                $returnPathEmail = $this->getSenderEmail();
+                break;
+            case 2:
+                $returnPathEmail = Mage::getStoreConfig(self::XML_PATH_SENDING_RETURN_PATH_EMAIL);
+                break;
+            default:
+                $returnPathEmail = null;
+                break;
+        }
+
+        if ($returnPathEmail !== null) {
+            $mail->setReturnPath($returnPathEmail);
+        }
+
         if (is_array($email)) {
             foreach ($email as $emailOne) {
                 $mail->addTo($emailOne, $name);
@@ -349,16 +385,16 @@ class Mage_Core_Model_Email_Template extends Varien_Object
             $mail->setBodyHTML($text);
         }
 
-
-
         $mail->setSubject('=?utf-8?B?'.base64_encode($this->getProcessedTemplateSubject($variables)).'?=');
         $mail->setFrom($this->getSenderEmail(), $this->getSenderName());
 
         try {
-            $mail->send(); // Zend_Mail warning..
+            $mail->send();
             $this->_mail = null;
         }
         catch (Exception $e) {
+            $this->_mail = null;
+            Mage::logException($e);
             return false;
         }
 
@@ -402,17 +438,11 @@ class Mage_Core_Model_Email_Template extends Varien_Object
             $this->setSenderEmail($sender['email']);
         }
 
-        $this->setSentSuccess($this->send($email, $name, $vars));
-        return $this;
-    }
+        if (!isset($vars['store'])) {
+            $vars['store'] = Mage::app()->getStore($storeId);
+        }
 
-    /**
-     * Delete template from DB
-     */
-    public function delete()
-    {
-        $this->getResource()->delete($this->getId());
-        $this->setId(null);
+        $this->setSentSuccess($this->send($email, $name, $vars));
         return $this;
     }
 
@@ -554,5 +584,65 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     {
         $this->getMail()->addHeader('Reply-To', $email);
         return $this;
+    }
+
+    /**
+     * Parse variables string into array of variables
+     *
+     * @param string $variablesString
+     * @return array
+     */
+    protected function _parseVariablesString($variablesString)
+    {
+        $variables = array();
+        if ($variablesString && is_string($variablesString)) {
+            $variablesString = str_replace("\n", '', $variablesString);
+            $variables = Zend_Json::decode($variablesString);
+        }
+        return $variables;
+    }
+
+    /**
+     * Retrieve option array of variables
+     *
+     * @param boolean $withGroup if true wrap variable options in group
+     * @return array
+     */
+    public function getVariablesOptionArray($withGroup = false)
+    {
+        $optionArray = array();
+        $variables = $this->_parseVariablesString($this->getData('orig_template_variables'));
+        if ($variables) {
+            foreach ($variables as $value => $label) {
+                $optionArray[] = array(
+                    'value' => '{{' . $value . '}}',
+                    'label' => Mage::helper('core')->__('%s', $label)
+                );
+            }
+            if ($withGroup) {
+                $optionArray = array(
+                    'label' => Mage::helper('core')->__('Template Variables'),
+                    'value' => $optionArray
+                );
+            }
+        }
+        return $optionArray;
+    }
+
+    /**
+     * Validate email template code
+     *
+     * @return Mage_Core_Model_Email_Template
+     */
+    protected function _beforeSave()
+    {
+        $code = $this->getTemplateCode();
+        if (empty($code)) {
+            Mage::throwException(Mage::helper('core')->__('Template Name must be not empty'));
+        }
+        if($this->_getResource()->checkCodeUsage($this)) {
+            Mage::throwException(Mage::helper('core')->__('Duplicate Of Template Name'));
+        }
+        return parent::_beforeSave();
     }
 }

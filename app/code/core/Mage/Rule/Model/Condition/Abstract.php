@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Rule
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Rule
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -33,6 +33,25 @@ abstract class Mage_Rule_Model_Condition_Abstract
     extends Varien_Object
     implements Mage_Rule_Model_Condition_Interface
 {
+    /**
+     * Defines which operators will be available for this condition
+     *
+     * @var string
+     */
+    protected $_inputType = null;
+
+    /**
+     * Default values for possible operator options
+     * @var array
+     */
+    protected $_defaultOperatorOptions = null;
+
+    /**
+     * Default combinations of operator options, depending on input type
+     * @var array
+     */
+    protected $_defaultOperatorInputByType = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -45,6 +64,51 @@ abstract class Mage_Rule_Model_Condition_Abstract
         if ($options = $this->getOperatorOptions()) {
             foreach ($options as $operator=>$dummy) { $this->setOperator($operator); break; }
         }
+    }
+
+    /**
+     * Default operator input by type map getter
+     *
+     * @return array
+     */
+    public function getDefaultOperatorInputByType()
+    {
+        if (null === $this->_defaultOperatorInputByType) {
+            $this->_defaultOperatorInputByType = array(
+                'string'      => array('==', '!=', '>=', '>', '<=', '<', '{}', '!{}', '()', '!()'),
+                'numeric'     => array('==', '!=', '>=', '>', '<=', '<', '()', '!()'),
+                'date'        => array('==', '>=', '<='),
+                'select'      => array('==', '!='),
+                'multiselect' => array('==', '!=', '{}', '!{}'),
+                'grid'        => array('()', '!()'),
+            );
+        }
+        return $this->_defaultOperatorInputByType;
+    }
+
+    /**
+     * Default operator options getter
+     * Provides all possible operator options
+     *
+     * @return array
+     */
+    public function getDefaultOperatorOptions()
+    {
+        if (null === $this->_defaultOperatorOptions) {
+            $this->_defaultOperatorOptions = array(
+                '=='  => Mage::helper('rule')->__('is'),
+                '!='  => Mage::helper('rule')->__('is not'),
+                '>='  => Mage::helper('rule')->__('equals or greater than'),
+                '<='  => Mage::helper('rule')->__('equals or less than'),
+                '>'   => Mage::helper('rule')->__('greater than'),
+                '<'   => Mage::helper('rule')->__('less than'),
+                '{}'  => Mage::helper('rule')->__('contains'),
+                '!{}' => Mage::helper('rule')->__('does not contain'),
+                '()'  => Mage::helper('rule')->__('is one of'),
+                '!()' => Mage::helper('rule')->__('is not one of')
+            );
+        }
+        return $this->_defaultOperatorOptions;
     }
 
     public function getForm()
@@ -123,39 +187,24 @@ abstract class Mage_Rule_Model_Condition_Abstract
 
     public function loadOperatorOptions()
     {
-        $this->setOperatorOption(array(
-            '=='  => Mage::helper('rule')->__('is'),
-            '!='  => Mage::helper('rule')->__('is not'),
-            '>='  => Mage::helper('rule')->__('equals or greater than'),
-            '<='  => Mage::helper('rule')->__('equals or less than'),
-            '>'   => Mage::helper('rule')->__('greater than'),
-            '<'   => Mage::helper('rule')->__('less than'),
-            '{}'  => Mage::helper('rule')->__('contains'),
-            '!{}' => Mage::helper('rule')->__('does not contain'),
-            '()'  => Mage::helper('rule')->__('is one of'),
-            '!()' => Mage::helper('rule')->__('is not one of'),
-        ));
-        $this->setOperatorByInputType(array(
-            'string' => array('==', '!=', '>=', '>', '<=', '<', '{}', '!{}', '()', '!()'),
-            'numeric' => array('==', '!=', '>=', '>', '<=', '<', '()', '!()'),
-            'date' => array('==', '>=', '<='),
-            'select' => array('==', '!='),
-            'multiselect' => array('==', '!=', '{}', '!{}'),
-            'grid' => array('()', '!()'),
-        ));
+        $this->setOperatorOption($this->getDefaultOperatorOptions());
+        $this->setOperatorByInputType($this->getDefaultOperatorInputByType());
         return $this;
     }
 
     /**
      * This value will define which operators will be available for this condition.
      *
-     * Possible values are: string, numeric, date, select, multiselect, grid
+     * Possible values are: string, numeric, date, select, multiselect, grid, boolean
      *
      * @return string
      */
     public function getInputType()
     {
-        return 'string';
+        if (null === $this->_inputType) {
+            return 'string';
+        }
+        return $this->_inputType;
     }
 
     public function getOperatorSelectOptions()
@@ -319,20 +368,33 @@ abstract class Mage_Rule_Model_Condition_Abstract
         return $this->getAttributeElement()->getHtml();
     }
 
+    /**
+     * Retrieve Condition Operator element Instance
+     * If the operator value is empty - define first available operator value as default
+     *
+     * @return Varien_Data_Form_Element_Select
+     */
     public function getOperatorElement()
     {
+        $options = $this->getOperatorSelectOptions();
         if (is_null($this->getOperator())) {
-            foreach ($this->getOperatorOption() as $k=>$v) {
-                $this->setOperator($k);
+            foreach ($options as $option) {
+                $this->setOperator($option['value']);
                 break;
             }
         }
-        return $this->getForm()->addField($this->getPrefix().'__'.$this->getId().'__operator', 'select', array(
-            'name'=>'rule['.$this->getPrefix().']['.$this->getId().'][operator]',
-            'values'=>$this->getOperatorSelectOptions(),
-            'value'=>$this->getOperator(),
-            'value_name'=>$this->getOperatorName(),
-        ))->setRenderer(Mage::getBlockSingleton('rule/editable'));
+
+        $elementId   = sprintf('%s__%s__operator', $this->getPrefix(), $this->getId());
+        $elementName = sprintf('rule[%s][%s][operator]', $this->getPrefix(), $this->getId());
+        $element     = $this->getForm()->addField($elementId, 'select', array(
+            'name'          => $elementName,
+            'values'        => $options,
+            'value'         => $this->getOperator(),
+            'value_name'    => $this->getOperatorName(),
+        ));
+        $element->setRenderer(Mage::getBlockSingleton('rule/editable'));
+
+        return $element;
     }
 
     public function getOperatorElementHtml()
@@ -470,7 +532,7 @@ abstract class Mage_Rule_Model_Condition_Abstract
                 break;
 
             case '<=': case '>':
-                if (is_array($validatedValue)) {
+                if (is_array($validatedValue) || is_null($validatedValue)) {
                     $result = false;
                 } else {
                     $result = $validatedValue<=$value;
@@ -478,7 +540,7 @@ abstract class Mage_Rule_Model_Condition_Abstract
                 break;
 
             case '>=': case '<':
-                if (is_array($validatedValue)) {
+                if (is_array($validatedValue) || is_null($validatedValue)) {
                     $result = false;
                 } else {
                     $result = $validatedValue>=$value;

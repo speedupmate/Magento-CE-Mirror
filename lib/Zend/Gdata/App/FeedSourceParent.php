@@ -16,8 +16,9 @@
  * @category   Zend
  * @package    Zend_Gdata
  * @subpackage App
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: FeedSourceParent.php 18951 2009-11-12 16:26:19Z alexander $
  */
 
 /**
@@ -56,7 +57,7 @@
  * @category   Zend
  * @package    Zend_Gdata
  * @subpackage App
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Gdata_App_FeedSourceParent extends Zend_Gdata_App_FeedEntryParent
@@ -99,7 +100,7 @@ abstract class Zend_Gdata_App_FeedSourceParent extends Zend_Gdata_App_FeedEntryP
         }
         return $this;
     }
-    
+
     /**
      * Set the active service instance for this feed and all enclosed entries.
      * This will be used to perform network requests, such as when calling
@@ -116,7 +117,7 @@ abstract class Zend_Gdata_App_FeedSourceParent extends Zend_Gdata_App_FeedEntryP
         }
         return $this;
     }
-    
+
     /**
      * Make accessing some individual elements of the feed easier.
      *

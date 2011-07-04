@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -30,21 +30,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @author      Magento Core Team <core@magentocommerce.com>
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_Action
 {
-
-    /**
-     * Enter description here...
-     *
-     */
-    protected function _construct()
-    {
-        $this->setFlag('index', 'no-preDispatch', true);
-        return parent::_construct();
-    }
-
     /**
      * Enter description here...
      *
@@ -60,6 +49,8 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
      */
     public function editAction()
     {
+        $this->_title($this->__('System'))->_title($this->__('Configuration'));
+
         $current = $this->getRequest()->getParam('section');
         $website = $this->getRequest()->getParam('website');
         $store   = $this->getRequest()->getParam('store');
@@ -151,7 +142,7 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
             $session->addSuccess(Mage::helper('adminhtml')->__('Configuration successfully saved'));
         }
         catch (Mage_Core_Exception $e) {
-            foreach(split("\n", $e->getMessage()) as $message) {
+            foreach(explode("\n", $e->getMessage()) as $message) {
                 $session->addError($message);
             }
         }

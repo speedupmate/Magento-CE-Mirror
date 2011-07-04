@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -53,16 +53,16 @@ class Mage_Adminhtml_Block_Catalog_Category_Tree extends Mage_Adminhtml_Block_Ca
             '_query' => false
         ));
 
-        if ($this->canAddSubCategory()) {
-            $this->setChild('add_sub_button',
-                $this->getLayout()->createBlock('adminhtml/widget_button')
-                    ->setData(array(
-                        'label'     => Mage::helper('catalog')->__('Add Subcategory'),
-                        'onclick'   => "addNew('".$addUrl."', false)",
-                        'class'     => 'add'
-                    ))
-            );
-        }
+        $this->setChild('add_sub_button',
+            $this->getLayout()->createBlock('adminhtml/widget_button')
+                ->setData(array(
+                    'label'     => Mage::helper('catalog')->__('Add Subcategory'),
+                    'onclick'   => "addNew('".$addUrl."', false)",
+                    'class'     => 'add',
+                    'id'        => 'add_subcategory_button',
+                    'style'     => $this->canAddSubCategory() ? '' : 'display: none;'
+                ))
+        );
 
         if ($this->canAddRootCategory()) {
             $this->setChild('add_root_button',
@@ -166,7 +166,7 @@ class Mage_Adminhtml_Block_Catalog_Category_Tree extends Mage_Adminhtml_Block_Ca
 
     public function getTree($parenNodeCategory=null)
     {
-       	$rootArray = $this->_getNodeJson($this->getRoot($parenNodeCategory));
+           $rootArray = $this->_getNodeJson($this->getRoot($parenNodeCategory));
         $tree = isset($rootArray['children']) ? $rootArray['children'] : array();
         return $tree;
     }
@@ -174,7 +174,7 @@ class Mage_Adminhtml_Block_Catalog_Category_Tree extends Mage_Adminhtml_Block_Ca
     public function getTreeJson($parenNodeCategory=null)
     {
         $rootArray = $this->_getNodeJson($this->getRoot($parenNodeCategory));
-        $json = Zend_Json::encode(isset($rootArray['children']) ? $rootArray['children'] : array());
+        $json = Mage::helper('core')->jsonEncode(isset($rootArray['children']) ? $rootArray['children'] : array());
         return $json;
     }
 
@@ -190,7 +190,9 @@ class Mage_Adminhtml_Block_Catalog_Category_Tree extends Mage_Adminhtml_Block_Ca
         if (empty($path)) {
             return '';
         }
-        $categories = Mage::getResourceSingleton('catalog/category_tree')->loadBreadcrumbsArray($path);
+
+        $categories = Mage::getResourceSingleton('catalog/category_tree')
+            ->setStoreId($this->getStore()->getId())->loadBreadcrumbsArray($path);
         if (empty($categories)) {
             return '';
         }
@@ -199,7 +201,8 @@ class Mage_Adminhtml_Block_Catalog_Category_Tree extends Mage_Adminhtml_Block_Ca
         }
         return
             '<script type="text/javascript">'
-            . $javascriptVarName . ' = ' . Zend_Json::encode($categories) . ';'
+            . $javascriptVarName . ' = ' . Mage::helper('core')->jsonEncode($categories) . ';'
+            . ($this->canAddSubCategory() ? '$("add_subcategory_button").show();' : '$("add_subcategory_button").hide();')
             . '</script>';
     }
 

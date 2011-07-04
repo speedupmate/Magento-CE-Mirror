@@ -14,20 +14,17 @@
  *
  * @category   Zend
  * @package    Zend_Log
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Log.php 9382 2008-05-05 18:55:55Z doctorrock83 $
+ * @version    $Id: Log.php 18951 2009-11-12 16:26:19Z alexander $
  */
-
-/** Zend_Log_Filter_Priority */
-#require_once 'Zend/Log/Filter/Priority.php';
 
 /**
  * @category   Zend
  * @package    Zend_Log
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Log.php 9382 2008-05-05 18:55:55Z doctorrock83 $
+ * @version    $Id: Log.php 18951 2009-11-12 16:26:19Z alexander $
  */
 class Zend_Log
 {
@@ -187,6 +184,8 @@ class Zend_Log
     public function addFilter($filter)
     {
         if (is_integer($filter)) {
+            /** @see Zend_Log_Filter_Priority */
+            #require_once 'Zend/Log/Filter/Priority.php';
             $filter = new Zend_Log_Filter_Priority($filter);
         } elseif(!is_object($filter) || ! $filter instanceof Zend_Log_Filter_Interface) {
             /** @see Zend_Log_Exception */

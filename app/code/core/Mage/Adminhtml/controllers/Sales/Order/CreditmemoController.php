@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -72,6 +72,8 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
      */
     protected function _initCreditmemo($update = false)
     {
+        $this->_title($this->__('Sales'))->_title($this->__('Credit Memos'));
+
         $creditmemo = false;
         if ($creditmemoId = $this->getRequest()->getParam('creditmemo_id')) {
             $creditmemo = Mage::getModel('sales/order_creditmemo')->load($creditmemoId);
@@ -190,14 +192,10 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
             }
 
             if (isset($data['shipping_amount'])) {
-                $creditmemo->setShippingAmount($data['shipping_amount']);
+                $creditmemo->setBaseShippingAmount((float)$data['shipping_amount']);
             } elseif ($invoice) {
-                $creditmemo->setShippingAmount($invoice->getShippingAmount());
-            }
-            else {
-                $creditmemo->setShippingAmount(
-                    $order->getBaseShippingAmount()-$order->getBaseShippingRefunded()
-                );
+                $baseAllowedAmount = $order->getBaseShippingAmount()-$order->getBaseShippingRefunded();
+                $creditmemo->setBaseShippingAmount(min($baseAllowedAmount, $invoice->getBaseShippingAmount()));
             }
 
             if (isset($data['adjustment_positive'])) {
@@ -239,6 +237,12 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
     public function viewAction()
     {
         if ($creditmemo = $this->_initCreditmemo()) {
+            if ($creditmemo->getInvoice()) {
+                $this->_title($this->__("View Memo for #%s", $creditmemo->getInvoice()->getIncrementId()));
+            } else {
+                $this->_title($this->__("View Memo"));
+            }
+
             $this->loadLayout();
             $this->getLayout()->getBlock('sales_creditmemo_view')
                 ->updateBackButtonUrl($this->getRequest()->getParam('come_from'));
@@ -267,6 +271,12 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
     public function newAction()
     {
         if ($creditmemo = $this->_initCreditmemo()) {
+            if ($creditmemo->getInvoice()) {
+                $this->_title($this->__("New Memo for #%s", $creditmemo->getInvoice()->getIncrementId()));
+            } else {
+                $this->_title($this->__("New Memo"));
+            }
+
             $commentText = Mage::getSingleton('adminhtml/session')->getCommentText(true);
 
             $creditmemo->addData(array('commentText'=>$commentText));
@@ -295,14 +305,14 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
                 'error'     => true,
                 'message'   => $e->getMessage()
             );
-            $response = Zend_Json::encode($response);
+            $response = Mage::helper('core')->jsonEncode($response);
         }
         catch (Exception $e) {
             $response = array(
                 'error'     => true,
                 'message'   => $this->__('Can not update item qty')
             );
-            $response = Zend_Json::encode($response);
+            $response = Mage::helper('core')->jsonEncode($response);
         }
         $this->getResponse()->setBody($response);
     }
@@ -326,15 +336,17 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
 
                 $comment = '';
                 if (!empty($data['comment_text'])) {
-                    $comment = $data['comment_text'];
                     $creditmemo->addComment($data['comment_text'], isset($data['comment_customer_notify']));
+                    if (isset($data['comment_customer_notify'])) {
+                        $comment = $data['comment_text'];
+                    }
                 }
 
                 if (isset($data['do_refund'])) {
                     $creditmemo->setRefundRequested(true);
                 }
                 if (isset($data['do_offline'])) {
-                    $creditmemo->setOfflineRequested($data['do_offline']);
+                    $creditmemo->setOfflineRequested((bool)(int)$data['do_offline']);
                 }
 
                 $creditmemo->register();
@@ -342,6 +354,7 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
                     $creditmemo->setEmailSent(true);
                 }
 
+                $creditmemo->getOrder()->setCustomerNoteNotify(!empty($data['send_email']));
                 $this->_saveCreditmemo($creditmemo);
                 $creditmemo->sendEmail(!empty($data['send_email']), $comment);
                 $this->_getSession()->addSuccess($this->__('Credit Memo was successfully created'));
@@ -358,7 +371,8 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
             $this->_getSession()->addError($e->getMessage());
         }
         catch (Exception $e) {
-            $this->_getSession()->addError($this->__('Can not save credit memo'));
+            Mage::logException($e);
+            $this->_getSession()->addError($this->__('Cannot save Credit Memo.'));
         }
         $this->_redirect('*/*/new', array('_current' => true));
     }
@@ -435,14 +449,14 @@ class Mage_Adminhtml_Sales_Order_CreditmemoController extends Mage_Adminhtml_Con
                 'error'     => true,
                 'message'   => $e->getMessage()
             );
-            $response = Zend_Json::encode($response);
+            $response = Mage::helper('core')->jsonEncode($response);
         }
         catch (Exception $e) {
             $response = array(
                 'error'     => true,
                 'message'   => $this->__('Can not add new comment.')
             );
-            $response = Zend_Json::encode($response);
+            $response = Mage::helper('core')->jsonEncode($response);
         }
         $this->getResponse()->setBody($response);
     }

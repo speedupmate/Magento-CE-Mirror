@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Sales
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -52,6 +52,9 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
     const XML_PATH_UPDATE_EMAIL_COPY_METHOD     = 'sales_email/invoice_comment/copy_method';
     const XML_PATH_UPDATE_EMAIL_ENABLED         = 'sales_email/invoice_comment/enabled';
 
+    const REPORT_DATE_TYPE_ORDER_CREATED        = 'order_created';
+    const REPORT_DATE_TYPE_INVOICE_CREATED      = 'invoice_created';
+
     protected static $_states;
 
     protected $_items;
@@ -62,6 +65,12 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
 
     protected $_eventPrefix = 'sales_order_invoice';
     protected $_eventObject = 'invoice';
+
+    /**
+     * Whether the pay() was called
+     * @var bool
+     */
+    protected $_wasPayCalled = false;
 
     public function __destruct()
     {
@@ -181,12 +190,9 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
      */
     public function canCapture()
     {
-        if ($this->getState() != self::STATE_CANCELED &&
-            $this->getState() != self::STATE_PAID &&
-            $this->getOrder()->getPayment()->canCapture()) {
-            return true;
-        }
-        return false;
+        return $this->getState() != self::STATE_CANCELED
+            && $this->getState() != self::STATE_PAID
+            && $this->getOrder()->getPayment()->canCapture();
     }
 
     /**
@@ -234,7 +240,9 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
     public function capture()
     {
         $this->getOrder()->getPayment()->capture($this);
-        $this->pay();
+        if ($this->getIsPaid()) {
+            $this->pay();
+        }
         return $this;
     }
 
@@ -245,6 +253,11 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
      */
     public function pay()
     {
+        if ($this->_wasPayCalled) {
+            return $this;
+        }
+        $this->_wasPayCalled = true;
+
         $invoiceState = self::STATE_PAID;
         if ($this->getOrder()->getPayment()->hasForcedState()) {
             $invoiceState = $this->getOrder()->getPayment()->getForcedState();
@@ -261,6 +274,15 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
         );
         Mage::dispatchEvent('sales_order_invoice_pay', array($this->_eventObject=>$this));
         return $this;
+    }
+
+    /**
+     * Whether pay() method was called (whether order and payment totals were updated)
+     * @return bool
+     */
+    public function wasPayCalled()
+    {
+        return $this->_wasPayCalled;
     }
 
     /**
@@ -282,7 +304,8 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
      */
     public function cancel()
     {
-        $this->getOrder()->getPayment()->cancelInvoice($this);
+        $order = $this->getOrder();
+        $order->getPayment()->cancelInvoice($this);
         foreach ($this->getAllItems() as $item) {
             $item->cancel();
         }
@@ -290,20 +313,26 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
         /**
          * Unregister order totals only for invoices in state PAID
          */
-        if ($this->getState() == self::STATE_PAID) {
-            $this->getOrder()->setTotalPaid(
-                $this->getOrder()->getTotalPaid()-$this->getGrandTotal()
-            );
-            $this->getOrder()->setBaseTotalPaid(
-                $this->getOrder()->getBaseTotalPaid()-$this->getBaseGrandTotal()
-            );
+        $order->setTotalInvoiced($order->getTotalInvoiced() - $this->getGrandTotal());
+        $order->setBaseTotalInvoiced($order->getBaseTotalInvoiced() - $this->getBaseGrandTotal());
 
-            $this->getOrder()->setTotalInvoiced(
-                $this->getOrder()->getTotalInvoiced()-$this->getGrandTotal()
-            );
-            $this->getOrder()->setBaseTotalInvoiced(
-                $this->getOrder()->getBaseTotalInvoiced()-$this->getBaseGrandTotal()
-            );
+        $order->setSubtotalInvoiced($order->getSubtotalInvoiced() - $this->getSubtotal());
+        $order->setBaseSubtotalInvoiced($order->getBaseSubtotalInvoiced() - $this->getBaseSubtotal());
+
+        $order->setTaxInvoiced($order->getTaxInvoiced() - $this->getTaxAmount());
+        $order->setBaseTaxInvoiced($order->getBaseTaxInvoiced() - $this->getBaseTaxAmount());
+
+        $order->setShippingInvoiced($order->getShippingInvoiced() - $this->getShippingAmount());
+        $order->setBaseShippingInvoiced($order->getBaseShippingInvoiced() - $this->getBaseShippingAmount());
+
+        $order->setDiscountInvoiced($order->getDiscountInvoiced() - $this->getDiscountAmount());
+        $order->setBaseDiscountInvoiced($order->getBaseDiscountInvoiced() - $this->getBaseDiscountAmount());
+        $order->setBaseTotalInvoicedCost($order->getBaseTotalInvoicedCost() - $this->getBaseCost());
+
+
+        if ($this->getState() == self::STATE_PAID) {
+            $this->getOrder()->setTotalPaid($this->getOrder()->getTotalPaid()-$this->getGrandTotal());
+            $this->getOrder()->setBaseTotalPaid($this->getOrder()->getBaseTotalPaid()-$this->getBaseGrandTotal());
         }
         $this->setState(self::STATE_CANCELED);
         $this->getOrder()->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
@@ -421,9 +450,7 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
     public function register()
     {
         if ($this->getId()) {
-            Mage::throwException(
-                Mage::helper('sales')->__('Can not register existing invoice')
-            );
+            Mage::throwException(Mage::helper('sales')->__('Cannot register existing invoice'));
         }
 
         foreach ($this->getAllItems() as $item) {
@@ -435,8 +462,10 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
             }
         }
 
+        $order = $this->getOrder();
+        $captureCase = $this->getRequestedCaptureCase();
         if ($this->canCapture()) {
-            if ($captureCase = $this->getRequestedCaptureCase()) {
+            if ($captureCase) {
                 if ($captureCase == self::CAPTURE_ONLINE) {
                     $this->capture();
                 }
@@ -445,45 +474,26 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
                     $this->pay();
                 }
             }
-        }
-        elseif(!$this->getOrder()->getPayment()->getMethodInstance()->isGateway()) {
+        } elseif(!$order->getPayment()->getMethodInstance()->isGateway() || $captureCase == self::CAPTURE_OFFLINE) {
+            $this->setCanVoidFlag(false);
             $this->pay();
         }
 
-        $this->getOrder()->setTotalInvoiced(
-            $this->getOrder()->getTotalInvoiced()+$this->getGrandTotal()
-        );
-        $this->getOrder()->setBaseTotalInvoiced(
-            $this->getOrder()->getBaseTotalInvoiced()+$this->getBaseGrandTotal()
-        );
+        $order->setTotalInvoiced($order->getTotalInvoiced() + $this->getGrandTotal());
+        $order->setBaseTotalInvoiced($order->getBaseTotalInvoiced() + $this->getBaseGrandTotal());
 
-        $this->getOrder()->setSubtotalInvoiced(
-            $this->getOrder()->getSubtotalInvoiced()+$this->getSubtotal()
-        );
-        $this->getOrder()->setBaseSubtotalInvoiced(
-            $this->getOrder()->getBaseSubtotalInvoiced()+$this->getBaseSubtotal()
-        );
+        $order->setSubtotalInvoiced($order->getSubtotalInvoiced() + $this->getSubtotal());
+        $order->setBaseSubtotalInvoiced($order->getBaseSubtotalInvoiced() + $this->getBaseSubtotal());
 
-        $this->getOrder()->setTaxInvoiced(
-            $this->getOrder()->getTaxInvoiced()+$this->getTaxAmount()
-        );
-        $this->getOrder()->setBaseTaxInvoiced(
-            $this->getOrder()->getBaseTaxInvoiced()+$this->getBaseTaxAmount()
-        );
+        $order->setTaxInvoiced($order->getTaxInvoiced() + $this->getTaxAmount());
+        $order->setBaseTaxInvoiced($order->getBaseTaxInvoiced() + $this->getBaseTaxAmount());
 
-        $this->getOrder()->setShippingInvoiced(
-            $this->getOrder()->getShippingInvoiced()+$this->getShippingAmount()
-        );
-        $this->getOrder()->setBaseShippingInvoiced(
-            $this->getOrder()->getBaseShippingInvoiced()+$this->getBaseShippingAmount()
-        );
+        $order->setShippingInvoiced($order->getShippingInvoiced() + $this->getShippingAmount());
+        $order->setBaseShippingInvoiced($order->getBaseShippingInvoiced() + $this->getBaseShippingAmount());
 
-        $this->getOrder()->setDiscountInvoiced(
-            $this->getOrder()->getDiscountInvoiced()+$this->getDiscountAmount()
-        );
-        $this->getOrder()->setBaseDiscountInvoiced(
-            $this->getOrder()->getBaseDiscountInvoiced()+$this->getBaseDiscountAmount()
-        );
+        $order->setDiscountInvoiced($order->getDiscountInvoiced() + $this->getDiscountAmount());
+        $order->setBaseDiscountInvoiced($order->getBaseDiscountInvoiced() + $this->getBaseDiscountAmount());
+        $order->setBaseTotalInvoicedCost($order->getBaseTotalInvoicedCost() + $this->getBaseCost());
 
         $state = $this->getState();
         if (is_null($state)) {
@@ -568,6 +578,7 @@ class Mage_Sales_Model_Order_Invoice extends Mage_Sales_Model_Abstract
         }
         $paymentBlock   = Mage::helper('payment')->getInfoBlock($order->getPayment())
             ->setIsSecureMode(true);
+        $paymentBlock->getMethod()->setStore($order->getStore()->getId());
 
         $mailTemplate = Mage::getModel('core/email_template');
 

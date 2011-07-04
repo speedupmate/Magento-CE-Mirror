@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_GoogleBase
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_GoogleBase
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -34,8 +34,24 @@
 */
 class Mage_GoogleBase_TypesController extends Mage_Adminhtml_Controller_Action
 {
+    /**
+     * Dispatches controller_action_postdispatch_adminhtml Event (as not Adminhtml router)
+     */
+    public function postDispatch()
+    {
+        parent::postDispatch();
+        if ($this->getFlag('', self::FLAG_NO_POST_DISPATCH)) {
+            return;
+        }
+        Mage::dispatchEvent('controller_action_postdispatch_adminhtml', array('controller_action' => $this));
+    }
+
     protected function _initItemType()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Google base'))
+             ->_title($this->__('Manage Attributes'));
+
         Mage::register('current_item_type', Mage::getModel('googlebase/type'));
         $typeId = $this->getRequest()->getParam('id');
         if (!is_null($typeId)) {
@@ -54,6 +70,10 @@ class Mage_GoogleBase_TypesController extends Mage_Adminhtml_Controller_Action
 
     public function indexAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Google base'))
+             ->_title($this->__('Manage Attributes'));
+
         $this->_initAction()
             ->_addBreadcrumb(Mage::helper('googlebase')->__('Item Types'), Mage::helper('googlebase')->__('Item Types'))
             ->_addContent($this->getLayout()->createBlock('googlebase/adminhtml_types'))
@@ -74,6 +94,9 @@ class Mage_GoogleBase_TypesController extends Mage_Adminhtml_Controller_Action
     {
         try {
             $this->_initItemType();
+
+            $this->_title($this->__('New ItemType'));
+
             $this->_initAction()
                 ->_addBreadcrumb(Mage::helper('googlebase')->__('New Item Type'), Mage::helper('adminhtml')->__('New Item Type'))
                 ->_addContent($this->getLayout()->createBlock('googlebase/adminhtml_types_edit'))
@@ -86,6 +109,10 @@ class Mage_GoogleBase_TypesController extends Mage_Adminhtml_Controller_Action
 
     public function editAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Google base'))
+             ->_title($this->__('Manage Attributes'));
+
         $id = $this->getRequest()->getParam('id');
         $model = Mage::getModel('googlebase/type');
 
@@ -100,6 +127,8 @@ class Mage_GoogleBase_TypesController extends Mage_Adminhtml_Controller_Action
                     $result[] = $attribute->getData();
                 }
             }
+
+            $this->_title($this->__('Edit Item Type'));
 
             Mage::register('current_item_type', $model);
             Mage::register('attributes', $result);

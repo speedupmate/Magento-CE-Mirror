@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -173,6 +173,11 @@ class Mage_Checkout_MultishippingController extends Mage_Checkout_Controller_Act
             $this->_redirect('*/multishipping_address/newShipping');
             return;
         }
+
+        $this->_getState()->unsCompleteStep(
+            Mage_Checkout_Model_Type_Multishipping_State::STEP_SHIPPING
+        );
+
         $this->_getState()->setActiveStep(
             Mage_Checkout_Model_Type_Multishipping_State::STEP_SELECT_ADDRESSES
         );
@@ -244,6 +249,7 @@ class Mage_Checkout_MultishippingController extends Mage_Checkout_Controller_Act
         $itemId     = $this->getRequest()->getParam('id');
         $addressId  = $this->getRequest()->getParam('address');
         if ($addressId && $itemId) {
+            $this->_getCheckout()->setCollectRatesFlag(true);
             $this->_getCheckout()->removeAddressItem($addressId, $itemId);
         }
         $this->_redirect('*/*/addresses');
@@ -404,7 +410,6 @@ class Mage_Checkout_MultishippingController extends Mage_Checkout_Controller_Act
         try {
             $payment = $this->getRequest()->getPost('payment');
             $this->_getCheckout()->setPaymentMethod($payment);
-            $this->_getCheckout()->getQuote()->getPayment()->importData($payment);
 
             $this->_getState()->setCompleteStep(
                 Mage_Checkout_Model_Type_Multishipping_State::STEP_BILLING
@@ -461,6 +466,12 @@ class Mage_Checkout_MultishippingController extends Mage_Checkout_Controller_Act
             $this->_getCheckout()->getCheckoutSession()->setDisplaySuccess(true);
             $this->_redirect('*/*/success');
         }
+        catch (Mage_Checkout_Exception $e) {
+            Mage::helper('checkout')->sendPaymentFailedEmail($this->_getCheckout()->getQuote(), $e->getMessage(), 'multi-shipping');
+            $this->_getCheckout()->getCheckoutSession()->clear();
+            Mage::getSingleton('checkout/session')->addError($e->getMessage());
+            $this->_redirect('*/cart');
+        }
         catch (Mage_Core_Exception $e){
             Mage::helper('checkout')->sendPaymentFailedEmail($this->_getCheckout()->getQuote(), $e->getMessage(), 'multi-shipping');
             Mage::getSingleton('checkout/session')->addError($e->getMessage());
@@ -485,6 +496,7 @@ class Mage_Checkout_MultishippingController extends Mage_Checkout_Controller_Act
 
         $this->loadLayout();
         $this->_initLayoutMessages('checkout/session');
+        Mage::dispatchEvent('checkout_multishipping_controller_success_action');
         $this->renderLayout();
     }
 

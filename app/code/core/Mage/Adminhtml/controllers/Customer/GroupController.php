@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -35,6 +35,8 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
 {
     protected function _initGroup()
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Customer Groups'));
+
         Mage::register('current_group', Mage::getModel('customer/group'));
         $groupId = $this->getRequest()->getParam('id');
         if (!is_null($groupId)) {
@@ -47,13 +49,12 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
      */
     public function indexAction()
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Customer Groups'));
+
         $this->loadLayout();
         $this->_setActiveMenu('customer/group');
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customers'), Mage::helper('customer')->__('Customers'));
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customer Groups'), Mage::helper('customer')->__('Customer Groups'));
-
-        $this->_addContent($this->getLayout()->createBlock('adminhtml/customer_group', 'group'));
-
         $this->renderLayout();
     }
 
@@ -68,11 +69,15 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customers'), Mage::helper('customer')->__('Customers'));
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customer Groups'), Mage::helper('customer')->__('Customer Groups'), $this->getUrl('*/customer_group'));
 
-        if (!is_null(Mage::registry('current_group')->getId())) {
+        $currentGroup = Mage::registry('current_group');
+
+        if (!is_null($currentGroup->getId())) {
             $this->_addBreadcrumb(Mage::helper('customer')->__('Edit Group'), Mage::helper('customer')->__('Edit Customer Groups'));
         } else {
             $this->_addBreadcrumb(Mage::helper('customer')->__('New Group'), Mage::helper('customer')->__('New Customer Groups'));
         }
+
+        $this->_title($currentGroup->getId() ? $currentGroup->getCode() : $this->__('New Group'));
 
         $this->getLayout()->getBlock('content')
             ->append($this->getLayout()->createBlock('adminhtml/customer_group_edit', 'group')
@@ -145,6 +150,6 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
 
     protected function _isAllowed()
     {
-	    return Mage::getSingleton('admin/session')->isAllowed('customer/group');
+        return Mage::getSingleton('admin/session')->isAllowed('customer/group');
     }
 }

@@ -18,14 +18,23 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <?php if (!$this->isReadonly()):?>
 <div class="entry-edit">
+    <div id="assign_product_warrning" style="display: none;">
+        <ul class="messages">
+            <li class="error-msg">
+                <ul>
+                    <li><?php echo $this->__('Links with associated products will retain only after saving current product.') ?></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
     <div class="entry-edit-head">
         <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('catalog')->__('Create Simple Associated Product') ?></h4>
     </div>
@@ -63,7 +72,9 @@
     </div>
     <div class="values-container right">
         <label for="__id___label" class="bold"><?php echo Mage::helper('catalog')->__('Attribute Name:') ?></label>
-        <input id="__id___label" type="text" <?php if ($this->isReadonly()):?> disabled="disabled" <?php endif;?> class="input-text attribute-label required-entry template no-display" value="'{{label}}'" />
+        <input id="__id___label" type="text" <?php if ($this->isReadonly()):?> disabled="disabled" <?php endif;?> class="input-text attribute-label required-entry template no-display" value="'{{label}}'" readonly="label" />
+        <input id="__id___label_use_default" type="checkbox" value="1" " checked="use_default" class="attribute-use-default-label">
+        <label for="__id___label_use_default"><?php echo Mage::helper('catalog')->__('Use default')?> ('{{store_label}}')</label>
         <ul class="attribute-values">
         </ul>
     </div>

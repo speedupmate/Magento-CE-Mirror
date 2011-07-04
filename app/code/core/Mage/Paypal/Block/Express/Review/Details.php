@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Paypal
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -31,45 +31,30 @@
  * @package    Mage_Paypal
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Paypal_Block_Express_Review_Details extends Mage_Core_Block_Template
+class Mage_Paypal_Block_Express_Review_Details extends Mage_Checkout_Block_Cart_Totals
 {
     protected $_address;
 
     /**
-     * Get PayPal Express Review Information
+     * Return review shipping address
      *
-     * @return Mage_Paypal_Model_Express_Review
+     * @return Mage_Sales_Model_Order_Address
      */
-    public function getReview()
-    {
-        return Mage::getSingleton('paypal/express_review');
-    }
-
     public function getAddress()
     {
         if (empty($this->_address)) {
-            $this->_address = $this->getReview()->getQuote()->getShippingAddress();
+            $this->_address = $this->getQuote()->getShippingAddress();
         }
         return $this->_address;
     }
 
-    public function getItems()
-    {
-//		$priceFilter = Mage::app()->getStore()->getPriceFilter();
-//        $itemsFilter = new Varien_Filter_Object_Grid();
-//        $itemsFilter->addFilter(new Varien_Filter_Sprintf('%d'), 'qty');
-//        $itemsFilter->addFilter($priceFilter, 'price');
-//        $itemsFilter->addFilter($priceFilter, 'row_total');
-//        return $itemsFilter->filter($this->getAddress()->getAllItems());
-        return $this->getReview()->getQuote()->getAllItems();
-    }
-
+    /**
+     * Return review quote totals
+     *
+     * @return array
+     */
     public function getTotals()
     {
-//        $totals = $this->getAddress()->getTotals();
-//        $totalsFilter = new Varien_Filter_Object_Grid();
-//        $totalsFilter->addFilter(Mage::app()->getStore()->getPriceFilter(), 'value');
-//        return $totalsFilter->filter($totals);
-        return $this->getReview()->getQuote()->getTotals();
+        return $this->getQuote()->getTotals();
     }
 }

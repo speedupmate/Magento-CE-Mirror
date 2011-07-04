@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -58,6 +58,8 @@ class Mage_Catalog_Model_Config extends Mage_Eav_Model_Config
      */
     protected $_usedForSortBy;
 
+    protected $_storeId = null;
+
     const XML_PATH_PRODUCT_COLLECTION_ATTRIBUTES = 'frontend/product/collection/attributes';
 
     /**
@@ -67,6 +69,31 @@ class Mage_Catalog_Model_Config extends Mage_Eav_Model_Config
     protected function _construct()
     {
         $this->_init('catalog/config');
+    }
+
+    /**
+     * Set store id
+     *
+     * @param integer $storeId
+     * @return Mage_Catalog_Model_Config
+     */
+    public function setStoreId($storeId)
+    {
+        $this->_storeId = $storeId;
+        return $this;
+    }
+
+    /**
+     * Return store id, if is not set return current app store
+     *
+     * @return integer
+     */
+    public function getStoreId()
+    {
+        if ($this->_storeId === null) {
+            return Mage::app()->getStore()->getId();
+        }
+        return $this->_storeId;
     }
 
     public function loadAttributeSets()
@@ -162,7 +189,7 @@ class Mage_Catalog_Model_Config extends Mage_Eav_Model_Config
             $attributeSetId = $this->getAttributeSetId($attributeSetId);
         }
         $name = strtolower($name);
-        return isset($this->_attributeGroupsById[$attributeSetId][$name]) ? $this->_attributeGroupsById[$attributeSetId][$name] : false;
+        return isset($this->_attributeGroupsByName[$attributeSetId][$name]) ? $this->_attributeGroupsByName[$attributeSetId][$name] : false;
     }
 
     public function loadProductTypes()
@@ -268,6 +295,7 @@ class Mage_Catalog_Model_Config extends Mage_Eav_Model_Config
             $this->_usedInProductListing = array();
             $entityType = 'catalog_product';
             $attributesData = $this->_getResource()
+                ->setStoreId($this->getStoreId())
                 ->getAttributesUsedInListing();
             Mage::getSingleton('eav/config')
                 ->importAttributesData($entityType, $attributesData);
@@ -315,7 +343,7 @@ class Mage_Catalog_Model_Config extends Mage_Eav_Model_Config
         );
         foreach ($this->getAttributesUsedForSortBy() as $attribute) {
             /* @var $attribute Mage_Eav_Model_Entity_Attribute_Abstract */
-            $options[$attribute->getAttributeCode()] = Mage::helper('catalog')->__($attribute->getFrontendLabel());
+            $options[$attribute->getAttributeCode()] = $attribute->getStoreLabel();
         }
 
         return $options;

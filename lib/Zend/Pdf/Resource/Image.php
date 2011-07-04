@@ -12,20 +12,19 @@
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
+ * @category   Zend
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Image.php 18993 2009-11-15 17:09:16Z alexander $
  */
 
 
-/** Zend_Pdf_Element_Object */
-#require_once 'Zend/Pdf/Element/Object.php';
-
-/** Zend_Pdf_Element_Dictionary */
-#require_once 'Zend/Pdf/Element/Dictionary.php';
+/** Internally used classes */
 
 /** Zend_Pdf_Element_Name */
 #require_once 'Zend/Pdf/Element/Name.php';
+
 
 /** Zend_Pdf_Resource */
 #require_once 'Zend/Pdf/Resource.php';
@@ -39,7 +38,7 @@
  * Thus part of the common class name is removed.
  *
  * @package    Zend_Pdf
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Pdf_Resource_Image extends Zend_Pdf_Resource

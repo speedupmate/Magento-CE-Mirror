@@ -64,8 +64,8 @@ abstract class Mage_Centinel_Model_StateAbstract extends Varien_Object
      * If $key is empty will return all the data as an array
      * Otherwise it will return value of the attribute specified by $key
      *
-     * $index parameter is ignored
-     * @see Mage_Core_Model_Session_Abstract::getData()
+     * If $index is specified it will assume that attribute data is an array
+     * and retrieve corresponding member.
      *
      * @param string $key
      * @param string|int $index
@@ -73,7 +73,7 @@ abstract class Mage_Centinel_Model_StateAbstract extends Varien_Object
      */
     public function getData($key='', $index=null)
     {
-        return $this->getDataStorage()->getData($key);
+        return $this->getDataStorage()->getData($key, $index);
     }
 
     /**

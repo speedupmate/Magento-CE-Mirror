@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
 var VarienRulesForm = new Class.create();
@@ -38,7 +40,6 @@ VarienRulesForm.prototype = {
 
     initParam: function (container) {
         container.rulesObject = this;
-
         var label = Element.down(container, '.label');
         if (label) {
             Event.observe(label, 'click', this.showParamInputField.bind(this, container));
@@ -55,7 +56,8 @@ VarienRulesForm.prototype = {
             if (apply) {
                 Event.observe(apply, 'click', this.hideParamInputField.bind(this, container));
             } else {
-                elem = elem.down();
+                elem = elem.down('.element-value-changer');
+                elem.container = container;
                 if (!elem.multiple) {
                     Event.observe(elem, 'change', this.hideParamInputField.bind(this, container));
                 }
@@ -71,17 +73,26 @@ VarienRulesForm.prototype = {
 
     showChooserElement: function (chooser) {
         this.chooserSelectedItems = $H({});
-        var values = this.updateElement.value.split(','), s='';
-        for (i=0; i<values.length; i++) {
-            s = values[i].strip();
-            if (s!='') {
-               this.chooserSelectedItems.set(s,1);
+        if (chooser.hasClassName('no-split')) {
+            this.chooserSelectedItems.set(this.updateElement.value, 1);
+        } else {
+            var values = this.updateElement.value.split(','), s = '';
+            for (i=0; i<values.length; i++) {
+                s = values[i].strip();
+                if (s!='') {
+                   this.chooserSelectedItems.set(s,1);
+                }
             }
         }
-        new Ajax.Updater(chooser, chooser.getAttribute('url'), {
+        new Ajax.Request(chooser.getAttribute('url'), {
             evalScripts: true,
             parameters: {'form_key': FORM_KEY, 'selected[]':this.chooserSelectedItems.keys() },
-            onSuccess: this._processSuccess.bind(this) && this.showChooserLoaded.bind(this, chooser),
+            onSuccess: function(transport) {
+                if (this._processSuccess(transport)) {
+                    $(chooser).update(transport.responseText);
+                    this.showChooserLoaded(chooser, transport);
+                }
+            }.bind(this),
             onFailure: this._processFailure.bind(this)
         });
     },
@@ -153,7 +164,7 @@ VarienRulesForm.prototype = {
 
         }
 
-        var elem = Element.down(elemContainer, 'select');
+        var elem = Element.down(elemContainer, '.element-value-changer');
         if (elem) {
            elem.focus();
            // trying to emulate enter to open dropdown
@@ -178,7 +189,7 @@ VarienRulesForm.prototype = {
         var label = Element.down(container, '.label'), elem;
 
         if (!container.hasClassName('rule-param-new-child')) {
-            elem = Element.down(container, 'select');
+            elem = Element.down(container, '.element-value-changer');
             if (elem && elem.options) {
                 var selectedOptions = [];
                 for (i=0; i<elem.options.length; i++) {
@@ -204,15 +215,13 @@ VarienRulesForm.prototype = {
                 } else if (str.length>30) {
                     str = str.substr(0, 30)+'...';
                 }
-                label.innerHTML = str;
+                label.innerHTML = str.escapeHTML();
             }
         } else {
-            elem = Element.down(container, 'select');
-
+            elem = Element.down(container, '.element-value-changer');
             if (elem.value) {
                 this.addRuleNewChild(elem);
             }
-
             elem.value = '';
         }
 
@@ -244,20 +253,29 @@ VarienRulesForm.prototype = {
         new_elem.innerHTML = Translator.translate('Please wait, loading...');
         children_ul.insertBefore(new_elem, $(elem).up('li'));
 
-        new Ajax.Updater(new_elem, this.newChildUrl, {
+        new Ajax.Request(this.newChildUrl, {
             evalScripts: true,
             parameters: {form_key: FORM_KEY, type:new_type.replace('/','-'), id:new_id },
             onComplete: this.onAddNewChildComplete.bind(this, new_elem),
-            onSuccess: this._processSuccess.bind(this),
+            onSuccess: function(transport) {
+                if(this._processSuccess(transport)) {
+                    $(new_elem).update(transport.responseText);
+                }
+            }.bind(this),
             onFailure: this._processFailure.bind(this)
         });
     },
 
     _processSuccess : function(transport) {
-        var response = transport.responseText.evalJSON();
-        if (response.ajaxExpired && response.ajaxRedirect) {
-            alert(Translator.translate('Your session has been expired, you will be relogged in now.'));
-            location.href = response.ajaxRedirect;
+        if (transport.responseText.isJSON()) {
+            var response = transport.responseText.evalJSON()
+            if (response.error) {
+                alert(response.message);
+            }
+            if(response.ajaxExpired && response.ajaxRedirect) {
+                setLocation(response.ajaxRedirect);
+            }
+            return false;
         }
         return true;
     },

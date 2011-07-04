@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Cms
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -56,9 +56,12 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
      */
     public function indexAction()
     {
-        $this->_initAction()
-            ->_addContent($this->getLayout()->createBlock('adminhtml/cms_page'))
-            ->renderLayout();
+        $this->_title($this->__('CMS'))
+             ->_title($this->__('Pages'))
+             ->_title($this->__('Manage Content'));
+
+        $this->_initAction();
+        $this->renderLayout();
     }
 
     /**
@@ -75,20 +78,26 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
      */
     public function editAction()
     {
+        $this->_title($this->__('CMS'))
+             ->_title($this->__('Pages'))
+             ->_title($this->__('Manage Content'));
+
         // 1. Get ID and create model
         $id = $this->getRequest()->getParam('page_id');
         $model = Mage::getModel('cms/page');
 
         // 2. Initial checking
         if ($id) {
-            $model->load($id);/*die('<br>#stop');*/
+            $model->load($id);
             if (! $model->getId()) {
                 Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('This page no longer exists'));
                 $this->_redirect('*/*/');
                 return;
             }
         }
-//print '<pre>';var_dump($model->getData());
+
+        $this->_title($model->getId() ? $model->getTitle() : $this->__('New Page'));
+
         // 3. Set entered data if was error when we do save
         $data = Mage::getSingleton('adminhtml/session')->getFormData(true);
         if (! empty($data)) {
@@ -100,14 +109,8 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
 
         // 5. Build edit form
         $this->_initAction()
-            ->_addBreadcrumb($id ? Mage::helper('cms')->__('Edit Page') : Mage::helper('cms')->__('New Page'), $id ? Mage::helper('cms')->__('Edit Page') : Mage::helper('cms')->__('New Page'))
-            ->_addContent($this->getLayout()->createBlock('adminhtml/cms_page_edit')->setData('action', $this->getUrl('*/cms_page/save')))
-            ->_addLeft($this->getLayout()->createBlock('adminhtml/cms_page_edit_tabs'));
+            ->_addBreadcrumb($id ? Mage::helper('cms')->__('Edit Page') : Mage::helper('cms')->__('New Page'), $id ? Mage::helper('cms')->__('Edit Page') : Mage::helper('cms')->__('New Page'));
 
-        if (Mage::app()->getConfig()->getModuleConfig('Mage_GoogleOptimizer')->is('active', true)
-            && Mage::helper('googleoptimizer')->isOptimizerActiveForCms()) {
-            $this->_addJs($this->getLayout()->createBlock('googleoptimizer/js')->setTemplate('googleoptimizer/js.phtml'));
-        }
         $this->renderLayout();
     }
 
@@ -118,18 +121,19 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
     {
         // check if data sent
         if ($data = $this->getRequest()->getPost()) {
-            // init model and set data
+            $data = $this->_filterPostData($data);
+            //init model and set data
             $model = Mage::getModel('cms/page');
 
-//            if ($id = $this->getRequest()->getParam('page_id')) {
-//                $model->load($id);
+            if ($id = $this->getRequest()->getParam('page_id')) {
+                $model->load($id);
 //                if ($id != $model->getId()) {
 //                    Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('The page you are trying to save no longer exists'));
 //                    Mage::getSingleton('adminhtml/session')->setFormData($data);
 //                    $this->_redirect('*/*/edit', array('page_id' => $this->getRequest()->getParam('page_id')));
 //                    return;
 //                }
-//            }
+            }
 
             $model->setData($data);
 
@@ -153,15 +157,24 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
                 $this->_redirect('*/*/');
                 return;
 
-            } catch (Exception $e) {
-                // display error message
-                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
-                // save data in session
-                Mage::getSingleton('adminhtml/session')->setFormData($data);
-                // redirect to edit form
-                $this->_redirect('*/*/edit', array('page_id' => $this->getRequest()->getParam('page_id')));
-                return;
+            } catch (Mage_Core_Exception $e) {
+                $this->_getSession()->addError($e->getMessage());
             }
+            catch (Exception $e) {
+                $this->_getSession()->addException($e, Mage::helper('cms')->__('Error while saving Page. Please try again later.'));
+//                $this->_getSession()->setFormData($data);
+//                // display error message
+//                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+//                // save data in session
+//                Mage::getSingleton('adminhtml/session')->setFormData($data);
+//                // redirect to edit form
+//                $this->_redirect('*/*/edit', array('page_id' => $this->getRequest()->getParam('page_id')));
+//                return;
+            }
+
+            $this->_getSession()->setFormData($data);
+            $this->_redirect('*/*/edit', array('page_id' => $this->getRequest()->getParam('page_id')));
+            return;
         }
         $this->_redirect('*/*/');
     }
@@ -209,6 +222,29 @@ class Mage_Adminhtml_Cms_PageController extends Mage_Adminhtml_Controller_Action
      */
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('cms/page');
+        switch ($this->getRequest()->getActionName()) {
+            case 'new':
+            case 'save':
+                return Mage::getSingleton('admin/session')->isAllowed('cms/page/save');
+                break;
+            case 'delete':
+                return Mage::getSingleton('admin/session')->isAllowed('cms/page/delete');
+                break;
+            default:
+                return Mage::getSingleton('admin/session')->isAllowed('cms/page');
+                break;
+        }
+    }
+
+    /**
+     * Filtering posted data. Converting localized data if needed
+     *
+     * @param array
+     * @return array
+     */
+    protected function _filterPostData($data)
+    {
+        $data = $this->_filterDates($data, array('custom_theme_from', 'custom_theme_to'));
+        return $data;
     }
 }

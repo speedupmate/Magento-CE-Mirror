@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -108,14 +108,19 @@ class Mage_Adminhtml_Block_System_Convert_Profile_Run extends Mage_Adminhtml_Blo
                 echo "</li>";
             }
 
+            if($profile->getEntityType() == 'product' && $profile->getDirection() == 'import') {
+                echo '<li id="liBeforeFinish" style="background-color:#FFD; display:none;">';
+                echo '<img src="'.Mage::getDesign()->getSkinUrl('images/fam_bullet_error.gif').'" class="v-middle" style="margin-right:5px"/>';
+                echo $this->__("Please wait while we are refreshing indexes.");
+                echo '<img id="before-finish-wait-img" src="'.Mage::getDesign()->getSkinUrl('images/rule-ajax-loader.gif').'" class="v-middle" style="margin-right:5px"/>';
+                echo '</li>';
+            }
+
             echo '<li id="liFinished" style="display:none;">';
             echo '<img src="'.Mage::getDesign()->getSkinUrl('images/note_msg_icon.gif').'" class="v-middle" style="margin-right:5px"/>';
             echo $this->__("Finished profile execution.");
             echo '</li>';
-
-
             echo "</ul>";
-
 
             $showFinished = true;
             $batchModel = Mage::getSingleton('dataflow/batch');
@@ -123,7 +128,10 @@ class Mage_Adminhtml_Block_System_Convert_Profile_Run extends Mage_Adminhtml_Blo
             if ($batchModel->getId()) {
                 if ($batchModel->getAdapter()) {
                     $numberOfRecords = $profile->getData('gui_data/import/number_of_records');
-                    $numberOfRecords = $numberOfRecords ? $numberOfRecords : 1;
+                    if (!$numberOfRecords) {
+                        $batchParams = $batchModel->getParams();
+                        $numberOfRecords = isset($batchParams['number_of_records']) ? $batchParams['number_of_records'] : 1;
+                    }
 
                     $showFinished = false;
                     $batchImportModel = $batchModel->getBatchImportModel();
@@ -156,7 +164,7 @@ var countOfUpdated = 0;
 var countOfError = 0;
 var importData = [];
 var totalRecords = ' . $countItems . ';
-var config= '.Zend_Json::encode($batchConfig).';
+var config= '.Mage::helper('core')->jsonEncode($batchConfig).';
 </script>
 <script type="text/javascript">
 function addImportData(data) {
@@ -173,6 +181,12 @@ function execImportData() {
             text: config.tplSccTxt.evaluate({updated:(countOfUpdated-countOfError)}),
             id: "updatedFinish"
         })});
+
+        if ($("liBeforeFinish")) {
+            Element.insert($("liFinished"), {before: $("liBeforeFinish")});
+            $("liBeforeFinish").show();
+        }
+
         new Ajax.Request("' . $this->getUrl('*/*/batchFinish', array('id' => $batchModel->getId())) .'", {
             method: "post",
             parameters: {form_key: FORM_KEY},
@@ -187,6 +201,10 @@ function execImportData() {
                             id: "error-finish"
                         })});
                     }
+                }
+
+                if ($("before-finish-wait-img")) {
+                    $("before-finish-wait-img").hide();
                 }
 
                 $(\'liFinished\').show();
@@ -266,7 +284,7 @@ function addProfileRow(data) {
                             'batch_id'   => $batchModel->getId(),
                             'rows[]'     => $ids
                         );
-                        echo '<script type="text/javascript">addImportData('.Zend_Json::encode($data).')</script>';
+                        echo '<script type="text/javascript">addImportData('.Mage::helper('core')->jsonEncode($data).')</script>';
                     }
                     echo '<script type="text/javascript">execImportData()</script>';
                     //print $this->getUrl('*/*/batchFinish', array('id' => $batchModel->getId()));
@@ -288,6 +306,5 @@ function addProfileRow(data) {
         echo "</ul>";
         */
         echo '</body></html>';
-        exit;
     }
 }

@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 var AdminOrder = new Class.create();
 AdminOrder.prototype = {
@@ -133,11 +135,9 @@ AdminOrder.prototype = {
         }
         data = data.toObject();
 
-        if(name == 'postcode' || name == 'country_id' || name == 'region_id'){
-            if( (type == 'billing' && this.shippingAsBilling)
-                || (type == 'shipping' && !this.shippingAsBilling) ) {
-                data['reset_shipping'] = true;
-            }
+        if( (type == 'billing' && this.shippingAsBilling)
+            || (type == 'shipping' && !this.shippingAsBilling) ) {
+            data['reset_shipping'] = true;
         }
 
         data['order['+type+'_address][customer_address_id]'] = $('order-'+type+'_address_customer_address_id').value;
@@ -210,7 +210,7 @@ AdminOrder.prototype = {
     resetShippingMethod : function(data){
         data['reset_shipping'] = 1;
         this.isShippingMethodReseted = true;
-        this.loadArea(['shipping_method', 'billing_method', 'totals', 'giftmessage'], true, data);
+        this.loadArea(['shipping_method', 'billing_method', 'shipping_address', 'totals', 'giftmessage'], true, data);
     },
 
     loadShippingRates : function(){
@@ -281,7 +281,7 @@ AdminOrder.prototype = {
             } else {
                 return false;
             }
-        } 
+        }
         var data = {};
         var fields = $('payment_form_' + currentMethod).select('input', 'select');
         for(var i=0;i<fields.length;i++){
@@ -571,6 +571,12 @@ AdminOrder.prototype = {
                 loaderArea: indicator,
                 onSuccess: function(transport) {
                     var response = transport.responseText.evalJSON();
+                    if (response.error) {
+                        alert(response.message);
+                    }
+                    if(response.ajaxExpired && response.ajaxRedirect) {
+                        setLocation(response.ajaxRedirect);
+                    }
                     if(!this.loadingAreas){
                         this.loadingAreas = [];
                     }
@@ -581,7 +587,9 @@ AdminOrder.prototype = {
                     for(var i=0; i<this.loadingAreas.length; i++){
                         var id = this.loadingAreas[i];
                         if($(this.getAreaId(id))){
-                            $(this.getAreaId(id)).update(response[id] ? response[id] : '');
+                            if ('message' != id || response[id]) {
+                                $(this.getAreaId(id)).update(response[id] ? response[id] : '');
+                            }
                             if ($(this.getAreaId(id)).callback) {
                                 this[$(this.getAreaId(id)).callback]();
                             }
@@ -671,20 +679,20 @@ AdminOrder.prototype = {
         }
     },
 
-    submit : function(){
-        //editForm.submit();
-        if(this.orderItemChanged){
-            if(confirm('You have item changes')){
-                //$('edit_form').submit();
-                editForm.submit();
-            }
-            else{
+    submit : function()
+    {
+        if (this.orderItemChanged) {
+            if (confirm('You have item changes')) {
+                if (editForm.submit()) {
+                    disableElements('save');
+                }
+            } else {
                 this.itemsUpdate();
             }
-        }
-        else{
-            //$('edit_form').submit();
-            editForm.submit();
+        } else {
+            if (editForm.submit()) {
+                disableElements('save');
+            }
         }
     },
 
@@ -719,6 +727,11 @@ AdminOrder.prototype = {
     processOverlay : function(elId, show)
     {
         var el = $(elId);
+
+        if (!el) {
+            return false;
+        }
+
         var parentEl = el.up(1);
         var parentPos = Element.cumulativeOffset(parentEl);
         if (show) {

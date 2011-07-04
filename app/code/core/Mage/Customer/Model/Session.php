@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -33,7 +33,19 @@
  */
 class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
 {
+    /**
+     * Customer object
+     *
+     * @var Mage_Customer_Model_Customer
+     */
     protected $_customer;
+
+    /**
+     * Flag with customer id validations result
+     *
+     * @var bool
+     */
+    protected $_isCustomerIdChecked = null;
 
     /**
      * Retrieve customer sharing configuration model
@@ -110,7 +122,10 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
      */
     public function getCustomerId()
     {
-        return $this->getId();
+        if ($this->isLoggedIn()) {
+            return $this->getId();
+        }
+        return null;
     }
 
     /**
@@ -146,8 +161,10 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
      */
     public function checkCustomerId($customerId)
     {
-        return Mage::getResourceSingleton('customer/customer')
-            ->checkCustomerId($customerId);
+        if ($this->_isCustomerIdChecked === null) {
+            $this->_isCustomerIdChecked = Mage::getResourceSingleton('customer/customer')->checkCustomerId($customerId);
+        }
+        return $this->_isCustomerIdChecked;
     }
 
     /**
@@ -163,8 +180,7 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
             ->setWebsiteId(Mage::app()->getStore()->getWebsiteId());
 
         if ($customer->authenticate($username, $password)) {
-            $this->setCustomer($customer);
-            Mage::dispatchEvent('customer_login', array('customer'=>$customer));
+            $this->setCustomerAsLoggedIn($customer);
             return true;
         }
         return false;
@@ -186,9 +202,8 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
     public function loginById($customerId)
     {
         $customer = Mage::getModel('customer/customer')->load($customerId);
-        if ($customer) {
-            $this->setCustomer($customer);
-            Mage::dispatchEvent('customer_login', array('customer'=>$customer));
+        if ($customer->getId()) {
+            $this->setCustomerAsLoggedIn($customer);
             return true;
         }
         return false;

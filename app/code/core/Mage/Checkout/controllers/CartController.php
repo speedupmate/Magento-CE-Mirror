@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -150,6 +150,12 @@ class Mage_Checkout_CartController extends Mage_Core_Controller_Front_Action
     {
         $cart   = $this->_getCart();
         $params = $this->getRequest()->getParams();
+        if (isset($params['qty'])) {
+            $filter = new Zend_Filter_LocalizedToNormalized(
+                array('locale' => Mage::app()->getLocale()->getLocaleCode())
+            );
+            $params['qty'] = $filter->filter($params['qty']);
+        }
 
         $product= $this->_initProduct();
         $related= $this->getRequest()->getParam('related_product');
@@ -179,7 +185,7 @@ class Mage_Checkout_CartController extends Mage_Core_Controller_Front_Action
             Mage::dispatchEvent('checkout_cart_add_product_complete',
                 array('product' => $product, 'request' => $this->getRequest(), 'response' => $this->getResponse())
             );
-            $message = $this->__('%s was successfully added to your shopping cart.', $product->getName());
+            $message = $this->__('%s was successfully added to your shopping cart.', Mage::helper('core')->htmlEscape($product->getName()));
             if (!$this->_getSession()->getNoCartRedirect(true)) {
                 $this->_getSession()->addSuccess($message);
                 $this->_goBack();
@@ -248,7 +254,18 @@ class Mage_Checkout_CartController extends Mage_Core_Controller_Front_Action
         try {
             $cartData = $this->getRequest()->getParam('cart');
             if (is_array($cartData)) {
+                $filter = new Zend_Filter_LocalizedToNormalized(
+                    array('locale' => Mage::app()->getLocale()->getLocaleCode())
+                );
+                foreach ($cartData as $index => $data) {
+                    if (isset($data['qty'])) {
+                        $cartData[$index]['qty'] = $filter->filter($data['qty']);
+                    }
+                }
                 $cart = $this->_getCart();
+                if (! $cart->getCustomerSession()->getCustomer()->getId() && $cart->getQuote()->getCustomerId()) {
+                    $cart->getQuote()->setCustomerId(null);
+                }
                 $cart->updateItems($cartData)
                     ->save();
             }

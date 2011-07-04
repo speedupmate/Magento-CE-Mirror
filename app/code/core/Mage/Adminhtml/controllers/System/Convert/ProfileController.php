@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -36,6 +36,10 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
 
     protected function _initProfile($idFieldName = 'id')
     {
+        $this->_title($this->__('System'))
+             ->_title($this->__('Import and Export'))
+             ->_title($this->__('Profiles'));
+
         $profileId = (int) $this->getRequest()->getParam($idFieldName);
         $profile = Mage::getModel('dataflow/profile');
 
@@ -58,6 +62,10 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
      */
     public function indexAction()
     {
+        $this->_title($this->__('System'))
+             ->_title($this->__('Import and Export'))
+             ->_title($this->__('Advanced Profiles'));
+
         if ($this->getRequest()->getQuery('ajax')) {
             $this->_forward('grid');
             return;
@@ -106,6 +114,8 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
         if (!empty($data)) {
             $profile->addData($data);
         }
+
+        $this->_title($profile->getId() ? $profile->getName() : $this->__('New Profile'));
 
         $this->_setActiveMenu('system/convert');
 
@@ -241,8 +251,8 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
                     continue;
                 }
 
-                $importData = $batchImportModel->getBatchData();
                 try {
+                    $importData = $batchImportModel->getBatchData();
                     $adapter->saveRow($importData);
                 }
                 catch (Exception $e) {
@@ -256,7 +266,7 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
                 'savedRows' => $saved,
                 'errors'    => $errors
             );
-            $this->getResponse()->setBody(Zend_Json::encode($result));
+            $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
         }
     }
 
@@ -278,7 +288,7 @@ class Mage_Adminhtml_System_Convert_ProfileController extends Mage_Adminhtml_Con
                     $result['error'] = Mage::helper('adminhtml')->__('Error while finished process. Please refresh cache');
                 }
                 $batchModel->delete();
-                $this->getResponse()->setBody(Zend_Json::encode($result));
+                $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
             }
         }
     }

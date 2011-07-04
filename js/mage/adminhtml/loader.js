@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
 var SessionError = Class.create();
@@ -56,9 +58,10 @@ Ajax.Request.addMethods({
         if (state == 'Complete') {
             try {
                 this._complete = true;
-                if (response.responseJSON && typeof(response.responseJSON) == 'object') {
-                    if (response.responseJSON.ajaxExpired && response.responseJSON.ajaxRedirect) {
-                        window.location.replace(response.responseJSON.ajaxRedirect);
+                if (response.responseText.isJSON()) {
+                    var jsonObject = response.responseText.evalJSON();
+                    if (jsonObject.ajaxExpired && jsonObject.ajaxRedirect) {
+                        window.location.replace(jsonObject.ajaxRedirect);
                         throw new SessionError('session expired');
                     }
                 }
@@ -144,7 +147,7 @@ varienLoader.prototype = {
         }
 
         if (typeof(params.updaterId) != 'undefined') {
-            new Ajax.Updater(params.updaterId, url, {
+            new varienUpdater(params.updaterId, url, {
                 evalScripts : true,
                 onComplete: this.processResult.bind(this),
                 onFailure: this._processFailure.bind(this)
@@ -256,3 +259,16 @@ function toggleSelectsUnderBlock(block, flag){
 }
 
 Ajax.Responders.register(varienLoaderHandler.handler);
+
+var varienUpdater = Class.create(Ajax.Updater, {
+    updateContent: function($super, responseText) {
+        if (responseText.isJSON()) {
+            var responseJSON = responseText.evalJSON();
+            if (responseJSON.ajaxExpired && responseJSON.ajaxRedirect) {
+                window.location.replace(responseJSON.ajaxRedirect);
+            }
+        } else {
+            $super(responseText);
+        }
+    }
+});

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Directory
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Directory
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -34,19 +34,21 @@ class Mage_Directory_Helper_Url extends Mage_Core_Helper_Url
     /**
      * Retrieve switch currency url
      *
+     * @param array $params Additional url params
      * @return string
      */
-    public function getSwitchCurrencyUrl()
+    public function getSwitchCurrencyUrl($params = array())
     {
+        $params = is_array($params) ? $params : array();
+
         if ($this->_getRequest()->getAlias('rewrite_request_path')) {
             $url = Mage::app()->getStore()->getBaseUrl() . $this->_getRequest()->getAlias('rewrite_request_path');
         }
         else {
             $url = $this->getCurrentUrl();
         }
-        $params = array(
-            Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED => Mage::helper('core')->urlEncode($url)
-        );
+        $params[Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED] = Mage::helper('core')->urlEncode($url);
+
         return $this->_getUrl('directory/currency/switch', $params);
     }
 

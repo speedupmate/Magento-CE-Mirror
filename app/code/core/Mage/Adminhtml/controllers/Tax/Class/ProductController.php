@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -39,6 +39,10 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
      */
     public function indexAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Customer Tax Classes'));
+
         $this->_initAction()
             ->_addContent($this->getLayout()->createBlock('adminhtml/tax_class')->setClassType('PRODUCT'))
             ->renderLayout();
@@ -59,6 +63,10 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
      */
     public function editAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Customer Tax Classes'));
+
         $classId    = $this->getRequest()->getParam('id');
         $model      = Mage::getModel('tax/class');
         if ($classId) {
@@ -69,6 +77,8 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
                 return;
             }
         }
+
+        $this->_title($model->getId() ? $model->getClassName() : $this->__('New Class'));
 
         $data = Mage::getSingleton('adminhtml/session')->getClassData(true);
         if (!empty($data)) {

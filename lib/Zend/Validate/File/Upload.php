@@ -14,9 +14,9 @@
  *
  * @category  Zend
  * @package   Zend_Validate
- * @copyright Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
- * @version   $Id: $
+ * @version   $Id: Upload.php 18148 2009-09-16 19:27:43Z thomas $
  */
 
 /**
@@ -29,7 +29,7 @@
  *
  * @category  Zend
  * @package   Zend_Validate
- * @copyright Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Validate_File_Upload extends Zend_Validate_Abstract
@@ -78,11 +78,15 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
      * If no files are given the $_FILES array will be used automatically.
      * NOTE: This validator will only work with HTTP POST uploads!
      *
-     * @param  array $files Array of files in syntax of Zend_File_Transfer
+     * @param  array|Zend_Config $files Array of files in syntax of Zend_File_Transfer
      * @return void
      */
     public function __construct($files = array())
     {
+        if ($files instanceof Zend_Config) {
+            $files = $files->toArray();
+        }
+
         $this->setFiles($files);
     }
 
@@ -119,7 +123,7 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
     }
 
     /**
-     * Sets the minimum filesize
+     * Sets the files to be checked
      *
      * @param  array $files The files to check in syntax of Zend_File_Transfer
      * @return Zend_Validate_File_Upload Provides a fluent interface
@@ -131,6 +135,13 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
         } else {
             $this->_files = $files;
         }
+
+        foreach($this->_files as $file => $content) {
+            if (!isset($content['error'])) {
+                unset($this->_files[$file]);
+            }
+        }
+
         return $this;
     }
 
@@ -149,11 +160,11 @@ class Zend_Validate_File_Upload extends Zend_Validate_Abstract
             $files[$value] = $this->_files[$value];
         } else {
             foreach ($this->_files as $file => $content) {
-                if ($content['name'] === $value) {
+                if (isset($content['name']) && ($content['name'] === $value)) {
                     $files[$file] = $this->_files[$file];
                 }
 
-                if ($content['tmp_name'] === $value) {
+                if (isset($content['tmp_name']) && ($content['tmp_name'] === $value)) {
                     $files[$file] = $this->_files[$file];
                 }
             }

@@ -43,6 +43,25 @@ class Varien_Http_Adapter_Curl implements Zend_Http_Client_Adapter_Interface
     protected $_resource;
 
     /**
+     * Apply current configuration array to transport resource
+     */
+    protected function _applyConfig()
+    {
+        //curl_setopt();
+        if (isset($this->_config['timeout'])) {
+            curl_setopt($this->_getResource(), CURLOPT_TIMEOUT, $this->_config['timeout']);
+        }
+        if (isset($this->_config['maxredirects'])) {
+            curl_setopt($this->_getResource(), CURLOPT_MAXREDIRS, $this->_config['maxredirects']);
+        }
+        if (isset($this->_config['proxy'])) {
+            curl_setopt ($this->_getResource(), CURLOPT_PROXY, $this->_config['proxy']);
+        }
+
+        return $this;
+    }
+
+    /**
      * Set the configuration array for the adapter
      *
      * @param array $config
@@ -59,6 +78,7 @@ class Varien_Http_Adapter_Curl implements Zend_Http_Client_Adapter_Interface
      * @param string  $host
      * @param int     $port
      * @param boolean $secure
+     * @deprecated since 1.4.0.0-rc1
      */
     public function connect($host, $port = 80, $secure = false)
     {
@@ -91,6 +111,8 @@ class Varien_Http_Adapter_Curl implements Zend_Http_Client_Adapter_Interface
         if ($url instanceof Zend_Uri_Http) {
             $url = $url->getUri();
         }
+        $this->_applyConfig();
+
         // set url to post to
         curl_setopt($this->_getResource(), CURLOPT_URL, $url);
         curl_setopt($this->_getResource(), CURLOPT_RETURNTRANSFER, true);
@@ -99,7 +121,7 @@ class Varien_Http_Adapter_Curl implements Zend_Http_Client_Adapter_Interface
             curl_setopt($this->_getResource(), CURLOPT_POSTFIELDS, $body);
         }
         elseif ($method == Zend_Http_Client::GET) {
-        	curl_setopt($this->_getResource(), CURLOPT_HTTPGET, true);
+            curl_setopt($this->_getResource(), CURLOPT_HTTPGET, true);
         }
 
         if( is_array($headers) ) {
@@ -171,5 +193,43 @@ class Varien_Http_Adapter_Curl implements Zend_Http_Client_Adapter_Interface
     public function getInfo($opt = 0)
     {
         return curl_getinfo($this->_getResource(), $opt);
+    }
+
+    /**
+     * curl_multi_* requests support
+     *
+     * @param array $urls
+     * @param array $options
+     * @return array
+     */
+    public function multiRequest($urls, $options = array())
+    {
+        $handles = array();
+        $result  = array();
+
+        $multihandle = curl_multi_init();
+
+        foreach ($urls as $key => $url) {
+            $handles[$key] = curl_init();
+            curl_setopt($handles[$key], CURLOPT_URL,            $url);
+            curl_setopt($handles[$key], CURLOPT_HEADER,         0);
+            curl_setopt($handles[$key], CURLOPT_RETURNTRANSFER, 1);
+            if (!empty($options)) {
+                curl_setopt_array($handles[$key], $options);
+            }
+            curl_multi_add_handle($multihandle, $handles[$key]);
+        }
+        $process = null;
+        do {
+            curl_multi_exec($multihandle, $process);
+            usleep(100);
+        } while ($process>0);
+
+        foreach ($handles as $key => $handle) {
+            $result[$key] = curl_multi_getcontent($handle);
+            curl_multi_remove_handle($multihandle, $handle);
+        }
+        curl_multi_close($multihandle);
+        return $result;
     }
 }

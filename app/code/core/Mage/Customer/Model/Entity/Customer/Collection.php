@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -84,28 +84,22 @@ class Mage_Customer_Model_Entity_Customer_Collection extends Mage_Eav_Model_Enti
         $countSelect->reset(Zend_Db_Select::LIMIT_OFFSET);
         $countSelect->reset(Zend_Db_Select::COLUMNS);
 
-        $countSelect->from('', 'COUNT(*)');
+        $countSelect->columns('COUNT(*)');
         $countSelect->resetJoinLeft();
 
         return $countSelect;
     }
 
     /**
-     * Retrive all ids for collection
+     * Reset left join
      *
-     * @return array
+     * @return Mage_Eav_Model_Entity_Collection_Abstract
      */
-    public function getAllIds($limit=null, $offset=null)
+    protected function _getAllIdsSelect($limit=null, $offset=null)
     {
-        $idsSelect = clone $this->getSelect();
-        $idsSelect->reset(Zend_Db_Select::ORDER);
-        $idsSelect->reset(Zend_Db_Select::LIMIT_COUNT);
-        $idsSelect->reset(Zend_Db_Select::LIMIT_OFFSET);
-        $idsSelect->reset(Zend_Db_Select::COLUMNS);
-        $idsSelect->from(null, 'e.'.$this->getEntity()->getIdFieldName());
-        $idsSelect->limit($limit, $offset);
+        $idsSelect = parent::_getAllIdsSelect($limit, $offset);
         $idsSelect->resetJoinLeft();
-
-        return $this->getConnection()->fetchCol($idsSelect, $this->_bindParams);
+        return $idsSelect;
     }
+
 }

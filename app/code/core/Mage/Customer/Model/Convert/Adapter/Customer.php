@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Magento
  *
@@ -19,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -32,7 +31,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
     const MULTI_DELIMITER = ' , ';
 
     /**
-     * Product model
+     * Customer model
      *
      * @var Mage_Customer_Model_Customer
      */
@@ -199,7 +198,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
      *
      * @return array
      */
-    public function getCustomerGoups()
+    public function getCustomerGroups()
     {
         if (is_null($this->_customerGroups)) {
             $this->_customerGroups = array();
@@ -213,7 +212,15 @@ class Mage_Customer_Model_Convert_Adapter_Customer
         return $this->_customerGroups;
     }
 
-
+    /**
+     * Alias at getCustomerGroups()
+     *
+     * @return array
+     */
+    public function getCustomerGoups()
+    {
+        return $this->getCustomerGroups();
+    }
 
     public function __construct()
     {
@@ -362,7 +369,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
         if ($collections instanceof Mage_Customer_Model_Entity_Customer_Collection) {
             $collections = array($collections->getEntity()->getStoreId()=>$collections);
         } elseif (!is_array($collections)) {
-            $this->addException(Mage::helper('customer')->__('No product collections found'), Mage_Dataflow_Model_Convert_Exception::FATAL);
+            $this->addException(Mage::helper('customer')->__('No customer collections found'), Mage_Dataflow_Model_Convert_Exception::FATAL);
         }
 
         foreach ($collections as $storeId=>$collection) {
@@ -375,7 +382,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
                 $i = 0;
                 foreach ($collection->getIterator() as $model) {
                     $new = false;
-                    // if product is new, create default values first
+                    // if customer is new, create default values first
                     if (!$model->getId()) {
                         $new = true;
                         $model->save();
@@ -412,7 +419,6 @@ class Mage_Customer_Model_Convert_Adapter_Customer
     {
         $customer = $this->getCustomerModel();
         $customer->setId(null);
-        $customer->setImportMode(true);
 
         if (empty($importData['website'])) {
             $message = Mage::helper('customer')->__('Skip import row, required field "%s" not defined', 'website');
@@ -433,7 +439,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
         $customer->setWebsiteId($website->getId())
             ->loadByEmail($importData['email']);
         if (!$customer->getId()) {
-            $customerGroups = $this->getCustomerGoups();
+            $customerGroups = $this->getCustomerGroups();
             /**
              * Check customer group
              */
@@ -465,7 +471,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
             }
         }
         elseif (!empty($importData['group_id'])) {
-            $customerGroups = $this->getCustomerGoups();
+            $customerGroups = $this->getCustomerGroups();
             /**
              * Check customer group
              */
@@ -497,7 +503,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
             $setValue = $value;
 
             if ($attribute->getFrontendInput() == 'multiselect') {
-                $value = split(self::MULTI_DELIMITER, $value);
+                $value = explode(self::MULTI_DELIMITER, $value);
                 $isArray = true;
                 $setValue = array();
             }
@@ -681,6 +687,7 @@ class Mage_Customer_Model_Convert_Adapter_Customer
             }
         }
 
+        $customer->setImportMode(true);
         $customer->save();
         $saveCustomer = false;
 

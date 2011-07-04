@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Review
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Review
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -101,5 +101,15 @@ class Mage_Review_Block_Customer_View extends Mage_Catalog_Block_Product_Abstrac
     public function dateFormat($date)
     {
         return $this->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_LONG);
+    }
+
+    /**
+     * Check whether current customer is review owner
+     *
+     * @return boolean
+     */
+    public function isReviewOwner()
+    {
+        return ($this->getReviewData()->getCustomerId() == Mage::getSingleton('customer/session')->getCustomerId());
     }
 }

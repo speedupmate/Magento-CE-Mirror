@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -36,16 +36,11 @@ class Mage_Customer_Model_Entity_Address_Attribute_Backend_Region extends Mage_E
     public function beforeSave($object)
     {
         $region = $object->getData('region');
-        if ($regionId = (int) $region) {
-            $regionModel = Mage::getModel('directory/region')->load($regionId);
-            if ($regionModel->getId()) {
-                if ($object->getCountryId()==$regionModel->getCountryId()) {
-                    $object->setRegionId($regionModel->getId())
-                        ->setRegion($regionModel->getName());
-                }
-                else {
-                    Mage::throwException(Mage::helper('customer')->__('Wrong region id by selected country'));
-                }
+        if (is_numeric($region)) {
+            $regionModel = Mage::getModel('directory/region')->load($region);
+            if ($regionModel->getId() && $object->getCountryId() == $regionModel->getCountryId()) {
+                $object->setRegionId($regionModel->getId())
+                    ->setRegion($regionModel->getName());
             }
         }
         return $this;

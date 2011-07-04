@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Downloadable
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -199,15 +199,15 @@ class Mage_Downloadable_Helper_Download extends Mage_Core_Helper_Abstract
     {
         $handle = $this->_getHandle();
         if ($this->_linkType == self::LINK_TYPE_FILE) {
-            if (function_exists('mime_content_type')) {
-                return mime_content_type($this->_resourceFile);
+            if (function_exists('mime_content_type') && ($contentType = mime_content_type($this->_resourceFile))) {
+                return $contentType;
             } else {
                 return Mage::helper('downloadable/file')->getFileType($this->_resourceFile);
             }
         }
         elseif ($this->_linkType == self::LINK_TYPE_URL) {
             if (isset($this->_urlHeaders['content-type'])) {
-                $contentType = split('; ', $this->_urlHeaders['content-type']);
+                $contentType = explode('; ', $this->_urlHeaders['content-type']);
                 return $contentType[0];
             }
         }
@@ -222,7 +222,7 @@ class Mage_Downloadable_Helper_Download extends Mage_Core_Helper_Abstract
         }
         elseif ($this->_linkType == self::LINK_TYPE_URL) {
             if (isset($this->_urlHeaders['content-disposition'])) {
-                $contentDisposition = split('; ', $this->_urlHeaders['content-disposition']);
+                $contentDisposition = explode('; ', $this->_urlHeaders['content-disposition']);
                 if (!empty($contentDisposition[1]) && strpos($contentDisposition[1], 'filename=') !== false) {
                     return substr($contentDisposition[1], 9);
                 }

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -52,11 +52,11 @@ class Mage_Catalog_Model_Product_Link_Api extends Mage_Catalog_Model_Api_Resourc
      * @param int|sku $productId
      * @return array
      */
-    public function items($type, $productId)
+    public function items($type, $productId, $identifierType = null)
     {
         $typeId = $this->_getTypeId($type);
 
-        $product = $this->_initProduct($productId);
+        $product = $this->_initProduct($productId, $identifierType);
 
         $link = $product->getLinkInstance()
             ->setLinkTypeId($typeId);
@@ -92,11 +92,11 @@ class Mage_Catalog_Model_Product_Link_Api extends Mage_Catalog_Model_Api_Resourc
      * @param array $data
      * @return boolean
      */
-    public function assign($type, $productId, $linkedProductId, $data = array())
+    public function assign($type, $productId, $linkedProductId, $data = array(), $identifierType = null)
     {
         $typeId = $this->_getTypeId($type);
 
-        $product = $this->_initProduct($productId);
+        $product = $this->_initProduct($productId, $identifierType);
 
         $link = $product->getLinkInstance()
             ->setLinkTypeId($typeId);
@@ -135,11 +135,11 @@ class Mage_Catalog_Model_Product_Link_Api extends Mage_Catalog_Model_Api_Resourc
      * @param array $data
      * @return boolean
      */
-    public function update($type, $productId, $linkedProductId, $data = array())
+    public function update($type, $productId, $linkedProductId, $data = array(), $identifierType = null)
     {
         $typeId = $this->_getTypeId($type);
 
-        $product = $this->_initProduct($productId);
+        $product = $this->_initProduct($productId, $identifierType);
 
         $link = $product->getLinkInstance()
             ->setLinkTypeId($typeId);
@@ -176,11 +176,11 @@ class Mage_Catalog_Model_Product_Link_Api extends Mage_Catalog_Model_Api_Resourc
      * @param int|string $linkedProductId
      * @return boolean
      */
-    public function remove($type, $productId, $linkedProductId)
+    public function remove($type, $productId, $linkedProductId, $identifierType = null)
     {
         $typeId = $this->_getTypeId($type);
 
-        $product = $this->_initProduct($productId);
+        $product = $this->_initProduct($productId, $identifierType);
 
         $link = $product->getLinkInstance()
             ->setLinkTypeId($typeId);
@@ -263,19 +263,26 @@ class Mage_Catalog_Model_Product_Link_Api extends Mage_Catalog_Model_Api_Resourc
      * @param int $productId
      * @return Mage_Catalog_Model_Product
      */
-    protected function _initProduct($productId)
+    protected function _initProduct($productId, $identifierType = null)
     {
-
-
+        $loadByIdOnFalse = false;
+        if ($identifierType === null) {
+            $identifierType = 'sku';
+            $loadByIdOnFalse = true;
+        }
         $product = Mage::getModel('catalog/product')
             ->setStoreId($this->_getStoreId());
-
-        $idBySku = $product->getIdBySku($productId);
-        if ($idBySku) {
-            $productId = $idBySku;
+        if ($identifierType == 'sku') {
+            $idBySku = $product->getIdBySku($productId);
+            if ($idBySku) {
+                $productId = $idBySku;
+            }
+            if ($idBySku || $loadByIdOnFalse) {
+                $product->load($productId);
+            }
+        } elseif ($identifierType == 'id') {
+            $product->load($productId);
         }
-
-        $product->load($productId);
 
         if (!$product->getId()) {
             $this->_fault('product_not_exists');

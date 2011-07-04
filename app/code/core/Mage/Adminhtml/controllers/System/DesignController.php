@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -29,6 +29,8 @@ class Mage_Adminhtml_System_DesignController extends Mage_Adminhtml_Controller_A
 {
     public function indexAction()
     {
+        $this->_title($this->__('System'))->_title($this->__('Design'));
+
         $this->loadLayout();
         $this->_setActiveMenu('system');
         $this->_addContent($this->getLayout()->createBlock('adminhtml/system_design'));
@@ -47,6 +49,8 @@ class Mage_Adminhtml_System_DesignController extends Mage_Adminhtml_Controller_A
 
     public function editAction()
     {
+        $this->_title($this->__('System'))->_title($this->__('Design'));
+
         $this->loadLayout();
         $this->_setActiveMenu('system');
         $this->getLayout()->getBlock('head')->setCanLoadExtJs(true);
@@ -57,6 +61,8 @@ class Mage_Adminhtml_System_DesignController extends Mage_Adminhtml_Controller_A
         if ($id) {
             $design->load($id);
         }
+
+        $this->_title($design->getId() ? $this->__('Edit Design Change') : $this->__('New Design Change'));
 
         Mage::register('design', $design);
 
@@ -69,17 +75,17 @@ class Mage_Adminhtml_System_DesignController extends Mage_Adminhtml_Controller_A
     public function saveAction()
     {
         if ($data = $this->getRequest()->getPost()) {
-        	$id = (int) $this->getRequest()->getParam('id');
+            $id = (int) $this->getRequest()->getParam('id');
 
-        	$design = Mage::getModel('core/design');
-        	if ($id) {
-        	    $design->load($id);
-        	}
+            $design = Mage::getModel('core/design');
+            if ($id) {
+                $design->load($id);
+            }
 
             $design->setData($data['design']);
-        	if ($id) {
-        	    $design->setId($id);
-        	}
+            if ($id) {
+                $design->setId($id);
+            }
             try {
                 $design->save();
 
@@ -99,8 +105,7 @@ class Mage_Adminhtml_System_DesignController extends Mage_Adminhtml_Controller_A
     public function deleteAction()
     {
         if ($id = $this->getRequest()->getParam('id')) {
-            $design = Mage::getModel('core/design')
-                ->setId($id);
+            $design = Mage::getModel('core/design')->load($id);
 
             try {
                 $design->delete();

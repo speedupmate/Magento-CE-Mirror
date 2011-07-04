@@ -17,8 +17,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 var varienForm = new Class.create();
 
@@ -42,6 +44,9 @@ varienForm.prototype = {
     },
 
     submit : function(url){
+        if (typeof varienGlobalEvents != undefined) {
+            varienGlobalEvents.fireEvent('formSubmit', this.formId);
+        }
         this.errorSections = $H({});
         this.canShowError = true;
         this.submitUrl = url;
@@ -275,6 +280,7 @@ RegionUpdater.prototype = {
 //            Element.remove(this.regionSelectEl);
 //            this.regionSelectEl = null;
         }
+        varienGlobalEvents.fireEvent("address_country_changed", this.countryEl);
     },
 
     setMarkDisplay: function(elem, display){
@@ -360,6 +366,71 @@ SelectUpdater.prototype = {
             select.options.add(option);
         } else {
             select.appendChild(option);
+        }
+    }
+}
+
+
+/**
+ * Observer that watches for dependent form elements
+ * If an element depends on 1 or more of other elements, it should show up only when all of them gain specified values
+ * TODO: implement multiple values per "master" elements
+ */
+FormElementDependenceController = Class.create();
+FormElementDependenceController.prototype = {
+    /**
+     * Structure of elements: {
+     *     'id_of_dependent_element' : {
+     *         'id_of_master_element_1' : 'reference_value',
+     *         'id_of_master_element_2' : 'reference_value'
+     *         ...
+     *     }
+     * }
+     * @param object elementsMap
+     */
+    initialize : function (elementsMap)
+    {
+        for (var idTo in elementsMap) {
+            for (var idFrom in elementsMap[idTo]) {
+                Event.observe($(idFrom), 'change', this.trackChange.bindAsEventListener(this, idTo, elementsMap[idTo]));
+                this.trackChange(null, idTo, elementsMap[idTo]);
+            }
+        }
+    },
+
+    /**
+     * Define whether target element should be toggled and show/hide its row
+     *
+     * @param object e - event
+     * @param string idTo - id of target element
+     * @param valuesFrom - ids of master elements and reference values
+     * @return
+     */
+    trackChange : function(e, idTo, valuesFrom)
+    {
+        // define whether the target should show up
+        var shouldShowUp = true;
+        for (var idFrom in valuesFrom) {
+            if ($(idFrom).value != valuesFrom[idFrom]) {
+                shouldShowUp = false;
+            }
+        }
+
+        // toggle target row
+        if (shouldShowUp) {
+            $(idTo).up(1).select('input', 'select').each(function (item) {
+                if (!item.type || item.type != 'hidden') { // don't touch hidden inputs, bc they may have custom logic
+                    item.disabled = false;
+                }
+            });
+            $(idTo).up(1).show();
+        } else {
+            $(idTo).up(1).select('input', 'select').each(function (item){
+                if (!item.type || item.type != 'hidden') { // don't touch hidden inputs, bc they may have custom logic
+                    item.disabled = true;
+                }
+            });
+            $(idTo).up(1).hide();
         }
     }
 }

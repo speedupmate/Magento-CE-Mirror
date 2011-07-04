@@ -24,15 +24,17 @@
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-<?php if ($this->getIsProcessed()):?>
-    <?php if ($this->getIsSuccess()):?>
-        <h1><?php echo $this->__('Verification Successful');?></h1>
-        <p><?php echo $this->__('Please continue with placing order.')?></p>
-    <?php else:?>
-        <h4><?php echo $this->__('Verification Failed');?></h4>
-        <p><?php echo $this->__('The card has failed verification with issuer bank.')?> <strong><?php echo $this->__('Order cannot be placed.')?></strong></p>
-    <?php endif;?>
+<?php if ($this->getIsSuccess()):?>
+
+<h1><?php echo $this->__('Verification Successful');?></h1>
+<p><?php echo $this->__('Please continue with placing order.')?></p>
+
 <?php else:?>
-    <h4><?php echo $this->__('Verification can not be processed');?></h4>
-    <p><?php echo $this->__('There has been wrong payment information submitted or time limit has expired. Please, try again.')?> <strong><?php echo $this->__('Order cannot be placed.')?></strong></p>
+
+<h1><?php echo $this->__('Verification Failed');?></h1>
+<p>
+<?php echo $this->__('The card has failed verification with issuer bank.')?>
+<strong><?php echo $this->__('Order cannot be placed.')?></strong>
+</p>
+
 <?php endif;?>

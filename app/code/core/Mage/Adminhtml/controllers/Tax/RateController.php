@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -40,6 +40,10 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
      */
     public function indexAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Manage Tax Zones and Rates'));
+
         $this->_initAction()
             ->_addBreadcrumb(Mage::helper('tax')->__('Manage Tax Rates'), Mage::helper('tax')->__('Manage Tax Rates'))
             ->_addContent(
@@ -59,6 +63,16 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
     {
         $rateModel = Mage::getSingleton('tax/calculation_rate')
             ->load(null);
+        
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Manage Tax Zones and Rates'));
+
+        $this->_title($this->__('New Rate'));
+
+        //This line substitutes in the form the previously entered by the user values, if any of them were wrong.
+        $rateModel->setData(Mage::getSingleton('adminhtml/session')->getFormData(true));
+        
         $this->_initAction()
             ->_addBreadcrumb(Mage::helper('tax')->__('Manage Tax Rates'), Mage::helper('tax')->__('Manage Tax Rates'), $this->getUrl('*/tax_rate'))
             ->_addBreadcrumb(Mage::helper('tax')->__('New Tax Rate'), Mage::helper('tax')->__('New Tax Rate'))
@@ -77,8 +91,17 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
      */
     public function saveAction()
     {
-        if ($ratePost = $this->getRequest()->getPost()) {
-            $ratePostData = $this->getRequest()->getPost('rate_data');
+        $ratePost = $this->getRequest()->getPost();
+        if ($ratePost) {
+
+            $rateId = $this->getRequest()->getParam('tax_calculation_rate_id');
+            if ($rateId) {
+                $rateModel = Mage::getSingleton('tax/calculation_rate')->load($rateId);
+                if (!$rateModel->getId()) {
+                    unset($ratePost['tax_calculation_rate_id']);
+                }
+            }
+
             $rateModel = Mage::getModel('tax/calculation_rate')->setData($ratePost);
 
             try {
@@ -89,6 +112,8 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
                 return true;
             }
             catch (Mage_Core_Exception $e) {
+                //save entered by the user values in session, for re-rendering of form.
+                Mage::getSingleton('adminhtml/session')->setFormData($ratePost);
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
             }
             catch (Exception $e) {
@@ -97,7 +122,9 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
             }
 
             $this->_redirectReferer();
+            return;
         }
+        $this->getResponse()->setRedirect($this->getUrl('*/tax_rate'));
     }
 
     /**
@@ -106,13 +133,18 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
      */
     public function editAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Manage Tax Zones and Rates'));
+
         $rateId = (int)$this->getRequest()->getParam('rate');
-        $rateModel = Mage::getSingleton('tax/calculation_rate')
-            ->load($rateId);
+        $rateModel = Mage::getSingleton('tax/calculation_rate')->load($rateId);
         if (!$rateModel->getId()) {
             $this->getResponse()->setRedirect($this->getUrl("*/*/"));
             return ;
         }
+
+        $this->_title(sprintf("%s", $rateModel->getCode()));
 
         $this->_initAction()
             ->_addBreadcrumb(Mage::helper('tax')->__('Manage Tax Rates'), Mage::helper('tax')->__('Manage Tax Rates'), $this->getUrl('*/tax_rate'))
@@ -169,7 +201,7 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'rates.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/tax_rate_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -181,7 +213,7 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'rates.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/tax_rate_grid')
-            ->getXml();
+            ->getExcelFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -206,6 +238,12 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
      */
     public function importExportAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Manage Tax Zones and Rates'));
+
+        $this->_title($this->__('Import and Export Tax Rates'));
+
         $this->loadLayout()
             ->_setActiveMenu('sales/tax_importExport')
             ->_addContent($this->getLayout()->createBlock('adminhtml/tax_rate_importExport'))
@@ -350,36 +388,50 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
      */
     public function exportPostAction()
     {
-        /** get rate types */
-        $stores = array();
-        $storeCollection = Mage::getModel('core/store')->getCollection()->setLoadDefault(false);
-        foreach ($storeCollection as $store) {
-            $stores[$store->getId()] = $store->getCode();
-        }
+        $storeTaxTitleTemplate       = array();
+        $taxCalculationRateTitleDict = array();
 
         /** start csv content and set template */
-        $content    = '"'.Mage::helper('tax')->__('Code').'","'.Mage::helper('tax')->__('Country').'","'.Mage::helper('tax')->__('State').'","'.Mage::helper('tax')->__('Zip/Post Code').'","'.Mage::helper('tax')->__('Rate').'"';
-        $template   = '"{{code}}","{{country_name}}","{{region_name}}","{{tax_postcode}}","{{rate}}"';
-        foreach ($stores as $id => $name) {
-            $content   .= ',"'.$name.'"';
-            $template  .= ',"{{title_'.$id.'}}"';
+        $content = '"'.Mage::helper('tax')->__('Code') . '","' . Mage::helper('tax')->__('Country') . '","'
+                 . Mage::helper('tax')->__('State') . '","' . Mage::helper('tax')->__('Zip/Post Code') . '","'
+                 . Mage::helper('tax')->__('Rate') . '"';
+
+        $template = '"{{code}}","{{country_name}}","{{region_name}}","{{tax_postcode}}","{{rate}}"';
+
+        foreach (Mage::getModel('core/store')->getCollection()->setLoadDefault(false) as $store) {
+            $storeTitle = 'title_' . $store->getId();
+            $content   .= ',"' . $store->getCode() . '"';
+            $template  .= ',"{{' . $storeTitle . '}}"';
+            $storeTaxTitleTemplate[$storeTitle] = null;
         }
+
         $content .= "\n";
 
-        $rateCollection = Mage::getModel('tax/calculation_rate')->getCollection()
-            ->joinStoreTitles()
-            ->joinCountryTable()
-            ->joinRegionTable();
-        foreach ($rateCollection as $rate) {
+        foreach (Mage::getModel('tax/calculation_rate_title')->getCollection() as $title) {
+            $rateId = $title->getTaxCalculationRateId();
+
+            if (! array_key_exists($rateId, $taxCalculationRateTitleDict)) {
+                $taxCalculationRateTitleDict[$rateId] = $storeTaxTitleTemplate;
+            }
+
+            $taxCalculationRateTitleDict[$rateId]['title_' . $title->getStoreId()] = $title->getValue();
+        }
+
+        foreach (Mage::getModel('tax/calculation_rate')->getCollection()->joinCountryTable()->joinRegionTable() as $rate) {
             if ($rate->getTaxRegionId() == 0) {
                 $rate->setRegionName('*');
             }
-            $content .= $rate->toString($template)."\n";
+
+            if (array_key_exists($rate->getId(), $taxCalculationRateTitleDict)) {
+                $rate->addData($taxCalculationRateTitleDict[$rate->getId()]);
+            } else {
+                $rate->addData($storeTaxTitleTemplate);
+            }
+
+            $content .= $rate->toString($template) . "\n";
         }
 
-        $fileName = 'tax_rates.csv';
-
-        $this->_prepareDownloadResponse($fileName, $content);
+        $this->_prepareDownloadResponse('tax_rates.csv', $content);
     }
 
     protected function _isAllowed()

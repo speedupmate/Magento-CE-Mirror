@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -36,6 +36,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
 
     protected function _initCustomer($idFieldName = 'id')
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Manage Customers'));
+
         $customerId = (int) $this->getRequest()->getParam($idFieldName);
         $customer = Mage::getModel('customer/customer');
 
@@ -52,6 +54,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
      */
     public function indexAction()
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Manage Customers'));
+
         if ($this->getRequest()->getQuery('ajax')) {
             $this->_forward('grid');
             return;
@@ -109,6 +113,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
             }
         }
 
+        $this->_title($customer->getId() ? $customer->getName() : $this->__('New Customer'));
+
         /**
          * Set active menu item
          */
@@ -151,33 +157,45 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     public function saveAction()
     {
         if ($data = $this->getRequest()->getPost()) {
-        	$redirectBack   = $this->getRequest()->getParam('back', false);
+            $data = $this->_filterPostData($data);
+            $redirectBack   = $this->getRequest()->getParam('back', false);
             $this->_initCustomer('customer_id');
+            /** @var Mage_Customer_Model_Customer */
             $customer = Mage::registry('current_customer');
-
             // Prepare customer saving data
             if (isset($data['account'])) {
+                if (isset($data['account']['email'])) {
+                    $data['account']['email'] = trim($data['account']['email']);
+                }
                 $customer->addData($data['account']);
             }
+            // unset template data
+            if (isset($data['address']['_template_'])) {
+                unset($data['address']['_template_']);
+            }
 
-            if (isset($data['address'])) {
-                // unset template data
-                if (isset($data['address']['_template_'])) {
-                    unset($data['address']['_template_']);
-                }
+            $modifiedAddresses = array();
 
+            if (! empty($data['address'])) {
                 foreach ($data['address'] as $index => $addressData) {
-                    $address = Mage::getModel('customer/address');
-                    $address->setData($addressData);
-
-                    if ($addressId = (int) $index) {
-                        $address->setId($addressId);
+                    if (($address = $customer->getAddressItemById($index))) {
+                        $addressId           = $index;
+                        $modifiedAddresses[] = $index;
+                    } else {
+                        $address   = Mage::getModel('customer/address');
+                        $addressId = null;
+                        $customer->addAddress($address);
                     }
-                    /**
-                     * We need set post_index for detect default addresses
-                     */
-                    $address->setPostIndex($index);
-                    $customer->addAddress($address);
+
+                    $address->setData($addressData)
+                            ->setId($addressId)
+                            ->setPostIndex($index); // We need set post_index for detect default addresses
+                }
+            }
+            // not modified customer addresses mark for delete
+            foreach ($customer->getAddressesCollection() as $customerAddress) {
+                if ($customerAddress->getId() && ! in_array($customerAddress->getId(), $modifiedAddresses)) {
+                    $customerAddress->setData('_deleted', true);
                 }
             }
 
@@ -190,6 +208,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
             $isNewCustomer = !$customer->getId();
             try {
                 if ($customer->getPassword() == 'auto') {
+                    $sendPassToEmail = true;
                     $customer->setPassword($customer->generatePassword());
                 }
 
@@ -203,15 +222,15 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                 );
 
                 $customer->save();
-
                 // send welcome email
-                if ($customer->getWebsiteId() && $customer->hasData('sendemail')) {
+                if ($customer->getWebsiteId() && ($customer->hasData('sendemail') || isset($sendPassToEmail))) {
+                    $storeId = $customer->getSendemailStoreId();
                     if ($isNewCustomer) {
-                        $customer->sendNewAccountEmail();
+                        $customer->sendNewAccountEmail('registered', '', $storeId);
                     }
                     // confirm not confirmed customer
                     elseif ((!$customer->getConfirmation())) {
-                        $customer->sendNewAccountEmail('confirmed');
+                        $customer->sendNewAccountEmail('confirmed', '', $storeId);
                     }
                 }
 
@@ -226,14 +245,16 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                 }
 
                 Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('Customer was successfully saved'));
-                Mage::dispatchEvent('adminhtml_customer_save_after', array('customer' => $customer));
+                Mage::dispatchEvent('adminhtml_customer_save_after',
+                    array('customer' => $customer, 'request' => $this->getRequest())
+                );
 
                 if ($redirectBack) {
-	                $this->_redirect('*/*/edit', array(
-	                    'id'    => $customer->getId(),
-	                    '_current'=>true
-	                ));
-	                return;
+                    $this->_redirect('*/*/edit', array(
+                        'id'    => $customer->getId(),
+                        '_current'=>true
+                    ));
+                    return;
                 }
             }
             catch (Exception $e){
@@ -253,7 +274,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'customers.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/customer_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -265,7 +286,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'customers.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/customer_grid')
-            ->getXml();
+            ->getExcelFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -328,7 +349,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                         ->delete();
                 }
                 catch (Exception $e) {
-                    //
+                    Mage::logException($e);
                 }
             }
         }
@@ -403,7 +424,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     {
         $this->_initCustomer();
         $this->getResponse()->setBody(
-            $this->getLayout()->createBlock('adminhtml/review_grid', 'admin.customer.reviews')
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_reviews', 'admin.customer.reviews')
                 ->setCustomerId(Mage::registry('current_customer')->getId())
                 ->setUseAjax(true)
                 ->toHtml()
@@ -574,5 +595,17 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     protected function _isAllowed()
     {
         return Mage::getSingleton('admin/session')->isAllowed('customer/manage');
+    }
+
+    /**
+     * Filtering posted data. Converting localized data if needed
+     *
+     * @param array
+     * @return array
+     */
+    protected function _filterPostData($data)
+    {
+        $data['account'] = $this->_filterDates($data['account'], array('dob'));
+        return $data;
     }
 }

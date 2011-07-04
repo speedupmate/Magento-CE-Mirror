@@ -140,38 +140,22 @@ class Mage_Centinel_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
-     * Return centinel block for payment form with logos
+     * Enter description here...
      *
-     * @param Mage_Payment_Model_Method_Abstract $method
-     * @return Mage_Centinel_Block_Logo
+     * @param unknown_type $method
+     * @return unknown
      */
     public function getMethodFormBlock($method)
     {
         $blockType = 'centinel/logo';
         if ($this->getLayout()) {
             $block = $this->getLayout()->createBlock($blockType);
-        } else {
+        }
+        else {
             $className = Mage::getConfig()->getBlockClassName($blockType);
             $block = new $className;
         }
         $block->setMethod($method);
-        return $block;
-    }
-
-    /**
-     * Return centinel info block
-     *
-     * @return Mage_Centinel_Block_Logo
-     */
-    public function getMethodInfoBlock()
-    {
-        $blockType = 'centinel/info';
-        if ($this->getLayout()) {
-            $block = $this->getLayout()->createBlock($blockType);
-        } else {
-            $className = Mage::getConfig()->getBlockClassName($blockType);
-            $block = new $className;
-        }
         return $block;
     }
 

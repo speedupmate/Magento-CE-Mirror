@@ -55,7 +55,7 @@ class Mage_Centinel_Adminhtml_Centinel_IndexController extends Mage_Adminhtml_Co
             Mage::logException($e);
             $result['message'] = Mage::helper('centinel')->__('Validation failed.');
         }
-        $this->getResponse()->setBody(Zend_Json::encode($result));
+        $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
     }
 
     /**
@@ -65,7 +65,7 @@ class Mage_Centinel_Adminhtml_Centinel_IndexController extends Mage_Adminhtml_Co
     public function authenticationStartAction()
     {
         if ($validator = $this->_getValidator()) {
-            Mage::register('current_centinel_validator', $validator);
+            Mage::register('centinel_validator', $validator);
         }
         $this->loadLayout()->renderLayout();
     }
@@ -76,19 +76,15 @@ class Mage_Centinel_Adminhtml_Centinel_IndexController extends Mage_Adminhtml_Co
      */
     public function authenticationCompleteAction()
     {
-        try {
-           if ($validator = $this->_getValidator()) {
-                $request = $this->getRequest();
+        if ($validator = $this->_getValidator()) {
+            $request = $this->getRequest();
 
-                $data = new Varien_Object();
-                $data->setTransactionId($request->getParam('MD'));
-                $data->setPaResPayload($request->getParam('PaRes'));
+            $data = new Varien_Object();
+            $data->setTransactionId($request->getParam('MD'));
+            $data->setPaResPayload($request->getParam('PaRes'));
 
-                $validator->authenticate($data);
-                Mage::register('current_centinel_validator', $validator);
-            }
-        } catch (Exception $e) {
-            Mage::register('current_centinel_validator', false);
+            $validator->authenticate($data);
+            Mage::register('centinel_validator', $validator);
         }
         $this->loadLayout()->renderLayout();
     }

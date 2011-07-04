@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_GoogleOptimizer
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_GoogleOptimizer
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -80,7 +80,7 @@ class Mage_GoogleOptimizer_Model_Code extends Mage_Core_Model_Abstract
      * Loading scripts and assigning scripts on entity
      *
      * @param Varien_Object $entity
-     * @return Mage_Googleoptimizer_Model_Code
+     * @return Mage_GoogleOptimizer_Model_Code
      */
     public function loadScripts($storeId)
     {
@@ -129,7 +129,7 @@ class Mage_GoogleOptimizer_Model_Code extends Mage_Core_Model_Abstract
      * Save scripts assigned on entity
      *
      * @param Varien_Object $entity
-     * @return Mage_Googleoptimizer_Model_Code
+     * @return Mage_GoogleOptimizer_Model_Code
      */
     public function saveScripts($storeId)
     {
@@ -170,7 +170,7 @@ class Mage_GoogleOptimizer_Model_Code extends Mage_Core_Model_Abstract
      * Removing scripts assigned to entity
      *
      * @param integer $storeId
-     * @return Mage_Googleoptimizer_Model_Code
+     * @return Mage_GoogleOptimizer_Model_Code
      */
     public function deleteScripts($storeId)
     {

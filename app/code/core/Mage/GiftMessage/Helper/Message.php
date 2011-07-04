@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_GiftMessage
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_GiftMessage
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
@@ -126,12 +126,12 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
         }
 
         if ($type=='item') {
-            return $resultItems && $this->_getDependenceFromStoreConfig(
+            return !$entity->getProduct()->isVirtual() && $resultItems && $this->_getDependenceFromStoreConfig(
                         $entity->getProduct()->getGiftMessageAvailable(),
                         $store
                    );
         } elseif ($type=='order_item') {
-            return $resultItems && $this->_getDependenceFromStoreConfig(
+            return !$entity->getIsVirtual() && $resultItems && $this->_getDependenceFromStoreConfig(
                         (is_null($entity->getGiftMessageAvailable()) ? 2 : $entity->getGiftMessageAvailable()),
                         $store
                     );
@@ -148,7 +148,7 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
                         ->getGiftMessageAvailable()
                 );
             }
-            return $this->_getDependenceFromStoreConfig(
+            return !$entity->getProduct()->isVirtual() && $this->_getDependenceFromStoreConfig(
                         $this->getCached('address_item_' . $entity->getProductId()),
                         $store
                    );

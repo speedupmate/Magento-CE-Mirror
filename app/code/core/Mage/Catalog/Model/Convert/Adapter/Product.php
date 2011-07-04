@@ -18,17 +18,18 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_Catalog_Model_Convert_Adapter_Product
     extends Mage_Eav_Model_Convert_Adapter_Entity
 {
-    const MULTI_DELIMITER = ' , ';
+    const MULTI_DELIMITER   = ' , ';
+    const ENTITY            = 'catalog_product_import';
 
     /**
      * Product model
@@ -599,7 +600,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             if (!is_array($websiteIds)) {
                 $websiteIds = array();
             }
-            $websiteCodes = split(',', $importData['websites']);
+            $websiteCodes = explode(',', $importData['websites']);
             foreach ($websiteCodes as $websiteCode) {
                 try {
                     $website = Mage::app()->getWebsite(trim($websiteCode));
@@ -630,7 +631,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             $setValue = $value;
 
             if ($attribute->getFrontendInput() == 'multiselect') {
-                $value = split(self::MULTI_DELIMITER, $value);
+                $value = explode(self::MULTI_DELIMITER, $value);
                 $isArray = true;
                 $setValue = array();
             }
@@ -648,9 +649,8 @@ class Mage_Catalog_Model_Convert_Adapter_Product
                             $setValue[] = $item['value'];
                         }
                     }
-                }
-                else {
-                    $setValue = null;
+                } else {
+                    $setValue = false;
                     foreach ($options as $item) {
                         if ($item['label'] == $value) {
                             $setValue = $item['value'];
@@ -726,10 +726,19 @@ class Mage_Catalog_Model_Convert_Adapter_Product
 
     /**
      * Process after import data
+     * Init indexing process after catalog product import
      *
      */
     public function finish()
     {
+        /**
+         * Back compatibility event
+         */
         Mage::dispatchEvent('catalog_product_import_after', array());
+
+        $entity = new Varien_Object();
+        Mage::getSingleton('index/indexer')->processEntityAction(
+            $entity, self::ENTITY, Mage_Index_Model_Event::TYPE_SAVE
+        );
     }
 }

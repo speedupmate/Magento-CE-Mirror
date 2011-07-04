@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Rss
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Rss
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -68,30 +68,22 @@ class Mage_Rss_Block_Catalog_Special extends Mage_Rss_Block_Abstract
             ->joinTable('catalogrule/rule_product_price', 'product_id=entity_id', array('rule_price'=>'rule_price', 'rule_start_date'=>'latest_start_date'), $rulePriceWhere, 'left')
         ;
 
-//public function join($table, $cond, $cols='*')
         $rulePriceCollection = Mage::getResourceModel('catalogrule/rule_product_price_collection')
             ->addFieldToFilter('website_id', $websiteId)
             ->addFieldToFilter('customer_group_id', $custGroup)
             ->addFieldToFilter('rule_date', $todayDate)
         ;
-//echo $rulePriceCollection->getSelect();
+
         $productIds = $rulePriceCollection->getProductIds();
 
         if (!empty($productIds)) {
             $specials->getSelect()->orWhere('e.entity_id in ('.implode(',',$productIds).')');
         }
 
-        /*
-        *need to put status and visibility after orWhere clause for catalog price rule products
-        */
-        Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($specials);
-        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($specials);
-
-
-//echo $specials->getSelect();
+        $specials->setVisibility(Mage::getSingleton('catalog/product_visibility')->getVisibleInCatalogIds());
 
         $newurl = Mage::getUrl('rss/catalog/new');
-        $title = Mage::helper('rss')->__('%s - Special Discounts', Mage::app()->getStore()->getName());
+        $title = Mage::helper('rss')->__('%s - Special Products', Mage::app()->getStore()->getFrontendName());
         $lang = Mage::getStoreConfig('general/locale/code');
 
         $rssObj = Mage::getModel('rss/rss');
@@ -112,46 +104,73 @@ class Mage_Rss_Block_Catalog_Special extends Mage_Rss_Block_Abstract
             ->walk($specials->getSelect(), array(array($this, 'addSpecialXmlCallback')), array('rssObj'=> $rssObj, 'results'=> &$results));
 
         if(sizeof($results)>0){
-           usort($results, array(&$this, 'sortByStartDate'));
-           foreach($results as $result){
-               $product->setData($result);
-               //$product->unsetData()->load($result['entity_id']);
+            usort($results, array(&$this, 'sortByStartDate'));
+            foreach($results as $result){
+                $product->setData($result);
 
-               $special_price = ($result['use_special'] ? $result['special_price'] : $result['rule_price']);
-               $description = '<table><tr>'.
-                '<td><a href="'.$product->getProductUrl().'"><img src="'. $this->helper('catalog/image')->init($product, 'thumbnail')->resize(75, 75) .'" border="0" align="left" height="75" width="75"></a></td>'.
-                '<td  style="text-decoration:none;">'.$product->getDescription().
-                '<p> Price:'.Mage::helper('core')->currency($product->getPrice()).
-                ' Special Price:'. Mage::helper('core')->currency($special_price).
-                ($result['use_special'] && $result['special_to_date'] ? '<br/> Special Expires on: '.$this->formatDate($result['special_to_date'], Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM) : '').
-                '</p>'.
-                '</td>'.
-                '</tr></table>';
+                $description = '<table><tr>'.
+                    '<td><a href="'.$product->getProductUrl().'"><img src="'. $this->helper('catalog/image')->init($product, 'thumbnail')->resize(75, 75) .'" border="0" align="left" height="75" width="75"></a></td>'.
+                    '<td  style="text-decoration:none;">'.$product->getDescription();
+
+                if ($product->getAllowedPriceInRss()) {
+                    $specialPrice = ($result['use_special'] ? $result['special_price'] : $result['rule_price']);
+                    $description .= '<p> Price:'.Mage::helper('core')->currency($product->getPrice()).
+                        ' Special Price:'. Mage::helper('core')->currency($specialPrice).
+                    ($result['use_special'] && $result['special_to_date'] ? '<br/> Special Expires on: '.$this->formatDate($result['special_to_date'], Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM) : '').
+                    '</p>';
+                }
+
+                $description .= '</td></tr></table>';
+
                 $data = array(
                         'title'         => $product->getName(),
                         'link'          => $product->getProductUrl(),
-                        'description'   => $description,
-
-                        );
+                        'description'   => $description
+                    );
                 $rssObj->_addEntry($data);
-           }
+            }
         }
         return $rssObj->createRssXml();
     }
 
+    /**
+     * Preparing data and adding to rss object
+     *
+     * @param array $args
+     */
     public function addSpecialXmlCallback($args)
     {
-//echo "<pre>";
-//print_r($args['row']);
+        /*
+         * RSS state object
+         */
+        $product = new Varien_Object();
+        //Product is allowed for RSS initially
+        $product->setAllowedInRss(true);
+        $args['product'] = $product;
+
+        Mage::dispatchEvent('rss_catalog_special_xml_callback', $args);
+
+        if (!$product->getAllowedInRss()) {
+            //Skip adding product to RSS
+            return;
+        }
+
        $row = $args['row'];
-       $special_price = $row['special_price'];
-       $rule_price = $row['rule_price'];
-       if (!$rule_price || ($rule_price && $special_price && $special_price<=$rule_price)) {
-           $row['start_date'] = $row['special_from_date'];
-           $row['use_special'] = true;
+
+       if ($product->getAllowedPriceInRss()) {
+           $specialPrice = $row['special_price'];
+           $rulePrice = $row['rule_price'];
+           if (!$rulePrice || ($rulePrice && $specialPrice && $specialPrice<=$rulePrice)) {
+               $row['start_date'] = $row['special_from_date'];
+               $row['use_special'] = true;
+           } else {
+               $row['start_date'] = $row['rule_start_date'];
+               $row['use_special'] = false;
+           }
+           $row['allowed_price_in_rss'] = true;
        } else {
-           $row['start_date'] = $row['rule_start_date'];
-           $row['use_special'] = false;
+           $row['start_date'] = null;
+           $row['allowed_price_in_rss'] = false;
        }
        $args['results'][] = $row;
     }

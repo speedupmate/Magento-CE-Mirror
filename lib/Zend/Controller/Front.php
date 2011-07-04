@@ -14,8 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Front.php 16541 2009-07-07 06:59:03Z bkarwin $
  */
 
 
@@ -31,7 +32,7 @@
 /**
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Controller_Front
@@ -442,7 +443,10 @@ class Zend_Controller_Front
     public function setRequest($request)
     {
         if (is_string($request)) {
-            #Zend_Loader::loadClass($request);
+            if (!class_exists($request)) {
+                #require_once 'Zend/Loader.php';
+                Zend_Loader::loadClass($request);
+            }
             $request = new $request();
         }
         if (!$request instanceof Zend_Controller_Request_Abstract) {
@@ -481,7 +485,10 @@ class Zend_Controller_Front
     public function setRouter($router)
     {
         if (is_string($router)) {
-            #Zend_Loader::loadClass($router);
+            if (!class_exists($router)) {
+                #require_once 'Zend/Loader.php';
+                Zend_Loader::loadClass($router);
+            }
             $router = new $router();
         }
 
@@ -610,7 +617,10 @@ class Zend_Controller_Front
     public function setResponse($response)
     {
         if (is_string($response)) {
-            #Zend_Loader::loadClass($response);
+            if (!class_exists($response)) {
+                #require_once 'Zend/Loader.php';
+                Zend_Loader::loadClass($response);
+            }
             $response = new $response();
         }
         if (!$response instanceof Zend_Controller_Response_Abstract) {

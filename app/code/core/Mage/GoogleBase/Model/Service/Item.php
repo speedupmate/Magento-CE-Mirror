@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_GoogleBase
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_GoogleBase
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -129,8 +129,8 @@ class Mage_GoogleBase_Model_Service_Item extends Mage_GoogleBase_Model_Service
             ->setPublished($published);
 
         if ($expires = $this->_getAttributeValue('expiration_date')) {
-        	$expires = $this->gBaseDate2DateTime($expires);
-        	$this->getItem()->setExpires($expires);
+            $expires = $this->gBaseDate2DateTime($expires);
+            $this->getItem()->setExpires($expires);
         }
     }
 
@@ -280,7 +280,15 @@ class Mage_GoogleBase_Model_Service_Item extends Mage_GoogleBase_Model_Service
             $entry->setContent($content);
         }
 
-        $this->_setAttributePrice(false, $object->getPrice());
+        $attributeValues = $this->getAttributeValues();
+        
+        if (isset($attributeValues['price']['value']) && floatval($attributeValues['price']['value']) > 0) {
+            $price = $attributeValues['price']['value'];
+        } else {
+            $price = $object->getPrice();
+        }
+
+        $this->_setAttributePrice(false, $price);
 
         if ($object->getQuantity()) {
             $quantity = $object->getQuantity() ? max(1, (int)$object->getQuantity()) : 1;
@@ -293,6 +301,7 @@ class Mage_GoogleBase_Model_Service_Item extends Mage_GoogleBase_Model_Service
             $this->_setAttribute('image_link', $object->getData('image_url'), 'url');
         }
 
+        $this->_setAttribute('condition', 'new', 'text');
         $this->_setAttribute('target_country', $targetCountry, 'text');
         $this->_setAttribute('item_language', $this->getConfig()->getCountryInfo($targetCountry, 'language'), 'text');
 

@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -606,6 +606,9 @@ class Mage_Core_Model_Url extends Varien_Object
         $this->unsetData('route_params');
 
         if (isset($routeParams['_direct'])) {
+            if (is_array($routeParams)) {
+                $this->setRouteParams($routeParams, false);
+            }
             return $this->getBaseUrl().$routeParams['_direct'];
         }
 
@@ -680,36 +683,68 @@ class Mage_Core_Model_Url extends Varien_Object
         return $this->setData('query', $data);
     }
 
+    /**
+     * Get query params part of url
+     *
+     * @param bool $escape "&" escape flag
+     * @return string
+     */
     public function getQuery($escape = false)
     {
         if (!$this->hasData('query')) {
             $query = '';
-            if (is_array($this->getQueryParams())) {
-                $query = http_build_query($this->getQueryParams(), '', $escape ? '&amp;' : '&');
+            $params = $this->getQueryParams();
+            if (is_array($params)) {
+                ksort($params);
+                $query = http_build_query($params, '', $escape ? '&amp;' : '&');
             }
             $this->setData('query', $query);
         }
         return $this->_getData('query');
     }
 
-    public function setQueryParams(array $data, $useCurrent = false)
+    /**
+     * Set query Params as array
+     *
+     * @param array $data
+     * @return Mage_Core_Model_Url
+     */
+    public function setQueryParams(array $data)
     {
         $this->unsetData('query');
-        if ($useCurrent) {
-            $params = $this->_getData('query_params');
-            foreach ($data as $param => $value) {
-                $params[$param] = $value;
-            }
-            $this->setData('query_params', $params);
+
+        if ($this->_getData('query_params') == $data) {
             return $this;
         }
 
-        if ($this->_getData('query_params')==$data) {
-            return $this;
+        $params = $this->_getData('query_params');
+        if (!is_array($params)) {
+            $params = array();
         }
-        return $this->setData('query_params', $data);
+        foreach ($data as $param => $value) {
+            $params[$param] = $value;
+        }
+        $this->setData('query_params', $params);
+
+        return $this;
     }
 
+    /**
+     * Purge Query params array
+     *
+     * @return Mage_Core_Model_Url
+     */
+    public function purgeQueryParams()
+    {
+        $this->setData('query_params', array());
+        return $this;
+    }
+
+    /**
+     * Retrurn Query Params
+     *
+     * @return array
+     */
     public function getQueryParams()
     {
         if (!$this->hasData('query_params')) {
@@ -788,6 +823,7 @@ class Mage_Core_Model_Url extends Varien_Object
 
         $query = null;
         if (isset($routeParams['_query'])) {
+            $this->purgeQueryParams();
             $query = $routeParams['_query'];
             unset($routeParams['_query']);
         }

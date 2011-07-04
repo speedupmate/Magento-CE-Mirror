@@ -40,6 +40,7 @@ abstract class Varien_Image_Adapter_Abstract
     const POSITION_BOTTOM_RIGHT = 'bottom-right';
     const POSITION_STRETCH = 'stretch';
     const POSITION_TILE = 'tile';
+    const POSITION_CENTER = 'center';
 
     protected $_fileType = null;
     protected $_fileName = null;
@@ -53,6 +54,8 @@ abstract class Varien_Image_Adapter_Abstract
     protected $_watermarkPosition = null;
     protected $_watermarkWidth = null;
     protected $_watermarkHeigth = null;
+    protected $_watermarkImageOpacity = null;
+    protected $_quality = null;
 
     protected $_keepAspectRatio;
     protected $_keepFrame;
@@ -118,6 +121,17 @@ abstract class Varien_Image_Adapter_Abstract
     public function getWatermarkPosition()
     {
         return $this->_watermarkPosition;
+    }
+
+    public function setWatermarkImageOpacity($imageOpacity)
+    {
+        $this->_watermarkImageOpacity = $imageOpacity;
+        return $this;
+    }
+
+    public function getWatermarkImageOpacity()
+    {
+        return $this->_watermarkImageOpacity;
     }
 
     public function setWatermarkWidth($width)
@@ -197,6 +211,20 @@ abstract class Varien_Image_Adapter_Abstract
             $this->_constrainOnly = (bool)$value;
         }
         return $this->_constrainOnly;
+    }
+
+    /**
+     * Get/set quality, values in percentage from 0 to 100
+     *
+     * @param int $value
+     * @return int
+     */
+    public function quality($value = null)
+    {
+        if (null !== $value) {
+            $this->_quality = (int)$value;
+        }
+        return $this->_quality;
     }
 
     /**

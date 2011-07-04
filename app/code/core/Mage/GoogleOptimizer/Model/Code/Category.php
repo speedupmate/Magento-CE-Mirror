@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_GoogleOptimizer
- * @copyright   Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -29,19 +29,19 @@
  * Google Optimizer Category model
  *
  * @category    Mage
- * @package     Mage_Googleoptimizer
+ * @package     Mage_GoogleOptimizer
  * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_GoogleOptimizer_Model_Code_Category extends Mage_GoogleOptimizer_Model_Code
 {
-    
+
     protected $_entityType = 'category';
 
     /**
      * Removing scripts assigned to entity
      *
      * @param integer $storeId
-     * @return Mage_Googleoptimizer_Model_Code
+     * @return Mage_GoogleOptimizer_Model_Code
      */
     public function deleteScripts($storeId)
     {

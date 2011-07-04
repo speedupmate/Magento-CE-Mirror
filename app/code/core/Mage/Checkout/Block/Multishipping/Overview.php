@@ -18,10 +18,10 @@
  * versions in the future. If you wish to customize Magento for your
  * needs please refer to http://www.magentocommerce.com for more information.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
@@ -33,6 +33,19 @@
  */
 class Mage_Checkout_Block_Multishipping_Overview extends Mage_Sales_Block_Items_Abstract
 {
+    /**
+     * Initialize default item renderer for row-level items output
+     */
+    protected function _construct()
+    {
+        parent::_construct();
+        $this->addItemRender(
+            $this->_getRowItemType('default'),
+            'checkout/cart_item_renderer',
+            'checkout/multishipping/overview/item.phtml'
+        );
+    }
+
     /**
      * Get multishipping checkout model
      *
@@ -63,9 +76,19 @@ class Mage_Checkout_Block_Multishipping_Overview extends Mage_Sales_Block_Items_
         return $this->getChildHtml('payment_info');
     }
 
+    /**
+     * Get object with payment info posted data
+     *
+     * @return Varien_Object
+     */
     public function getPayment()
     {
-        return $this->getCheckout()->getQuote()->getPayment();
+        if (!$this->hasData('payment')) {
+            $payment = new Varien_Object($this->getRequest()->getPost('payment'));
+            $this->setData('payment', $payment);
+        }
+        return $this->_getData('payment');
+        //return $this->getCheckout()->getQuote()->getPayment();
     }
 
     public function getShippingAddresses()
@@ -215,9 +238,67 @@ class Mage_Checkout_Block_Multishipping_Overview extends Mage_Sales_Block_Items_
     }
 
 
-    public function renderTotals($totals)
+    public function renderTotals($totals, $colspan=null)
     {
-        $colspan = $this->helper('tax')->displayCartBothPrices() ? 5 : 3;
-        return $this->getChild('totals')->setTotals($totals)->renderTotals(-1, $colspan);
+        if ($colspan === null) {
+            $colspan = $this->helper('tax')->displayCartBothPrices() ? 5 : 3;
+        }
+        $totals = $this->getChild('totals')->setTotals($totals)->renderTotals('', $colspan)
+            . $this->getChild('totals')->setTotals($totals)->renderTotals('footer', $colspan);
+        return $totals;
+    }
+
+    /**
+     * Add renderer for row-level item output
+     *
+     * @param   string $type Product type
+     * @param   string $block Block type
+     * @param   string $template Block template
+     * @return  Mage_Checkout_Block_Multishipping_Overview
+     */
+    public function addRowItemRender($type, $block, $template)
+    {
+        $type = $this->_getRowItemType($type);
+        parent::addItemRender($this->_getRowItemType($type), $block, $template);
+        return $this;
+    }
+
+    /**
+     * Return row-level item html
+     *
+     * @param Varien_Object $item
+     * @return string
+     */
+    public function getRowItemHtml(Varien_Object $item)
+    {
+        $type = $this->_getItemType($item);
+        $block = $this->_getRowItemRenderer($type)
+            ->setItem($item);
+        $this->_prepareItem($block);
+        return $block->toHtml();
+    }
+
+    /**
+     * Retrieve renderer block for row-level item output
+     *
+     * @param string $type
+     * @return Mage_Core_Block_Abstract
+     */
+    public function _getRowItemRenderer($type)
+    {
+        $type = $this->_getRowItemType($type);
+        $type = isset($this->_itemRenders[$type]) ? $type : $this->_getRowItemType('default');
+        return parent::getItemRenderer($type);
+    }
+
+    /**
+     * Wrap row renderers into namespace by adding 'row_' suffix
+     *
+     * @param string $type Product type
+     * @return string
+     */
+    protected function _getRowItemType($type)
+    {
+        return 'row_' . $type;
     }
 }

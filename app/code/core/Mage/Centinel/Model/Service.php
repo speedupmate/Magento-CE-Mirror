@@ -116,8 +116,7 @@ class Mage_Centinel_Model_Service extends Varien_Object
         $params = array(
             '_secure'  => true,
             '_current' => $current,
-            'form_key' => Mage::getSingleton('core/session')->getFormKey(),
-            'isIframe' => true
+            'form_key' => Mage::getSingleton('core/session')->getFormKey()
         );
         if (Mage::app()->getStore()->isAdmin()) {
             return Mage::getSingleton('adminhtml/url')->getUrl('*/centinel_index/' . $suffix, $params);
@@ -144,7 +143,6 @@ class Mage_Centinel_Model_Service extends Varien_Object
            ->setMerchantId($config->getMerchantId())
            ->setTransactionPwd($config->getTransactionPwd())
            ->setIsTestMode($config->getIsTestMode())
-           ->setDebugFlag($config->getDebugFlag())
            ->setApiEndpointUrl($this->getCustomApiEndpointUrl());
         return $this->_api;
     }
@@ -298,18 +296,6 @@ class Mage_Centinel_Model_Service extends Varien_Object
             }
             Mage::throwException(Mage::helper('centinel')->__('This card has failed validation and cannot be used.'));
         }
-    }
-
-    /**
-     * Reset validation state and drop api object
-     * 
-     * @return Mage_Centinel_Model_Service
-     */
-    public function reset()
-    {
-        $this->_resetValidationState();
-        $this->_api = null;
-        return $this;
     }
 
     /**
