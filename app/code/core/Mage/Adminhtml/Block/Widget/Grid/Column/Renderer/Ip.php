@@ -25,30 +25,19 @@
  */
 
 /**
- * Backup type column renderer
- *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @author      Magento Core Team <core@magentocommerce.com>
+ * Long INT to IP renderer
  */
-class Mage_Adminhtml_Block_Backup_Grid_Renderer_Type extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Ip
+    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
 {
-    protected function _getOption($id)
-    {
-        $options = array(
-                'db'=>Mage::helper('backup')->__('DB')
-        );
-
-        if(!isset($options[$id])) {
-        	return '';
-        }
-        return $options[$id];
-    }
-
+    /**
+     * Render the grid cell value
+     *
+     * @param Varien_Object $row
+     * @return string
+     */
     public function render(Varien_Object $row)
     {
-    	return $this->_getOption($row->getData($this->getColumn()->getIndex()));
+        return long2ip($row->getData($this->getColumn()->getIndex()));
     }
-
-
 }
