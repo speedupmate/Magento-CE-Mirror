@@ -1,0 +1,216 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category   design_default
+ * @package    Mage
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<?php
+/**
+ * Template for Mage_Adminhtml_Block_Catalog_Product_Edit
+ */
+?>
+
+
+
+<div class="content-header">
+    <h3 class="icon-head head-products"><?php echo $this->getHeader() ?></h3>
+    <p class="content-buttons form-buttons"><?php echo $this->getBackButtonHtml() ?>
+    <?php echo $this->getCancelButtonHtml() ?>
+    <?php if($this->getProductId()): ?>
+        <?php echo $this->getDeleteButtonHtml() ?>
+        <?php if($this->getProductSetId() && $this->getIsConfigured()): ?>
+            <?php echo $this->getDuplicateButtonHtml() ?>
+        <?php endif; ?>
+    <?php endif; ?>
+    <?php if($this->getProductSetId() && $this->getIsConfigured()): ?>
+        <?php echo $this->getSaveButtonHtml() ?>
+        <?php echo $this->getSaveAndEditButtonHtml() ?>
+    <?php endif; ?>
+    </p>
+</div>
+<form action="<?php echo $this->getSaveUrl() ?>" method="post" id="product_edit_form" enctype="multipart/form-data">
+    <?php echo $this->getBlockHtml('formkey')?>
+    <div style="display:none"></div>
+</form>
+<script type="text/javascript">
+//<![CDATA[
+    var productTemplateSyntax = /(^|.|\r|\n)({{(\w+)}})/;
+    var productForm = new varienForm('product_edit_form', '<?php echo $this->getValidationUrl() ?>');
+    productForm._processValidationResult = function(transport) {
+        var response = transport.responseText.evalJSON();
+        if (response.error){
+            if (response.attribute && $(response.attribute)) {
+                $(response.attribute).setHasError(true, productForm);
+                Validation.ajaxError($(response.attribute), response.message);
+                $(response.attribute).focus();
+            }
+            else if ($('messages')) {
+                $('messages').innerHTML = '<ul class="messages"><li class="error-msg"><ul><li>' + response.message + '</li></ul></li></ul>';
+            }
+        }
+        else{
+            productForm._submit();
+        }
+    };
+    function saveAndContinueEdit(urlTemplate) {
+        var template = new Template(urlTemplate, productTemplateSyntax);
+        var url = template.evaluate({tab_id:product_info_tabsJsTabs.activeTab.id});
+        productForm.submit(url);
+    }
+    function setSettings(urlTemplate, setElement, typeElement) {
+        var template = new Template(urlTemplate, productTemplateSyntax);
+        setLocation(template.evaluate({attribute_set:$F(setElement),type:$F(typeElement)}));
+    }
+
+     function setSuperSettings(urlTemplate, attributesClass, validateField) {
+        var attributesFields = $$('.' + attributesClass);
+        var attributes = Form.serializeElements(attributesFields, true).attribute;
+        if(typeof attributes == 'string') {
+            attributes = [attributes];
+        }
+
+        if(!attributes) {
+            $(validateField).value = 'no-attributes';
+        } else {
+            $(validateField).value = 'has-attributes';
+        }
+
+        if (productForm.validator.validate()) {
+            var template = new Template(urlTemplate, productTemplateSyntax);
+            var url = template.evaluate({
+                attributes: encode_base64(attributes.join(',')).replace(new RegExp('/','g'),'%2F').replace(new RegExp('=','g'),'%3D')
+            });
+            setLocation(url);
+        }
+    }
+
+    function checkMaxLength(Object, MaxLen)
+    {
+        if (Object.value.length > MaxLen-1) {
+            Object.value = Object.value.substr(0, MaxLen);
+        }
+        return 1;
+    }
+
+<?php if($this->getProductSetId() && $this->getIsConfigured()): ?>
+    var productLinksController = Class.create();
+
+    productLinksController.prototype = {
+        initialize : function(fieldId, products, grid) {
+            this.saveField = $(fieldId);
+            this.saveFieldId = fieldId;
+            this.products    = $H(products);
+            this.grid        = grid;
+            this.tabIndex    = 1000;
+            this.grid.rowClickCallback = this.rowClick.bind(this);
+            this.grid.initRowCallback = this.rowInit.bind(this);
+            this.grid.checkboxCheckCallback = this.registerProduct.bind(this);
+            this.grid.rows.each(this.eachRow.bind(this));
+            this.saveField.value = this.serializeObject(this.products);
+            this.grid.reloadParams = {'products[]':this.products.keys()};
+        },
+        eachRow : function(row) {
+            this.rowInit(this.grid, row);
+        },
+        registerProduct : function(grid, element, checked) {
+            if(checked){
+                if(element.inputElements) {
+                    this.products.set(element.value, {});
+                    for(var i = 0; i < element.inputElements.length; i++) {
+                        element.inputElements[i].disabled = false;
+                        this.products.get(element.value)[element.inputElements[i].name] = element.inputElements[i].value;
+                    }
+                }
+            }
+            else{
+                if(element.inputElements){
+                    for(var i = 0; i < element.inputElements.length; i++) {
+                        element.inputElements[i].disabled = true;
+                    }
+                }
+
+                this.products.unset(element.value);
+            }
+            this.saveField.value = this.serializeObject(this.products);
+            this.grid.reloadParams = {'products[]':this.products.keys()};
+        },
+        serializeObject : function(hash) {
+            var clone = hash.clone();
+            clone.each(function(pair) {
+                clone.set(pair.key, encode_base64(Object.toQueryString(pair.value)));
+            });
+            return clone.toQueryString();
+        },
+        rowClick : function(grid, event) {
+            var trElement = Event.findElement(event, 'tr');
+            var isInput   = Event.element(event).tagName == 'INPUT';
+            if(trElement){
+                var checkbox = Element.select(trElement, 'input');
+                if(checkbox[0]){
+                    var checked = isInput ? checkbox[0].checked : !checkbox[0].checked;
+                    this.grid.setCheckboxChecked(checkbox[0], checked);
+                }
+            }
+        },
+        inputChange : function(event) {
+            var element = Event.element(event);
+            if(element && element.checkboxElement && element.checkboxElement.checked){
+                this.products.get(element.checkboxElement.value)[element.name] = element.value;
+                this.saveField.value = this.serializeObject(this.products);
+            }
+        },
+        rowInit : function(grid, row) {
+            var checkbox = $(row).select('.checkbox')[0];
+            var inputs = $(row).select('.input-text');
+            if(checkbox && inputs.length > 0) {
+                checkbox.inputElements = inputs;
+                for(var i = 0; i < inputs.length; i++) {
+                    inputs[i].checkboxElement = checkbox;
+                    if(this.products.get(checkbox.value) && this.products.get(checkbox.value)[inputs[i].name]) {
+                        inputs[i].value = this.products.get(checkbox.value)[inputs[i].name];
+                    }
+                    inputs[i].disabled = !checkbox.checked;
+                    inputs[i].tabIndex = this.tabIndex++;
+                    Event.observe(inputs[i],'keyup', this.inputChange.bind(this));
+                    Event.observe(inputs[i],'change', this.inputChange.bind(this));
+                }
+            }
+        }
+    };
+<?php endif; ?>
+
+Event.observe(window, 'load', function() {
+    var objName = '<?php echo $this->getSelectedTabId() ?>';
+    if (objName) {
+        obj = $(objName);
+        product_info_tabsJsTabs.showTabContent(obj);
+    }
+    Product.AttributesBridge.setTabsObject(product_info_tabsJsTabs);
+});
+
+Validation.addAllThese([
+    ['validate-super-product-attributes', '<?php echo Mage::helper('catalog')->__('Please select one or more attributes.') ?>', function(v) {
+                return (v != "no-attributes");
+            }]]);
+//]]>
+</script>
