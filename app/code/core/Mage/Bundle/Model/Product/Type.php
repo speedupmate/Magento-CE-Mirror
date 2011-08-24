@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -179,7 +179,13 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
                 $selectionIds = unserialize($customOption->getValue());
                 $selections = $this->getSelectionsByIds($selectionIds, $product);
                 foreach ($selections->getItems() as $selection) {
-                    $weight += $selection->getWeight();
+                    $qtyOption = $this->getProduct($product)
+                        ->getCustomOption('selection_qty_' . $selection->getSelectionId());
+                    if ($qtyOption) {
+                        $weight += $selection->getWeight() * $qtyOption->getValue();
+                    } else {
+                        $weight += $selection->getWeight();
+                    }
                 }
             }
             return $weight;
@@ -224,6 +230,14 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
         // If bundle product has dynamic weight, than delete weight attribute
         if (!$product->getData('weight_type') && $product->hasData('weight')) {
             $product->setData('weight', false);
+        }
+
+        if ($product->getPriceType() == Mage_Bundle_Model_Product_Price::PRICE_TYPE_DYNAMIC) {
+            $product->setData(
+                'msrp_enabled', Mage_Catalog_Model_Product_Attribute_Source_Msrp_Type_Enabled::MSRP_ENABLE_NO
+            );
+            $product->unsetData('msrp');
+            $product->unsetData('msrp_display_actual_price_type');
         }
 
         $product->canAffectOptions(false);
@@ -388,6 +402,7 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
             $storeId = $this->getProduct($product)->getStoreId();
             $selectionsCollection = Mage::getResourceModel('bundle/selection_collection')
                 ->addAttributeToSelect(Mage::getSingleton('catalog/config')->getProductAttributes())
+                ->addAttributeToSelect('tax_class_id') //used for calculation item taxes in Bundle with Dynamic Price
                 ->setFlag('require_stock_items', true)
                 ->setFlag('product_children', true)
                 ->setPositionOrder()
@@ -1007,4 +1022,52 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
             && parent::canConfigure();
     }
 
+    /**
+     * Check if Minimum Advertise Price is enabled at least in one option
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param int $visibility
+     * @return bool|null
+     */
+    public function isMapEnabledInOptions($product, $visibility = null)
+    {
+        /**
+         * @TODO: In order to clarify is MAP enabled for product we can check associated products.
+         * Commented for future improvements.
+         */
+        /*
+        $collection = $this->getUsedProductCollection($product);
+        $helper = Mage::helper('catalog');
+
+        $result = null;
+        $parentVisibility = $product->getMsrpDisplayActualPriceType();
+        if ($parentVisibility === null) {
+            $parentVisibility = $helper->getMsrpDisplayActualPriceType();
+        }
+        $visibilities = array($parentVisibility);
+        foreach ($collection as $item) {
+            if ($helper->canApplyMsrp($item)) {
+                $productVisibility = $item->getMsrpDisplayActualPriceType();
+                if ($productVisibility === null) {
+                    $productVisibility = $helper->getMsrpDisplayActualPriceType();
+                }
+                $visibilities[] = $productVisibility;
+                $result = true;
+            }
+        }
+
+        if ($result && $visibility !== null) {
+            if ($visibilities) {
+                $maxVisibility = max($visibilities);
+                $result = $result && $maxVisibility == $visibility;
+            } else {
+                $result = false;
+            }
+        }
+
+        return $result;
+        */
+
+        return null;
+    }
 }

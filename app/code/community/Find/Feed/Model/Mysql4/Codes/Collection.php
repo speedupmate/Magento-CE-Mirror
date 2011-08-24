@@ -19,8 +19,8 @@
  * needs please refer to http://www.magentocommerce.com for more information.
  *
  * @category    
- * @package     _home
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @package     _storage
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -30,26 +30,7 @@
  * @category    Find
  * @package     Find_Feed
  */
-class Find_Feed_Model_Mysql4_Codes_Collection extends Mage_Core_Model_Mysql4_Collection_Abstract
+class Find_Feed_Model_Mysql4_Codes_Collection extends Find_Feed_Model_Resource_Codes_Collection
 {
-    /**
-     * Local constructor
-     *
-     */
-    protected function _construct()
-    {
-        $this->_init('find_feed/codes');
-    }
-
-    /**
-     * Fetch attributes to import
-     *
-     * @return array
-     */
-    public function getImportAttributes() 
-    {
-        $this->addFieldToFilter('is_imported', array('eq' => '1'));
-        return $this->_toOptionHash('import_code', 'eav_code');
-    }
 
 }

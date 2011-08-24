@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Paypal
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -35,6 +35,7 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
      */
     const DO_DIRECT_PAYMENT = 'DoDirectPayment';
     const DO_CAPTURE = 'DoCapture';
+    const DO_AUTHORIZATION = 'DoAuthorization';
     const DO_VOID = 'DoVoid';
     const REFUND_TRANSACTION = 'RefundTransaction';
     const SET_EXPRESS_CHECKOUT = 'SetExpressCheckout';
@@ -168,6 +169,10 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
         'PROFILESTATUS'       => 'recurring_profile_status',
         'STATUS'              => 'status',
 
+        //Next two fields are used for Brazil only
+        'TAXID'               => 'buyer_tax_id',
+        'TAXIDTYPE'           => 'buyer_tax_id_type',
+
         'BILLINGAGREEMENTID' => 'billing_agreement_id',
         'REFERENCEID' => 'reference_id',
         'BILLINGAGREEMENTSTATUS' => 'billing_agreement_status',
@@ -274,6 +279,14 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
     protected $_doCaptureRequest = array('AUTHORIZATIONID', 'COMPLETETYPE', 'AMT', 'CURRENCYCODE', 'NOTE', 'INVNUM',);
     protected $_doCaptureResponse = array('TRANSACTIONID', 'CURRENCYCODE', 'AMT', 'PAYMENTSTATUS', 'PENDINGREASON',);
 
+
+    /**
+     * DoAuthorization request/response map
+     * @var array
+     */
+    protected $_doAuthorizationRequest = array('TRANSACTIONID', 'AMT', 'CURRENCYCODE');
+    protected $_doAuthorizationResponse = array('TRANSACTIONID', 'AMT');
+
     /**
      * DoVoid request map
      * @var array
@@ -363,6 +376,14 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
     );
 
     /**
+     * Map for billing address to do request (not response)
+     * Merging with $_billingAddressMap
+     *
+     * @var array
+     */
+    protected $_billingAddressMapRequest = array ();
+
+    /**
      * Map for shipping address import/export (extends billing address mapper)
      * @var array
      */
@@ -396,7 +417,7 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
      */
     protected $_paymentInformationResponse = array(
         'PAYERID', 'PAYERSTATUS', 'CORRELATIONID', 'ADDRESSID', 'ADDRESSSTATUS',
-        'PAYMENTSTATUS', 'PENDINGREASON', 'PROTECTIONELIGIBILITY', 'EMAIL', 'SHIPPINGOPTIONNAME'
+        'PAYMENTSTATUS', 'PENDINGREASON', 'PROTECTIONELIGIBILITY', 'EMAIL', 'SHIPPINGOPTIONNAME', 'TAXID', 'TAXIDTYPE'
     );
 
     /**
@@ -537,7 +558,7 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
      */
     public function getVersion()
     {
-        return '65.2';
+        return '72.0';
     }
 
     /**
@@ -672,6 +693,23 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
         $this->_importFromResponse($this->_paymentInformationResponse, $response);
         $this->_importFromResponse($this->_doCaptureResponse, $response);
     }
+
+    /**
+     * DoAuthorization call
+     *
+     * @link https://cms.paypal.com/us/cgi-bin/?&cmd=_render-content&content_ID=developer/e_howto_api_nvp_r_DoAuthorization
+     * @return Mage_Paypal_Model_Api_Nvp
+     */
+    public function callDoAuthorization()
+    {
+        $request = $this->_exportToRequest($this->_doAuthorizationRequest);
+        $response = $this->call(self::DO_AUTHORIZATION, $request);
+        $this->_importFromResponse($this->_paymentInformationResponse, $response);
+        $this->_importFromResponse($this->_doAuthorizationResponse, $response);
+
+        return $this;
+    }
+
 
     /**
      * DoVoid call
@@ -1168,7 +1206,11 @@ class Mage_Paypal_Model_Api_Nvp extends Mage_Paypal_Model_Api_Abstract
         $billingAddress  = ($this->getBillingAddress()) ? $this->getBillingAddress() : $this->getAddress();
         $shippingAddress = $this->getAddress();
 
-        $to = Varien_Object_Mapper::accumulateByMap($billingAddress, $to, array_flip($this->_billingAddressMap));
+        $to = Varien_Object_Mapper::accumulateByMap(
+            $billingAddress,
+            $to,
+            array_merge(array_flip($this->_billingAddressMap), $this->_billingAddressMapRequest)
+        );
         if ($regionCode = $this->_lookupRegionCodeFromAddress($billingAddress)) {
             $to['STATE'] = $regionCode;
         }

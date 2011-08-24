@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Poll
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -40,11 +40,17 @@ class Mage_Poll_VoteController extends Mage_Core_Controller_Front_Action
      */
     protected $_cookieCheckActions = array('add');
 
+    /**
+     * Add Vote to Poll
+     *
+     * @return void
+     */
     public function addAction()
     {
         $pollId     = intval($this->getRequest()->getParam('poll_id'));
         $answerId   = intval($this->getRequest()->getParam('vote'));
 
+        /** @var $poll Mage_Poll_Model_Poll */
         $poll = Mage::getModel('poll/poll')->load($pollId);
 
         /**
@@ -58,6 +64,13 @@ class Mage_Poll_VoteController extends Mage_Core_Controller_Front_Action
 
             $poll->addVote($vote);
             Mage::getSingleton('core/session')->setJustVotedPoll($pollId);
+            Mage::dispatchEvent(
+                'poll_vote_add',
+                array(
+                    'poll'  => $poll,
+                    'vote'  => $vote
+                )
+            );
         }
         $this->_redirectReferer();
     }

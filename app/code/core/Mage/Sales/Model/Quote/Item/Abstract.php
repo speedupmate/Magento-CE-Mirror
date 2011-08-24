@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -153,12 +153,13 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
     }
 
     /**
-     * Set messages for quote item
+     * Adds message(s) for quote item. Duplicated messages are not added.
      *
      * @param  mixed $messages
      * @return Mage_Sales_Model_Quote_Item_Abstract
      */
-    public function setMessage($messages) {
+    public function setMessage($messages)
+    {
         $messagesExists = $this->getMessage(false);
         if (!is_array($messages)) {
             $messages = array($messages);
@@ -198,6 +199,34 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
     }
 
     /**
+     * Removes message by text
+     *
+     * @param string $text
+     * @return Mage_Sales_Model_Quote_Item_Abstract
+     */
+    public function removeMessageByText($text)
+    {
+        foreach ($this->_messages as $key => $message) {
+            if ($message == $text) {
+                unset($this->_messages[$key]);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Clears all messages
+     *
+     * @return Mage_Sales_Model_Quote_Item_Abstract
+     */
+    public function clearMessage()
+    {
+        $this->unsMessage(); // For older compatibility, when we kept message inside data array
+        $this->_messages = array();
+        return $this;
+    }
+
+    /**
      * Retrieve store model object
      *
      * @return Mage_Core_Model_Store
@@ -215,7 +244,7 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
     public function checkData()
     {
         $this->setHasError(false);
-        $this->unsMessage();
+        $this->clearMessage();
 
         $qty = $this->_getData('qty');
 
@@ -279,8 +308,8 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
     public function calcRowTotal()
     {
         $qty        = $this->getTotalQty();
-        $total      = $this->getCalculationPrice()*$qty;
-        $baseTotal  = $this->getBaseCalculationPrice()*$qty;
+        $total      = $this->getCalculationPriceOriginal()*$qty;
+        $baseTotal  = $this->getBaseCalculationPriceOriginal()*$qty;
 
         $this->setRowTotal($this->getStore()->roundPrice($total));
         $this->setBaseRowTotal($this->getStore()->roundPrice($baseTotal));
@@ -289,11 +318,31 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
 
     /**
      * Get item price used for quote calculation process.
-     * This method get custom price (if ut defined) or original product final price
+     * This method get custom price (if it is defined) or original product final price
      *
      * @return float
      */
     public function getCalculationPrice()
+    {
+        $price = $this->_getData('calculation_price');
+        if (is_null($price)) {
+            if ($this->hasCustomPrice()) {
+                $price = $this->getCustomPrice();
+            } else {
+                $price = $this->getConvertedPrice();
+            }
+            $this->setData('calculation_price', $price);
+        }
+        return $price;
+    }
+
+    /**
+     * Get item price used for quote calculation process.
+     * This method get original custom price applied before tax calculation
+     *
+     * @return float
+     */
+    public function getCalculationPriceOriginal()
     {
         $price = $this->_getData('calculation_price');
         if (is_null($price)) {
@@ -313,6 +362,28 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
      * @return float
      */
     public function getBaseCalculationPrice()
+    {
+        if (!$this->hasBaseCalculationPrice()) {
+            if ($this->hasCustomPrice()) {
+                $price = (float) $this->getCustomPrice();
+                if ($price) {
+                    $rate = $this->getStore()->convertPrice($price) / $price;
+                    $price = $price / $rate;
+                }
+            } else {
+                $price = $this->getPrice();
+            }
+            $this->setBaseCalculationPrice($price);
+        }
+        return $this->_getData('base_calculation_price');
+    }
+
+    /**
+     * Get original calculation price used for quote calculation in base currency.
+     *
+     * @return float
+     */
+    public function getBaseCalculationPriceOriginal()
     {
         if (!$this->hasBaseCalculationPrice()) {
             if ($this->hasOriginalCustomPrice()) {
@@ -502,7 +573,8 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
             $shipmentType = $this->getProduct()->getShipmentType();
         }
 
-        if ((null !== $shipmentType) && (int)$shipmentType === Mage_Catalog_Model_Product_Type_Abstract::SHIPMENT_SEPARATELY) {
+        if ((null !== $shipmentType) &&
+            (int)$shipmentType === Mage_Catalog_Model_Product_Type_Abstract::SHIPMENT_SEPARATELY) {
             return true;
         }
         return false;

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -175,9 +175,13 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option extends Mage_Bun
     {
         $price = $this->getProduct()->getPriceModel()->getSelectionPreFinalPrice($this->getProduct(), $_selection);
         $this->setFormatProduct($_selection);
-        return $_selection->getSelectionQty()*1 . ' x ' . $_selection->getName() . ' &nbsp; ' .
-            ($includeContainer ? '<span class="price-notice">' : '') . '+' .
-            $this->formatPriceString($price, $includeContainer) . ($includeContainer ? '</span>' : '');
+        $priceTitle = $_selection->getSelectionQty()*1 . ' x ' . $_selection->getName();
+
+        $priceTitle .= ' &nbsp; ' . ($includeContainer ? '<span class="price-notice">' : '')
+            . '+' . $this->formatPriceString($price, $includeContainer)
+            . ($includeContainer ? '</span>' : '');
+
+        return  $priceTitle;
     }
 
     /**
@@ -199,12 +203,22 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option extends Mage_Bun
         return is_numeric($price) ? $price : 0;
     }
 
+    /**
+     * Get title price for selection product
+     *
+     * @param Mage_Catalog_Model_Product $_selection
+     * @param bool $includeContainer
+     * @return string
+     */
     public function getSelectionTitlePrice($_selection, $includeContainer = true)
     {
         $price = $this->getProduct()->getPriceModel()->getSelectionPreFinalPrice($this->getProduct(), $_selection, 1);
         $this->setFormatProduct($_selection);
-        return $_selection->getName() . ' &nbsp; ' . ($includeContainer ? '<span class="price-notice">' : '') . '+' .
-            $this->formatPriceString($price, $includeContainer) . ($includeContainer ? '</span>' : '');
+        $priceTitle = $_selection->getName();
+        $priceTitle .= ' &nbsp; ' . ($includeContainer ? '<span class="price-notice">' : '')
+            . '+' . $this->formatPriceString($price, $includeContainer)
+            . ($includeContainer ? '</span>' : '');
+        return $priceTitle;
     }
 
     /**
@@ -233,7 +247,10 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle_Option extends Mage_Bun
     {
         $taxHelper  = Mage::helper('tax');
         $coreHelper = $this->helper('core');
-        if ($this->getFormatProduct()) {
+        $currentProduct = $this->getProduct();
+        if (!$currentProduct->getPriceType() == Mage_Bundle_Model_Product_Price::PRICE_TYPE_FIXED
+                && $this->getFormatProduct()
+        ) {
             $product = $this->getFormatProduct();
         } else {
             $product = $this->getProduct();

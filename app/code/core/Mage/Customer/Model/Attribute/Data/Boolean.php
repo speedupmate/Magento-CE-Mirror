@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Customer
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -32,27 +32,6 @@
  * @package     Mage_Customer
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Customer_Model_Attribute_Data_Boolean extends Mage_Customer_Model_Attribute_Data_Select
+class Mage_Customer_Model_Attribute_Data_Boolean extends Mage_Eav_Model_Attribute_Data_Boolean
 {
-    /**
-     * Return a text for option value
-     *
-     * @param int $value
-     * @return string
-     */
-    protected function _getOptionText($value)
-    {
-        switch ($value) {
-            case '0':
-                $text = Mage::helper('customer')->__('No');
-                break;
-            case '1':
-                $text = Mage::helper('customer')->__('Yes');
-                break;
-            default:
-                $text = '';
-                break;
-        }
-        return $text;
-    }
 }

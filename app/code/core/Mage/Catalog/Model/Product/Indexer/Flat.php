@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Catalog_Model_Product_Indexer_Flat extends Mage_Index_Model_Indexer_Abstract
@@ -111,11 +111,13 @@ class Mage_Catalog_Model_Product_Indexer_Flat extends Mage_Index_Model_Indexer_A
             $enableBefore   = ($attribute->getOrigData('backend_type') == 'static')
                 || ($addFilterable && $attribute->getOrigData('is_filterable') > 0)
                 || ($attribute->getOrigData('used_in_product_listing') == 1)
+                || ($attribute->getOrigData('is_used_for_promo_rules') == 1)
                 || ($attribute->getOrigData('used_for_sort_by') == 1);
 
             $enableAfter    = ($attribute->getData('backend_type') == 'static')
                 || ($addFilterable && $attribute->getData('is_filterable') > 0)
                 || ($attribute->getData('used_in_product_listing') == 1)
+                || ($attribute->getData('is_used_for_promo_rules') == 1)
                 || ($attribute->getData('used_for_sort_by') == 1);
 
             if ($event->getType() == Mage_Index_Model_Event::TYPE_DELETE) {

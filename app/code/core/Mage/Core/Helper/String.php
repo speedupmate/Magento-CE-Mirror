@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -279,4 +279,24 @@ class Mage_Core_Helper_String extends Mage_Core_Helper_Abstract
     {
         return iconv_strpos($haystack, $needle, $offset, self::ICONV_CHARSET);
     }
+
+    /**
+     * Sorts array with multibyte string keys
+     *
+     * @param array $sort
+     * @return array
+     */
+    public function ksortMultibyte(array &$sort)
+    {
+        if (empty($sort)) {
+            return false;
+        }
+        $oldLocale = setlocale(LC_COLLATE, "0");
+        setlocale(LC_COLLATE, Mage::app()->getLocale()->getLocaleCode() . '.UTF8');
+        ksort($sort, SORT_LOCALE_STRING);
+        setlocale(LC_COLLATE, $oldLocale);
+
+        return $sort;
+    }
+
 }

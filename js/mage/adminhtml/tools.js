@@ -19,7 +19,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 function setLocation(url){
@@ -346,7 +346,11 @@ var toolbarToggle = {
         var buttons = $$('.content-buttons')[0];
         if (buttons && buttons.oldParent && buttons.oldParent != buttons.parentNode) {
             buttons.remove();
-            buttons.oldParent.insertBefore(buttons, buttons.oldBefore);
+            if(buttons.oldBefore) {
+                buttons.oldParent.insertBefore(buttons, buttons.oldBefore);
+            } else {
+                buttons.oldParent.appendChild(buttons);
+            }
         }
 
         this.headerCopy.style.display = 'none';

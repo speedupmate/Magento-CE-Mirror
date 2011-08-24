@@ -20,14 +20,16 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * XmlConnect shopping cart controller
  *
- * @author  Magento Core Team <core@magentocommerce.com>
+ * @category    Mage
+ * @package     Mage_XmlConnect
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_XmlConnect_CartController extends Mage_XmlConnect_Controller_Action
 {
@@ -173,7 +175,9 @@ class Mage_XmlConnect_CartController extends Mage_XmlConnect_Controller_Action
                 $subProduct = $product->getTypeInstance(true)
                     ->getProductByAttributes($request->getSuperAttribute(), $product);
 
-                if ($requestedQty < ($requiredQty = $subProduct->getStockItem()->getMinSaleQty())) {
+                if (!empty($subProduct)
+                    && $requestedQty < ($requiredQty = $subProduct->getStockItem()->getMinSaleQty())
+                ) {
                     $requestedQty = $requiredQty;
                 }
 

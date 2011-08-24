@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -190,7 +190,8 @@ class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
         foreach ($checkout->getAllVisibleItems() as $_item) {
             /* @var $_item Mage_Sales_Model_Quote_Item */
             $items .= $_item->getProduct()->getName() . '  x '. $_item->getQty() . '  '
-                    . $checkout->getStoreCurrencyCode() . ' ' . $_item->getProduct()->getFinalPrice($_item->getQty()) . "\n";
+                    . $checkout->getStoreCurrencyCode() . ' '
+                    . $_item->getProduct()->getFinalPrice($_item->getQty()) . "\n";
         }
         $total = $checkout->getStoreCurrencyCode() . ' ' . $checkout->getGrandTotal();
 
@@ -282,5 +283,15 @@ class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         return $guestCheckout;
+    }
+
+    /**
+     * Check if context is checkout
+     *
+     * @return bool
+     */
+    public function isContextCheckout()
+    {
+        return (Mage::app()->getRequest()->getParam('context') == 'checkout');
     }
 }

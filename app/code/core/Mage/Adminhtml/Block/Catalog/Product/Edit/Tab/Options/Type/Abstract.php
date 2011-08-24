@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -53,8 +53,16 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Options_Type_Abstract extend
         return parent::_prepareLayout();
     }
 
+    /**
+     * Get html of Price Type select element
+     *
+     * @return string
+     */
     public function getPriceTypeSelectHtml()
     {
+        if ($this->getCanEditPrice() === false) {
+            $this->getChild('option_price_type')->setExtraParams('disabled="disabled"');
+        }
         return $this->getChildHtml('option_price_type');
     }
 

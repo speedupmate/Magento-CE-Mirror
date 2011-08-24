@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -64,7 +64,7 @@ class Mage_Adminhtml_Model_Customer_Renderer_Region implements Varien_Data_Form_
             $regionCollection = self::$_regionCollections[$countryId];
         }
 
-        $regionId = $element->getForm()->getElement('region_id')->getValue();
+        $regionId = intval($element->getForm()->getElement('region_id')->getValue());
 
         $htmlAttributes = $element->getHtmlAttributes();
         foreach ($htmlAttributes as $key => $attribute) {
@@ -92,7 +92,7 @@ class Mage_Adminhtml_Model_Customer_Renderer_Region implements Varien_Data_Form_
                  . $element->serialize($htmlAttributes) .'>' . "\n";
             foreach ($regionCollection as $region) {
                 $selected = ($regionId==$region['value']) ? ' selected="selected"' : '';
-                $html.= '<option value="'.$region['value'].'"'.$selected.'>'.$region['label'].'</option>';
+                $html.= '<option value="'.(int)$region['value'].'"'.$selected.'>'.$region['label'].'</option>';
             }
             $html.= '</select>' . "\n";
 

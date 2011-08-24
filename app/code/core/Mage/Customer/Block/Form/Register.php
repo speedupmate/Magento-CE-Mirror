@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Customer
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -83,7 +83,9 @@ class Mage_Customer_Block_Form_Register extends Mage_Directory_Block_Data
                 $data->addData($formData);
                 $data->setCustomerData(1);
             }
-
+            if (isset($data['region_id'])) {
+                $data['region_id'] = (int)$data['region_id'];
+            }
             $this->setData('form_data', $data);
         }
         return $data;
@@ -125,7 +127,7 @@ class Mage_Customer_Block_Form_Register extends Mage_Directory_Block_Data
      */
     public function isNewsletterEnabled()
     {
-        return !Mage::getStoreConfigFlag('advanced/modules_disable_output/Mage_Newsletter');
+        return Mage::helper('core')->isModuleOutputEnabled('Mage_Newsletter');
     }
 
     /**

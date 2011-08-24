@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -67,14 +67,21 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Billing_Method_Form extends Mage_P
      */
     public function getSelectedMethodCode()
     {
-        if ($currentMethodCode = $this->getQuote()->getPayment()->getMethod()) {
-            return $currentMethodCode;
-        }
-        if (count($this->getMethods()) == 1) {
-            foreach ($this->getMethods() as $method) {
+        // One available method. Return this method as selected, because no other variant is possible.
+        $methods = $this->getMethods();
+        if (count($methods) == 1) {
+            foreach ($methods as $method) {
                 return $method->getCode();
             }
         }
+
+        // Several methods. If user has selected some method - then return it.
+        $currentMethodCode = $this->getQuote()->getPayment()->getMethod();
+        if ($currentMethodCode) {
+            return $currentMethodCode;
+        }
+
+        // Several methods, but no preference for one of them.
         return false;
     }
 

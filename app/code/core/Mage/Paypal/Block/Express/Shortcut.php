@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Paypal
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -29,6 +29,12 @@
  */
 class Mage_Paypal_Block_Express_Shortcut extends Mage_Core_Block_Template
 {
+    /**
+     * Position of "OR" label against shortcut
+     */
+    const POSITION_BEFORE = 'before';
+    const POSITION_AFTER = 'after';
+
     /**
      * Whether the block should be eventually rendered
      *
@@ -74,10 +80,11 @@ class Mage_Paypal_Block_Express_Shortcut extends Mage_Core_Block_Template
 
         if ($isInCatalog) {
             // Show PayPal shortcut on a product view page only if product has nonzero price
+            /** @var $currentProduct Mage_Catalog_Model_Product */
             $currentProduct = Mage::registry('current_product');
             if (!is_null($currentProduct)) {
                 $productPrice = (float)$currentProduct->getFinalPrice();
-                if (empty($productPrice)) {
+                if (empty($productPrice) && !$currentProduct->isGrouped()) {
                     $this->_shouldRender = false;
                     return $result;
                 }
@@ -135,5 +142,28 @@ class Mage_Paypal_Block_Express_Shortcut extends Mage_Core_Block_Template
             return '';
         }
         return parent::_toHtml();
+    }
+
+    /**
+     * Check is "OR" label position before shortcut
+     *
+     * @return bool
+     */
+    public function isOrPositionBefore()
+    {
+        return ($this->getIsInCatalogProduct() && !$this->getShowOrPosition())
+            || ($this->getShowOrPosition() && $this->getShowOrPosition() == self::POSITION_BEFORE);
+
+    }
+
+    /**
+     * Check is "OR" label position after shortcut
+     *
+     * @return bool
+     */
+    public function isOrPositionAfter()
+    {
+        return (!$this->getIsInCatalogProduct() && !$this->getShowOrPosition())
+            || ($this->getShowOrPosition() && $this->getShowOrPosition() == self::POSITION_AFTER);
     }
 }

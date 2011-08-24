@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -441,6 +441,13 @@ class Mage_Core_Model_Cache
         } else {
             $this->_allowedCacheOptions = unserialize($options);
         }
+
+        if (Mage::getConfig()->getOptions()->getData('global_ban_use_cache')) {
+            foreach ($this->_allowedCacheOptions as $key => $val) {
+                $this->_allowedCacheOptions[$key] = false;
+            }
+        }
+
         return $this;
     }
 

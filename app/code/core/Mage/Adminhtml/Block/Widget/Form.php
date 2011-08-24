@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -197,8 +197,10 @@ class Mage_Adminhtml_Block_Widget_Form extends Mage_Adminhtml_Block_Widget
 
                 $element->setAfterElementHtml($this->_getAdditionalElementHtml($element));
 
-                if ($inputType == 'select' || $inputType == 'multiselect') {
+                if ($inputType == 'select') {
                     $element->setValues($attribute->getSource()->getAllOptions(true, true));
+                } else if ($inputType == 'multiselect') {
+                    $element->setValues($attribute->getSource()->getAllOptions(false, true));
                 } else if ($inputType == 'date') {
                     $element->setImage($this->getSkinUrl('images/grid-cal.gif'));
                     $element->setFormat(

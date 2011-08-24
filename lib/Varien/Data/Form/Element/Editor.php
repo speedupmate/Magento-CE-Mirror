@@ -199,7 +199,7 @@ class Varien_Data_Form_Element_Editor extends Varien_Data_Form_Element_Textarea
         if ($this->getConfig('add_widgets')) {
             $buttonsHtml .= $this->_getButtonHtml(array(
                 'title'     => $this->translate('Insert Widget...'),
-                'onclick'   => "widgetTools.openDialog('" . $this->getConfig('widget_window_url') . "widget_target_id "
+                'onclick'   => "widgetTools.openDialog('" . $this->getConfig('widget_window_url') . "widget_target_id/"
                                . $this->getHtmlId() . "')",
                 'class'     => 'add-widget plugin',
                 'style'     => $visible ? '' : 'display:none',
@@ -363,9 +363,14 @@ class Varien_Data_Form_Element_Editor extends Varien_Data_Form_Element_Textarea
      */
     public function translate($string)
     {
-        if ($this->getConfig('translator') instanceof Varien_Object) {
-            return $this->getConfig('translator')->__($string);
+        $translator = $this->getConfig('translator');
+        if (is_object($translator) && is_callable(array($translator, '__'))) {
+            $result = $translator->__($string);
+            if (is_string($result)) {
+                return $result;
+            }
         }
+
         return $string;
     }
 

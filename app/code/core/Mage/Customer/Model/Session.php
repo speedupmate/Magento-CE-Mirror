@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Customer
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -46,6 +46,13 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
      * @var bool
      */
     protected $_isCustomerIdChecked = null;
+
+    /**
+     * Persistent customer group id
+     *
+     * @var null|int
+     */
+    protected $_persistentCustomerGroupId = null;
 
     /**
      * Retrieve customer sharing configuration model
@@ -116,31 +123,54 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
     }
 
     /**
+     * Set customer id
+     *
+     * @param int|null $id
+     * @return Mage_Customer_Model_Session
+     */
+    public function setCustomerId($id)
+    {
+        $this->setData('customer_id', $id);
+        return $this;
+    }
+
+    /**
      * Retrieve customer id from current session
      *
-     * @return int || null
+     * @return int|null
      */
     public function getCustomerId()
     {
-        if ($this->isLoggedIn()) {
-            return $this->getId();
+        if ($this->getData('customer_id')) {
+            return $this->getData('customer_id');
         }
-        return null;
+        return ($this->isLoggedIn()) ? $this->getId() : null;
+    }
+
+    /**
+     * Set customer group id
+     *
+     * @param int|null $id
+     * @return Mage_Customer_Model_Session
+     */
+    public function setCustomerGroupId($id)
+    {
+        $this->setData('customer_group_id', $id);
+        return $this;
     }
 
     /**
      * Get customer group id
-     * If customer is not logged in system not logged in group id will be returned
+     * If customer is not logged in system, 'not logged in' group id will be returned
      *
      * @return int
      */
     public function getCustomerGroupId()
     {
-        if ($this->isLoggedIn()) {
-            return $this->getCustomer()->getGroupId();
-        } else {
-            return Mage_Customer_Model_Group::NOT_LOGGED_IN_ID;
+        if ($this->getData('customer_group_id')) {
+            return $this->getData('customer_group_id');
         }
+        return ($this->isLoggedIn()) ? $this->getCustomer()->getGroupId() : Mage_Customer_Model_Group::NOT_LOGGED_IN_ID;
     }
 
     /**
@@ -243,5 +273,41 @@ class Mage_Customer_Model_Session extends Mage_Core_Model_Session_Abstract
             return false;
         }
         return true;
+    }
+
+    /**
+     * Set auth url
+     *
+     * @param string $key
+     * @param string $url
+     * @return Mage_Customer_Model_Session
+     */
+    protected function _setAuthUrl($key, $url)
+    {
+        $url = Mage::helper('core/url')
+            ->removeRequestParam($url, Mage::getSingleton('core/session')->getSessionIdQueryParam());
+        return $this->setData($key, $url);
+    }
+
+    /**
+     * Set Before auth url
+     *
+     * @param string $url
+     * @return Mage_Customer_Model_Session
+     */
+    public function setBeforeAuthUrl($url)
+    {
+        return $this->_setAuthUrl('before_auth_url', $url);
+    }
+
+    /**
+     * Set After auth url
+     *
+     * @param string $url
+     * @return Mage_Customer_Model_Session
+     */
+    public function setAfterAuthUrl($url)
+    {
+        return $this->_setAuthUrl('after_auth_url', $url);
     }
 }

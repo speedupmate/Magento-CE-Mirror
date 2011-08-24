@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Tax
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -183,8 +183,8 @@ class Mage_Tax_Model_Sales_Total_Quote_Subtotal extends Mage_Sales_Model_Quote_A
         $rate   = $this->_calculator->getRate($request);
         $qty    = $item->getTotalQty();
 
-        $price          = $taxPrice         = $item->getCalculationPrice();
-        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPrice();
+        $price          = $taxPrice         = $item->getCalculationPriceOriginal();
+        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPriceOriginal();
         $subtotal       = $taxSubtotal      = $item->getRowTotal();
         $baseSubtotal   = $baseTaxSubtotal  = $item->getBaseRowTotal();
         $taxOnOrigPrice = !$this->_helper->applyTaxOnCustomPrice($this->_store) && $item->hasCustomPrice();
@@ -297,8 +297,8 @@ class Mage_Tax_Model_Sales_Total_Quote_Subtotal extends Mage_Sales_Model_Quote_A
         $rate   = $this->_calculator->getRate($request);
         $qty    = $item->getTotalQty();
 
-        $price          = $taxPrice         = $item->getCalculationPrice();
-        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPrice();
+        $price          = $taxPrice         = $item->getCalculationPriceOriginal();
+        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPriceOriginal();
         $subtotal       = $taxSubtotal      = $item->getRowTotal();
         $baseSubtotal   = $baseTaxSubtotal  = $item->getBaseRowTotal();
         $taxOnOrigPrice = !$this->_helper->applyTaxOnCustomPrice($this->_store) && $item->hasCustomPrice();
@@ -415,8 +415,8 @@ class Mage_Tax_Model_Sales_Total_Quote_Subtotal extends Mage_Sales_Model_Quote_A
         $rate   = $calc->getRate($request);
         $qty    = $item->getTotalQty();
 
-        $price          = $taxPrice         = $item->getCalculationPrice();
-        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPrice();
+        $price          = $taxPrice         = $item->getCalculationPriceOriginal();
+        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPriceOriginal();
         $subtotal       = $taxSubtotal      = $item->getRowTotal();
         $baseSubtotal   = $baseTaxSubtotal  = $item->getBaseRowTotal();
 
@@ -661,7 +661,7 @@ class Mage_Tax_Model_Sales_Total_Quote_Subtotal extends Mage_Sales_Model_Quote_A
             $address,
             $address->getQuote()->getBillingAddress(),
             $address->getQuote()->getCustomerTaxClassId(),
-            $address->_store
+            $address->getQuote()->getStore()
         );
         return $addressTaxRequest;
     }
@@ -738,8 +738,8 @@ class Mage_Tax_Model_Sales_Total_Quote_Subtotal extends Mage_Sales_Model_Quote_A
         $rate   = $this->_calculator->getRate($request);
         $qty    = $item->getTotalQty();
 
-        $price          = $taxPrice         = $item->getCalculationPrice();
-        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPrice();
+        $price          = $taxPrice         = $item->getCalculationPriceOriginal();
+        $basePrice      = $baseTaxPrice     = $item->getBaseCalculationPriceOriginal();
         $subtotal       = $taxSubtotal      = $item->getRowTotal();
         $baseSubtotal   = $baseTaxSubtotal  = $item->getBaseRowTotal();
 

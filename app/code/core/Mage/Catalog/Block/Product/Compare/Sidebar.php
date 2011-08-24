@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,13 @@
  */
 class Mage_Catalog_Block_Product_Compare_Sidebar extends Mage_Catalog_Block_Product_Compare_Abstract
 {
+    /**
+     * Compare Products Collection
+     *
+     * @var null|Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Compare_Item_Collection
+     */
+    protected $_itemsCollection = null;
+
     /**
      * Initialize block
      *
@@ -50,7 +57,32 @@ class Mage_Catalog_Block_Product_Compare_Sidebar extends Mage_Catalog_Block_Prod
      */
     public function getItems()
     {
+        if ($this->_itemsCollection) {
+            return $this->_itemsCollection;
+        }
         return $this->_getHelper()->getItemCollection();
+    }
+
+    /**
+     * Set Compare Products Collection
+     *
+     * @param Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Compare_Item_Collection $collection
+     * @return Mage_Catalog_Block_Product_Compare_Sidebar
+     */
+    public function setItems($collection)
+    {
+        $this->_itemsCollection = $collection;
+        return $this;
+    }
+
+    /**
+     * Retrieve compare product helper
+     *
+     * @return Mage_Catalog_Helper_Product_Compare
+     */
+    public function getCompareProductHelper()
+    {
+        return $this->_getHelper();
     }
 
     /**

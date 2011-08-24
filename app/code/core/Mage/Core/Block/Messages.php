@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -67,6 +67,13 @@ class Mage_Core_Block_Messages extends Mage_Core_Block_Template
      * @var bool
      */
     protected $_escapeMessageFlag = false;
+
+    /**
+     * Storage for used types of message storages
+     *
+     * @var array
+     */
+    protected $_usedStorageTypes = array('core/session');
 
     public function _prepareLayout()
     {
@@ -276,5 +283,27 @@ class Mage_Core_Block_Messages extends Mage_Core_Block_Template
     public function setMessagesSecondLevelTagName($tagName)
     {
         $this->_messagesSecondLevelTagName = $tagName;
+    }
+
+    /**
+     * Get cache key informative items
+     *
+     * @return array
+     */
+    public function getCacheKeyInfo()
+    {
+        return array(
+            'storage_types' => serialize($this->_usedStorageTypes)
+        );
+    }
+
+    /**
+     * Add used storage type
+     *
+     * @param string $type
+     */
+    public function addStorageType($type)
+    {
+        $this->_usedStorageTypes[] = $type;
     }
 }

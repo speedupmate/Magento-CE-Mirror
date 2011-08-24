@@ -190,7 +190,8 @@ class Varien_File_Uploader
         $this->_result = false;
 
         $destinationFile = $destinationFolder;
-        $fileName = isset($newFileName) ? $newFileName : self::getCorrectFileName($this->_file['name']);
+        $fileName = isset($newFileName) ? $newFileName : $this->_file['name'];
+        $fileName = self::getCorrectFileName($fileName);
         if ($this->_enableFilesDispersion) {
             $fileName = $this->correctFileNameCase($fileName);
             $this->setAllowCreateFolders(true);
@@ -205,7 +206,7 @@ class Varien_File_Uploader
 
         $destinationFile = self::_addDirSeparator($destinationFile) . $fileName;
 
-        $this->_result = move_uploaded_file($this->_file['tmp_name'], $destinationFile);
+        $this->_result = $this->_moveFile($this->_file['tmp_name'], $destinationFile);
 
         if ($this->_result) {
             chmod($destinationFile, 0777);
@@ -223,6 +224,18 @@ class Varien_File_Uploader
         }
 
         return $this->_result;
+    }
+
+    /**
+     * Move files from TMP folder into destination folder
+     *
+     * @param string $tmpPath
+     * @param string $destPath
+     * @return bool
+     */
+    protected function _moveFile($tmpPath, $destPath)
+    {
+        return move_uploaded_file($tmpPath, $destPath);
     }
 
     /**
@@ -488,33 +501,6 @@ class Varien_File_Uploader
 
         if (!(@is_dir($destinationFolder) || @mkdir($destinationFolder, 0777, true))) {
             throw new Exception("Unable to create directory '{$destinationFolder}'.");
-        }
-        return $this;
-
-        $destinationFolder = str_replace('/', DIRECTORY_SEPARATOR, $destinationFolder);
-        $path = explode(DIRECTORY_SEPARATOR, $destinationFolder);
-        $newPath = null;
-        $oldPath = null;
-        foreach ($path as $key => $directory) {
-            if (trim($directory) == '') {
-                continue;
-            }
-            if (strlen($directory) === 2 && $directory{1} === ':') {
-                $newPath = $directory;
-                continue;
-            }
-            $newPath .= ($newPath != DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR . $directory : $directory;
-            if(is_dir($newPath)) {
-                $oldPath = $newPath;
-                continue;
-            } else {
-                if(is_writable($oldPath)) {
-                    mkdir($newPath, 0777);
-                } else {
-                    throw new Exception("Unable to create directory '{$newPath}'. Access forbidden.");
-                }
-            }
-            $oldPath = $newPath;
         }
         return $this;
     }

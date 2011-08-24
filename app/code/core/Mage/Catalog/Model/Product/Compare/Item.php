@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,9 +28,18 @@
 /**
  * Catalog Compare Item Model
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @method Mage_Catalog_Model_Resource_Product_Compare_Item _getResource()
+ * @method Mage_Catalog_Model_Resource_Product_Compare_Item getResource()
+ * @method Mage_Catalog_Model_Product_Compare_Item setVisitorId(int $value)
+ * @method Mage_Catalog_Model_Product_Compare_Item setCustomerId(int $value)
+ * @method int getProductId()
+ * @method Mage_Catalog_Model_Product_Compare_Item setProductId(int $value)
+ * @method int getStoreId()
+ * @method Mage_Catalog_Model_Product_Compare_Item setStoreId(int $value)
+ *
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Model_Product_Compare_Item extends Mage_Core_Model_Abstract
 {
@@ -163,7 +172,7 @@ class Mage_Catalog_Model_Product_Compare_Item extends Mage_Core_Model_Abstract
     {
         $this->_getResource()->updateCustomerFromVisitor($this);
 
-        Mage::helper('catalog/product_compare')->calculate();
+        Mage::helper('catalog/product_compare')->setCustomerId($this->getCustomerId())->calculate();
         return $this;
     }
 
@@ -173,7 +182,7 @@ class Mage_Catalog_Model_Product_Compare_Item extends Mage_Core_Model_Abstract
      * @param Varien_Event_Observer $observer
      * @return Mage_Catalog_Model_Product_Compare_Item
      */
-    public function bindCustomerLogout(Varien_Event_Observer $observer)
+    public function bindCustomerLogout(Varien_Event_Observer $observer = null)
     {
         $this->_getResource()->purgeVisitorByCustomer($this);
 

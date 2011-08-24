@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Dataflow
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,8 @@
  */
 class Mage_Dataflow_Model_Convert_Adapter_Io extends Mage_Dataflow_Model_Convert_Adapter_Abstract
 {
+    const XML_PATH_EXPORT_LOCAL_VALID_PATH = 'general/file/importexport_local_valid_paths';
+
     /**
      * @return Varien_Io_Abstract
      */
@@ -54,9 +56,7 @@ class Mage_Dataflow_Model_Convert_Adapter_Io extends Mage_Dataflow_Model_Convert
                           . DS . $ioConfig['filename'];
                     /** @var $validator Mage_Core_Model_File_Validator_AvailablePath */
                     $validator = Mage::getModel('core/file_validator_availablePath');
-                    /** @var $helper Mage_ImportExport_Helper_Data */
-                    $helper = Mage::helper('importexport');
-                    $validator->setPaths($helper->getLocalValidPaths());
+                    $validator->setPaths( Mage::getStoreConfig(self::XML_PATH_EXPORT_LOCAL_VALID_PATH) );
                     if (!$validator->isValid($path)) {
                         foreach ($validator->getMessages() as $message) {
                             Mage::throwException($message);

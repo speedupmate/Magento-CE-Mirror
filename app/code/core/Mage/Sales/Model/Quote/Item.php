@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,9 +28,108 @@
 /**
  * Sales Quote Item Model
  *
- * @category   Mage
- * @package    Mage_Sales
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @method Mage_Sales_Model_Resource_Quote_Item _getResource()
+ * @method Mage_Sales_Model_Resource_Quote_Item getResource()
+ * @method int getQuoteId()
+ * @method Mage_Sales_Model_Quote_Item setQuoteId(int $value)
+ * @method string getCreatedAt()
+ * @method Mage_Sales_Model_Quote_Item setCreatedAt(string $value)
+ * @method string getUpdatedAt()
+ * @method Mage_Sales_Model_Quote_Item setUpdatedAt(string $value)
+ * @method int getProductId()
+ * @method Mage_Sales_Model_Quote_Item setProductId(int $value)
+ * @method int getStoreId()
+ * @method Mage_Sales_Model_Quote_Item setStoreId(int $value)
+ * @method int getParentItemId()
+ * @method Mage_Sales_Model_Quote_Item setParentItemId(int $value)
+ * @method int getIsVirtual()
+ * @method Mage_Sales_Model_Quote_Item setIsVirtual(int $value)
+ * @method string getSku()
+ * @method Mage_Sales_Model_Quote_Item setSku(string $value)
+ * @method string getName()
+ * @method Mage_Sales_Model_Quote_Item setName(string $value)
+ * @method string getDescription()
+ * @method Mage_Sales_Model_Quote_Item setDescription(string $value)
+ * @method string getAppliedRuleIds()
+ * @method Mage_Sales_Model_Quote_Item setAppliedRuleIds(string $value)
+ * @method string getAdditionalData()
+ * @method Mage_Sales_Model_Quote_Item setAdditionalData(string $value)
+ * @method int getFreeShipping()
+ * @method Mage_Sales_Model_Quote_Item setFreeShipping(int $value)
+ * @method int getIsQtyDecimal()
+ * @method Mage_Sales_Model_Quote_Item setIsQtyDecimal(int $value)
+ * @method int getNoDiscount()
+ * @method Mage_Sales_Model_Quote_Item setNoDiscount(int $value)
+ * @method float getWeight()
+ * @method Mage_Sales_Model_Quote_Item setWeight(float $value)
+ * @method float getBasePrice()
+ * @method Mage_Sales_Model_Quote_Item setBasePrice(float $value)
+ * @method float getCustomPrice()
+ * @method float getDiscountPercent()
+ * @method Mage_Sales_Model_Quote_Item setDiscountPercent(float $value)
+ * @method float getDiscountAmount()
+ * @method Mage_Sales_Model_Quote_Item setDiscountAmount(float $value)
+ * @method float getBaseDiscountAmount()
+ * @method Mage_Sales_Model_Quote_Item setBaseDiscountAmount(float $value)
+ * @method float getTaxPercent()
+ * @method Mage_Sales_Model_Quote_Item setTaxPercent(float $value)
+ * @method Mage_Sales_Model_Quote_Item setTaxAmount(float $value)
+ * @method Mage_Sales_Model_Quote_Item setBaseTaxAmount(float $value)
+ * @method float getRowTotal()
+ * @method Mage_Sales_Model_Quote_Item setRowTotal(float $value)
+ * @method float getBaseRowTotal()
+ * @method Mage_Sales_Model_Quote_Item setBaseRowTotal(float $value)
+ * @method float getRowTotalWithDiscount()
+ * @method Mage_Sales_Model_Quote_Item setRowTotalWithDiscount(float $value)
+ * @method float getRowWeight()
+ * @method Mage_Sales_Model_Quote_Item setRowWeight(float $value)
+ * @method Mage_Sales_Model_Quote_Item setProductType(string $value)
+ * @method float getBaseTaxBeforeDiscount()
+ * @method Mage_Sales_Model_Quote_Item setBaseTaxBeforeDiscount(float $value)
+ * @method float getTaxBeforeDiscount()
+ * @method Mage_Sales_Model_Quote_Item setTaxBeforeDiscount(float $value)
+ * @method float getOriginalCustomPrice()
+ * @method Mage_Sales_Model_Quote_Item setOriginalCustomPrice(float $value)
+ * @method string getRedirectUrl()
+ * @method Mage_Sales_Model_Quote_Item setRedirectUrl(string $value)
+ * @method float getBaseCost()
+ * @method Mage_Sales_Model_Quote_Item setBaseCost(float $value)
+ * @method float getPriceInclTax()
+ * @method Mage_Sales_Model_Quote_Item setPriceInclTax(float $value)
+ * @method float getBasePriceInclTax()
+ * @method Mage_Sales_Model_Quote_Item setBasePriceInclTax(float $value)
+ * @method float getRowTotalInclTax()
+ * @method Mage_Sales_Model_Quote_Item setRowTotalInclTax(float $value)
+ * @method float getBaseRowTotalInclTax()
+ * @method Mage_Sales_Model_Quote_Item setBaseRowTotalInclTax(float $value)
+ * @method int getGiftMessageId()
+ * @method Mage_Sales_Model_Quote_Item setGiftMessageId(int $value)
+ * @method string getWeeeTaxApplied()
+ * @method Mage_Sales_Model_Quote_Item setWeeeTaxApplied(string $value)
+ * @method float getWeeeTaxAppliedAmount()
+ * @method Mage_Sales_Model_Quote_Item setWeeeTaxAppliedAmount(float $value)
+ * @method float getWeeeTaxAppliedRowAmount()
+ * @method Mage_Sales_Model_Quote_Item setWeeeTaxAppliedRowAmount(float $value)
+ * @method float getBaseWeeeTaxAppliedAmount()
+ * @method Mage_Sales_Model_Quote_Item setBaseWeeeTaxAppliedAmount(float $value)
+ * @method float getBaseWeeeTaxAppliedRowAmount()
+ * @method Mage_Sales_Model_Quote_Item setBaseWeeeTaxAppliedRowAmount(float $value)
+ * @method float getWeeeTaxDisposition()
+ * @method Mage_Sales_Model_Quote_Item setWeeeTaxDisposition(float $value)
+ * @method float getWeeeTaxRowDisposition()
+ * @method Mage_Sales_Model_Quote_Item setWeeeTaxRowDisposition(float $value)
+ * @method float getBaseWeeeTaxDisposition()
+ * @method Mage_Sales_Model_Quote_Item setBaseWeeeTaxDisposition(float $value)
+ * @method float getBaseWeeeTaxRowDisposition()
+ * @method Mage_Sales_Model_Quote_Item setBaseWeeeTaxRowDisposition(float $value)
+ * @method float getHiddenTaxAmount()
+ * @method Mage_Sales_Model_Quote_Item setHiddenTaxAmount(float $value)
+ * @method float getBaseHiddenTaxAmount()
+ * @method Mage_Sales_Model_Quote_Item setBaseHiddenTaxAmount(float $value)
+ *
+ * @category    Mage
+ * @package     Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
 {
@@ -85,12 +184,32 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
     protected $_flagOptionsSaved = null;
 
     /**
+     * Array of errors associated with this quote item
+     *
+     * @var Mage_Sales_Model_Status_List
+     */
+    protected $_errorInfos = null;
+
+    /**
      * Initialize resource model
      *
      */
     protected function _construct()
     {
         $this->_init('sales/quote_item');
+        $this->_errorInfos = Mage::getModel('sales/status_list');
+    }
+
+    /**
+     * Init mapping array of short fields to
+     * its full names
+     *
+     * @return Varien_Object
+     */
+    protected function _initOldFieldsMap()
+    {
+        $this->_oldFieldsMap = Mage::helper('sales')->getOldFieldMap('quote_item');
+        return $this;
     }
 
     /**
@@ -678,5 +797,104 @@ class Mage_Sales_Model_Quote_Item extends Mage_Sales_Model_Quote_Item_Abstract
             ->setQty($this->getQty() * 1);
 
         return $buyRequest;
+    }
+
+    /**
+     * Sets flag, whether this quote item has some error associated with it.
+     *
+     * @param bool $flag
+     * @return Mage_Sales_Model_Quote_Item
+     */
+    protected function _setHasError($flag)
+    {
+        return $this->setData('has_error', $flag);
+    }
+
+    /**
+     * Sets flag, whether this quote item has some error associated with it.
+     * When TRUE - also adds 'unknown' error information to list of quote item errors.
+     * When FALSE - clears whole list of quote item errors.
+     * It's recommended to use addErrorInfo() instead - to be able to remove error statuses later.
+     *
+     * @param bool $flag
+     * @return Mage_Sales_Model_Quote_Item
+     * @see addErrorInfo()
+     */
+    public function setHasError($flag)
+    {
+        if ($flag) {
+            $this->addErrorInfo();
+        } else {
+            $this->_clearErrorInfo();
+        }
+        return $this;
+    }
+
+    /**
+     * Clears list of errors, associated with this quote item.
+     * Also automatically removes error-flag from oneself.
+     *
+     * @return Mage_Sales_Model_Quote_Item
+     */
+    protected function _clearErrorInfo()
+    {
+        $this->_errorInfos->clear();
+        $this->_setHasError(false);
+        return $this;
+    }
+
+    /**
+     * Adds error information to the quote item.
+     * Automatically sets error flag.
+     *
+     * @param string|null $origin Usually a name of module, that embeds error
+     * @param int|null $code Error code, unique for origin, that sets it
+     * @param string|null $message Error message
+     * @param Varien_Object|null $additionalData Any additional data, that caller would like to store
+     * @return Mage_Sales_Model_Quote_Item
+     */
+    public function addErrorInfo($origin = null, $code = null, $message = null, $additionalData = null)
+    {
+        $this->_errorInfos->addItem($origin, $code, $message, $additionalData);
+        if ($message !== null) {
+            $this->setMessage($message);
+        }
+        $this->_setHasError(true);
+
+        return $this;
+    }
+
+    /**
+     * Retrieves all error infos, associated with this item
+     *
+     * @return array
+     */
+    public function getErrorInfos()
+    {
+        return $this->_errorInfos->getItems();
+    }
+
+    /**
+     * Removes error infos, that have parameters equal to passed in $params.
+     * $params can have following keys (if not set - then any item is good for this key):
+     *   'origin', 'code', 'message'
+     *
+     * @param array $params
+     * @return Mage_Sales_Model_Quote_Item
+     */
+    public function removeErrorInfosByParams($params)
+    {
+        $removedItems = $this->_errorInfos->removeItemsByParams($params);
+        foreach ($removedItems as $item) {
+            if ($item['message'] !== null) {
+                $this->removeMessageByText($item['message']);
+            }
+        }
+
+        if (!$this->_errorInfos->getItems()) {
+            $this->_setHasError(false);
+        }
+
+        return $this;
     }
 }

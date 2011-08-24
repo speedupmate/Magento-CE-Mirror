@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -40,6 +40,13 @@ class Mage_Checkout_Block_Onepage_Billing extends Mage_Checkout_Block_Onepage_Ab
      * @var Mage_Sales_Model_Quote_Address
      */
     protected $_address;
+
+    /**
+     * Customer Taxvat Widget block
+     *
+     * @var Mage_Customer_Block_Widget_Taxvat
+     */
+    protected $_taxvat;
 
     /**
      * Initialize billing address step
@@ -97,6 +104,12 @@ class Mage_Checkout_Block_Onepage_Billing extends Mage_Checkout_Block_Onepage_Ab
         if (is_null($this->_address)) {
             if ($this->isCustomerLoggedIn()) {
                 $this->_address = $this->getQuote()->getBillingAddress();
+                if(!$this->_address->getFirstname()) {
+                    $this->_address->setFirstname($this->getQuote()->getCustomer()->getFirstname());
+                }
+                if(!$this->_address->getLastname()) {
+                    $this->_address->setLastname($this->getQuote()->getCustomer()->getLastname());
+                }
             } else {
                 $this->_address = Mage::getModel('sales/quote_address');
             }
@@ -147,5 +160,38 @@ class Mage_Checkout_Block_Onepage_Billing extends Mage_Checkout_Block_Onepage_Ab
 
     public function getSaveUrl()
     {
+    }
+
+    /**
+     * Get Customer Taxvat Widget block
+     *
+     * @return Mage_Customer_Block_Widget_Taxvat
+     */
+    protected function _getTaxvat()
+    {
+        if (!$this->_taxvat) {
+            $this->_taxvat = $this->getLayout()->createBlock('customer/widget_taxvat');
+        }
+
+        return $this->_taxvat;
+    }
+
+    /**
+     * Check whether taxvat is enabled
+     *
+     * @return bool
+     */
+    public function isTaxvatEnabled()
+    {
+        return $this->_getTaxvat()->isEnabled();
+    }
+
+    public function getTaxvatHtml()
+    {
+        return $this->_getTaxvat()
+            ->setTaxvat($this->getQuote()->getCustomerTaxvat())
+            ->setFieldIdFormat('billing:%s')
+            ->setFieldNameFormat('billing[%s]')
+            ->toHtml();
     }
 }

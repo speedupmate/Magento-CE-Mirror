@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_CatalogSearch
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -48,7 +48,11 @@ class Mage_CatalogSearch_AdvancedController extends Mage_Core_Controller_Front_A
             Mage::getSingleton('catalogsearch/advanced')->addFilters($this->getRequest()->getQuery());
         } catch (Mage_Core_Exception $e) {
             Mage::getSingleton('catalogsearch/session')->addError($e->getMessage());
-            $this->_redirectError(Mage::getURL('*/*/'));
+            $this->_redirectError(
+                Mage::getModel('core/url')
+                    ->setQueryParams($this->getRequest()->getQuery())
+                    ->getUrl('*/*/')
+            );
         }
         $this->_initLayoutMessages('catalog/session');
         $this->renderLayout();

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -289,6 +289,10 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
 
         $this->_initBillingAddressFromOrder($order);
         $this->_initShippingAddressFromOrder($order);
+
+        if (!$this->getQuote()->isVirtual() && $this->getShippingAddress()->getSameAsBilling()) {
+            $this->setShippingAsBilling(1);
+        }
 
         $this->setShippingMethod($order->getShippingMethod());
         $this->getQuote()->getShippingAddress()->setShippingDescription($order->getShippingDescription());
@@ -1083,7 +1087,9 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
             $tmpAddress = clone $this->getBillingAddress();
             $tmpAddress->unsAddressId()
                 ->unsAddressType();
-            $this->getShippingAddress()->addData($tmpAddress->getData());
+            $data = $tmpAddress->getData();
+            $data['save_in_address_book'] = 0; // Do not duplicate address (billing address will do saving too)
+            $this->getShippingAddress()->addData($data);
         }
         $this->getShippingAddress()->setSameAsBilling($flag);
         $this->setRecollect(true);
@@ -1338,7 +1344,8 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
                 $customerAddressId = $this->getShippingAddress()->getCustomerAddressId();
                 if ($customerAddressId && $customer->getId()) {
                     $customer->getAddressItemById($customerAddressId)->addData($shippingAddress->getData());
-                } elseif ($billingAddress !== null
+                } elseif (!empty($customerAddressId)
+                    && $billingAddress !== null
                     && $this->getBillingAddress()->getCustomerAddressId() == $customerAddressId
                 ) {
                     $billingAddress->setIsDefaultShipping(true);
@@ -1436,9 +1443,6 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
         $quote = $this->getQuote();
         $this->_prepareQuoteItems();
 
-        if (! $quote->getCustomer()->getId() || ! $quote->getCustomer()->isInStore($this->getSession()->getStore())) {
-            $quote->getCustomer()->sendNewAccountEmail('registered', '', $quote->getStoreId());
-        }
         $service = Mage::getModel('sales/service_quote', $quote);
         if ($this->getSession()->getOrder()->getId()) {
             $oldOrder = $this->getSession()->getOrder();
@@ -1458,9 +1462,13 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
         }
 
         $order = $service->submit();
-        if (!$quote->getCustomer()->getId() || !$quote->getCustomer()->isInStore($this->getSession()->getStore())) {
+        if ((!$quote->getCustomer()->getId() || !$quote->getCustomer()->isInStore($this->getSession()->getStore()))
+            && !$quote->getCustomerIsGuest()
+        ) {
             $quote->getCustomer()->setCreatedAt($order->getCreatedAt());
-            $quote->getCustomer()->save();
+            $quote->getCustomer()
+                ->save()
+                ->sendNewAccountEmail('registered', '', $quote->getStoreId());;
         }
         if ($this->getSession()->getOrder()->getId()) {
             $oldOrder = $this->getSession()->getOrder();
@@ -1474,6 +1482,7 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
         if ($this->getSendConfirmation()) {
             $order->sendNewOrderEmail();
         }
+
         Mage::dispatchEvent('checkout_submit_all_after', array('order' => $order, 'quote' => $quote));
 
         return $order;
@@ -1628,7 +1637,7 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
                 $order->setCustomerId($this->_customer->getId());
                 $billing->setCustomerId($this->_customer->getId());
                 $shipping->setCustomerId($this->_customer->getId());
-                $this->_customer->sendNewAccountEmail();
+                $this->_customer->sendNewAccountEmail('registered', '', $order->getStoreId());
             } else {
                 $saveCusstomerAddress = false;
 
@@ -1691,7 +1700,7 @@ class Mage_Adminhtml_Model_Sales_Order_Create extends Varien_Object
             $this->getBillingAddress()->setCustomerId($customer->getId());
             $this->getShippingAddress()->setCustomerId($customer->getId());
 
-            $customer->sendNewAccountEmail();
+            $customer->sendNewAccountEmail('registered', '', $customer->getStoreId());
         } else {
             $customer = $this->getSession()->getCustomer();
 

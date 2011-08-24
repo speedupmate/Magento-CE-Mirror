@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -69,15 +69,32 @@ class Mage_XmlConnect_Model_Preview_Ipad extends Mage_XmlConnect_Model_Preview_A
      */
     public function getBannerImage()
     {
-        $configPath = 'conf/body/bannerIpadImage';
-        $imageUrlOrig = $this->getData($configPath);
-        if ($imageUrlOrig) {
-            $width = Mage_XmlConnect_Helper_Ipad::PREVIEW_BANNER_WIDTH;
-            $height = Mage_XmlConnect_Helper_Ipad::PREVIEW_BANNER_HEIGHT;
-            $bannerImage = Mage::helper('xmlconnect/image')
-                ->getCustomSizeImageUrl($imageUrlOrig, $width, $height);
-        } else {
-            $bannerImage = $this->getPreviewImagesUrl('ipad/banner_image.png');
+        $orientation = $this->getOrientation();
+        switch ($orientation) {
+            case Mage_XmlConnect_Helper_Ipad::ORIENTATION_LANDSCAPE:
+                $configPath = 'conf/body/bannerIpadLandscapeImage';
+                $imageUrlOrig = $this->getData($configPath);
+                if ($imageUrlOrig) {
+                    $width  = Mage_XmlConnect_Helper_Ipad::PREVIEW_LANDSCAPE_BANNER_WIDTH;
+                    $height = Mage_XmlConnect_Helper_Ipad::PREVIEW_LANDSCAPE_BANNER_HEIGHT;
+                    $bannerImage = Mage::helper('xmlconnect/image')
+                        ->getCustomSizeImageUrl($imageUrlOrig, $width, $height);
+                } else {
+                    $bannerImage = $this->getPreviewImagesUrl('ipad/banner_image_l.png');
+                }
+                break;
+            case Mage_XmlConnect_Helper_Ipad::ORIENTATION_PORTRAIT:
+                $configPath = 'conf/body/bannerIpadImage';
+                $imageUrlOrig = $this->getData($configPath);
+                if ($imageUrlOrig) {
+                    $width  = Mage_XmlConnect_Helper_Ipad::PREVIEW_PORTRAIT_BANNER_WIDTH;
+                    $height = Mage_XmlConnect_Helper_Ipad::PREVIEW_PORTRAIT_BANNER_HEIGHT;
+                    $bannerImage = Mage::helper('xmlconnect/image')
+                        ->getCustomSizeImageUrl($imageUrlOrig, $width, $height);
+                } else {
+                    $bannerImage = $this->getPreviewImagesUrl('ipad/banner_image.png');
+                }
+                break;
         }
         return $bannerImage;
     }

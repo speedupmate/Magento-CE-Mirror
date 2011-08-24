@@ -20,11 +20,45 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
+/**
+ * Sales order shipment model
+ *
+ * @method Mage_Sales_Model_Resource_Order_Shipment _getResource()
+ * @method Mage_Sales_Model_Resource_Order_Shipment getResource()
+ * @method int getStoreId()
+ * @method Mage_Sales_Model_Order_Shipment setStoreId(int $value)
+ * @method float getTotalWeight()
+ * @method Mage_Sales_Model_Order_Shipment setTotalWeight(float $value)
+ * @method float getTotalQty()
+ * @method Mage_Sales_Model_Order_Shipment setTotalQty(float $value)
+ * @method int getEmailSent()
+ * @method Mage_Sales_Model_Order_Shipment setEmailSent(int $value)
+ * @method int getOrderId()
+ * @method Mage_Sales_Model_Order_Shipment setOrderId(int $value)
+ * @method int getCustomerId()
+ * @method Mage_Sales_Model_Order_Shipment setCustomerId(int $value)
+ * @method int getShippingAddressId()
+ * @method Mage_Sales_Model_Order_Shipment setShippingAddressId(int $value)
+ * @method int getBillingAddressId()
+ * @method Mage_Sales_Model_Order_Shipment setBillingAddressId(int $value)
+ * @method int getShipmentStatus()
+ * @method Mage_Sales_Model_Order_Shipment setShipmentStatus(int $value)
+ * @method string getIncrementId()
+ * @method Mage_Sales_Model_Order_Shipment setIncrementId(string $value)
+ * @method string getCreatedAt()
+ * @method Mage_Sales_Model_Order_Shipment setCreatedAt(string $value)
+ * @method string getUpdatedAt()
+ * @method Mage_Sales_Model_Order_Shipment setUpdatedAt(string $value)
+ *
+ * @category    Mage
+ * @package     Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
 class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
 {
     const STATUS_NEW    = 1;
@@ -46,6 +80,11 @@ class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
     const REPORT_DATE_TYPE_ORDER_CREATED        = 'order_created';
     const REPORT_DATE_TYPE_SHIPMENT_CREATED     = 'shipment_created';
 
+    /*
+     * Identifier for order history item
+     */
+    const HISTORY_ENTITY_NAME = 'shipment';
+
     protected $_items;
     protected $_tracks;
     protected $_order;
@@ -60,6 +99,17 @@ class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
     protected function _construct()
     {
         $this->_init('sales/order_shipment');
+    }
+
+    /**
+     * Init mapping array of short fields to its full names
+     *
+     * @return Mage_Sales_Model_Order_Shipment
+     */
+    protected function _initOldFieldsMap()
+    {
+        $this->_oldFieldsMap = Mage::helper('sales')->getOldFieldMap('order_shipment');
+        return $this;
     }
 
     /**
@@ -117,7 +167,7 @@ class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
         if (!$this->_order instanceof Mage_Sales_Model_Order) {
             $this->_order = Mage::getModel('sales/order')->load($this->getOrderId());
         }
-        return $this->_order;
+        return $this->_order->setHistoryEntityName(self::HISTORY_ENTITY_NAME);
     }
 
     /**
@@ -510,6 +560,9 @@ class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
             $this->setOrderId($this->getOrder()->getId());
             $this->setShippingAddressId($this->getOrder()->getShippingAddress()->getId());
         }
+        if ($this->getPackages()) {
+            $this->setPackages(serialize($this->getPackages()));
+        }
 
         return parent::_beforeSave();
     }
@@ -556,5 +609,31 @@ class Mage_Sales_Model_Order_Shipment extends Mage_Sales_Model_Abstract
     public function getStore()
     {
         return $this->getOrder()->getStore();
+    }
+
+    /**
+     * Set shipping label
+     *
+     * @param string $label   label representation (image or pdf file)
+     * @return Mage_Sales_Model_Order_Shipment
+     */
+    public function setShippingLabel($label)
+    {
+        $this->setData('shipping_label', $label);
+        return $this;
+    }
+
+    /**
+     * Get shipping label and decode by db adapter
+     *
+     * @return void
+     */
+    public function getShippingLabel()
+    {
+        $label = $this->getData('shipping_label');
+        if ($label) {
+            return $this->getResource()->getReadConnection()->decodeVarbinary($label);
+        }
+        return $label;
     }
 }

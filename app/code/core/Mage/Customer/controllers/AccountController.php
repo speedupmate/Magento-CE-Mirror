@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Customer
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -176,7 +176,9 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
             $session->setBeforeAuthUrl(Mage::helper('customer')->getAccountUrl());
             // Redirect customer to the last page visited after logging in
             if ($session->isLoggedIn()) {
-                if (!Mage::getStoreConfigFlag('customer/startup/redirect_dashboard')) {
+                if (!Mage::getStoreConfigFlag(
+                    Mage_Customer_Helper_Data::XML_PATH_CUSTOMER_STARTUP_REDIRECT_TO_DASHBOARD
+                )) {
                     $referer = $this->getRequest()->getParam(Mage_Customer_Helper_Data::REFERER_QUERY_PARAM_NAME);
                     if ($referer) {
                         $referer = Mage::helper('core')->urlDecode($referer);
@@ -317,8 +319,16 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                 if (true === $validationResult) {
                     $customer->save();
 
+                    Mage::dispatchEvent('customer_register_success',
+                        array('account_controller' => $this, 'customer' => $customer)
+                    );
+
                     if ($customer->isConfirmationRequired()) {
-                        $customer->sendNewAccountEmail('confirmation', $session->getBeforeAuthUrl());
+                        $customer->sendNewAccountEmail(
+                            'confirmation',
+                            $session->getBeforeAuthUrl(),
+                            Mage::app()->getStore()->getId()
+                        );
                         $session->addSuccess($this->__('Account confirmation is required. Please, check your email for the confirmation link. To resend the confirmation email please <a href="%s">click here</a>.', Mage::helper('customer')->getEmailConfirmationUrl($customer->getEmail())));
                         $this->_redirectSuccess(Mage::getUrl('*/*/index', array('_secure'=>true)));
                         return;
@@ -371,7 +381,11 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
             $this->__('Thank you for registering with %s.', Mage::app()->getStore()->getFrontendName())
         );
 
-        $customer->sendNewAccountEmail($isJustConfirmed ? 'confirmed' : 'registered');
+        $customer->sendNewAccountEmail(
+            $isJustConfirmed ? 'confirmed' : 'registered',
+            '',
+            Mage::app()->getStore()->getId()
+        );
 
         $successUrl = Mage::getUrl('*/*/index', array('_secure'=>true));
         if ($this->_getSession()->getBeforeAuthUrl()) {
@@ -462,7 +476,7 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
                     throw new Exception('');
                 }
                 if ($customer->getConfirmation()) {
-                    $customer->sendNewAccountEmail('confirmation');
+                    $customer->sendNewAccountEmail('confirmation', '', Mage::app()->getStore()->getId());
                     $this->_getSession()->addSuccess($this->__('Please, check your email for confirmation key.'));
                 } else {
                     $this->_getSession()->addSuccess($this->__('This email does not require confirmation.'));
@@ -569,7 +583,7 @@ class Mage_Customer_AccountController extends Mage_Core_Controller_Front_Action
         }
 
         $this->getLayout()->getBlock('head')->setTitle($this->__('Account Information'));
-
+        $this->getLayout()->getBlock('messages')->setEscapeMessageFlag(true);
         $this->renderLayout();
     }
 

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Connect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -318,7 +318,7 @@ class Mage_Connect_Validator
      */
     public function validatePackageName($name)
     {
-        return preg_match("/^[a-zA-Z0-9_-]+$/i", $name);
+        return preg_match("/^[a-zA-Z0-9_]+$/i", $name);
     }
 
     /**

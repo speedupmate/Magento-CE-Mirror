@@ -21,7 +21,7 @@
  *
  * @category    design
  * @package     base_default
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
@@ -38,6 +38,8 @@
                 <action method="setIsQuoteAllowed"><value>1</value></action>
             </block>
         </reference>
+
+        <update handle="SHORTCUT_uk_popup" />
     </checkout_cart_index>
 
     <paypaluk_express_review translate="label">
@@ -57,6 +59,7 @@
                     <action method="addItemRender"><type>configurable</type><block>checkout/cart_item_renderer_configurable</block><template>checkout/onepage/review/item.phtml</template></action>
                     <block type="checkout/cart_totals" name="paypal.express.review.details.totals" as="totals" template="checkout/onepage/review/totals.phtml"/>
                 </block>
+                <block type="checkout/agreements" name="paypal.express.review.details.agreements" as="agreements" template="checkout/onepage/agreements.phtml"/>
             </block>
         </reference>
         <reference name="head">
@@ -84,6 +87,7 @@
                 </block>
             </block>
         </reference>
+        <update handle="SHORTCUT_uk_popup" />
     </catalog_product_view>
 
     <default>
@@ -94,4 +98,50 @@
             <block type="paypaluk/express_shortcut" name="paypaluk.partner.cart_sidebar.shortcut" template="paypal/express/shortcut.phtml"/>
         </reference>
     </default>
+
+    <catalog_category_default>
+        <update handle="SHORTCUT_uk_popup" />
+    </catalog_category_default>
+
+    <catalog_category_layered>
+        <update handle="SHORTCUT_uk_popup" />
+    </catalog_category_layered>
+
+    <catalog_product_compare_index>
+        <update handle="SHORTCUT_uk_popup" />
+    </catalog_product_compare_index>
+
+    <catalogsearch_result_index>
+        <update handle="SHORTCUT_uk_popup" />
+    </catalogsearch_result_index>
+
+    <catalogsearch_advanced_result>
+        <update handle="SHORTCUT_uk_popup" />
+    </catalogsearch_advanced_result>
+
+    <tag_product_list>
+        <update handle="SHORTCUT_uk_popup" />
+    </tag_product_list>
+
+    <wishlist_index_index>
+        <update handle="SHORTCUT_uk_popup" />
+    </wishlist_index_index>
+
+    <checkout_onepage_success>
+        <update handle="SHORTCUT_uk_popup" />
+    </checkout_onepage_success>
+    <checkout_onepage_failure>
+        <update handle="SHORTCUT_uk_popup" />
+    </checkout_onepage_failure>
+
+    <SHORTCUT_uk_popup>
+        <reference name="product.tooltip">
+            <block type="page/html_wrapper" name="product.info.addtocart.paypaluk.wrapper" translate="label">
+                <block type="paypaluk/express_shortcut" name="product.info.addtocart.paypaluk" template="paypal/express/shortcut.phtml">
+                    <action method="setIsInCatalogProduct"><value>1</value></action>
+                    <action method="setShowOrPosition"><value>after</value></action>
+                </block>
+            </block>
+        </reference>
+    </SHORTCUT_uk_popup>
 </layout>

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -314,6 +314,56 @@ class Mage_Core_Model_Session_Abstract extends Mage_Core_Model_Session_Abstract_
                 $this->addMessage($message);
             }
         }
+        return $this;
+    }
+
+    /**
+     * Adds messages array to message collection, but doesn't add duplicates to it
+     *
+     * @param   array|string|Mage_Core_Model_Message_Abstract $messages
+     * @return  Mage_Core_Model_Session_Abstract
+     */
+    public function addUniqueMessages($messages)
+    {
+        if (!is_array($messages)) {
+            $messages = array($messages);
+        }
+        if (!$messages) {
+            return $this;
+        }
+
+        $messagesAlready = array();
+        $items = $this->getMessages()->getItems();
+        foreach ($items as $item) {
+            if ($item instanceof Mage_Core_Model_Message_Abstract) {
+                $text = $item->getText();
+            } else if (is_string($item)) {
+                $text = $item;
+            } else {
+                continue; // Some unknown object, do not put it in already existing messages
+            }
+            $messagesAlready[$text] = true;
+        }
+
+        foreach ($messages as $message) {
+            if ($message instanceof Mage_Core_Model_Message_Abstract) {
+                $text = $message->getText();
+            } else if (is_string($message)) {
+                $text = $message;
+            } else {
+                $text = null; // Some unknown object, add it anyway
+            }
+
+            // Check for duplication
+            if ($text !== null) {
+                if (isset($messagesAlready[$text])) {
+                    continue;
+                }
+                $messagesAlready[$text] = true;
+            }
+            $this->addMessage($message);
+        }
+
         return $this;
     }
 

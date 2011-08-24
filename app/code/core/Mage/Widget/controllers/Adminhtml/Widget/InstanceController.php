@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Widget
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -71,15 +71,15 @@ class Mage_Widget_Adminhtml_Widget_InstanceController extends Mage_Adminhtml_Con
         $widgetInstance = Mage::getModel('widget/widget_instance');
         $instanceId = $this->getRequest()->getParam('instance_id', null);
         $type = $this->getRequest()->getParam('type', null);
-        $packageTheme = $this->getRequest()->getParam('package_theme', null);
+        $packageTheme = $this->getRequest()->getParam('package', null) . '/'
+                . $this->getRequest()->getParam('theme', null);
+        $packageTheme = $packageTheme === '/' ? null : $packageTheme;
         if ($instanceId) {
             $widgetInstance->load($instanceId);
             if (!$widgetInstance->getId()) {
                 $this->_getSession()->addError(Mage::helper('widget')->__('Wrong wigdet instance specified.'));
                 return false;
             }
-            $data['type'] = $widgetInstance->getType();
-            $data['package_theme'] = $widgetInstance->getPackageTheme();
         } else {
             $widgetInstance->setType($type)
                 ->setPackageTheme($packageTheme);

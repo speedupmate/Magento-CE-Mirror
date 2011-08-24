@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Tax
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,24 +31,24 @@
  */
 class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
 {
-    const CALC_TAX_BEFORE_DISCOUNT_ON_EXCL  = '0_0';
-    const CALC_TAX_BEFORE_DISCOUNT_ON_INCL  = '0_1';
-    const CALC_TAX_AFTER_DISCOUNT_ON_EXCL   = '1_0';
-    const CALC_TAX_AFTER_DISCOUNT_ON_INCL   = '1_1';
+    const CALC_TAX_BEFORE_DISCOUNT_ON_EXCL      = '0_0';
+    const CALC_TAX_BEFORE_DISCOUNT_ON_INCL      = '0_1';
+    const CALC_TAX_AFTER_DISCOUNT_ON_EXCL       = '1_0';
+    const CALC_TAX_AFTER_DISCOUNT_ON_INCL       = '1_1';
 
-    const CALC_UNIT_BASE    = 'UNIT_BASE_CALCULATION';
-    const CALC_ROW_BASE     = 'ROW_BASE_CALCULATION';
-    const CALC_TOTAL_BASE   = 'TOTAL_BASE_CALCULATION';
+    const CALC_UNIT_BASE                        = 'UNIT_BASE_CALCULATION';
+    const CALC_ROW_BASE                         = 'ROW_BASE_CALCULATION';
+    const CALC_TOTAL_BASE                       = 'TOTAL_BASE_CALCULATION';
 
-    protected $_rates   = array();
-    protected $_ctc     = array();
-    protected $_ptc     = array();
+    protected $_rates                           = array();
+    protected $_ctc                             = array();
+    protected $_ptc                             = array();
 
-    protected $_rateCache = array();
-    protected $_rateCalculationProcess = array();
+    protected $_rateCache                       = array();
+    protected $_rateCalculationProcess          = array();
 
-    protected $_customer = null;
-    protected $_defaultCustomerTaxClass = null;
+    protected $_customer                        = null;
+    protected $_defaultCustomerTaxClass         = null;
 
     protected function _construct()
     {
@@ -67,7 +67,7 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
         return $this;
     }
 
-    public function getDefaultCustomerTaxClass($store=null)
+    public function getDefaultCustomerTaxClass($store = null)
     {
         if ($this->_defaultCustomerTaxClass === null) {
             $defaultCustomerGroup = Mage::getStoreConfig(Mage_Customer_Model_Group::XML_PATH_DEFAULT_ID, $store);
@@ -79,7 +79,7 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
     /**
      * Get customer object
      *
-     * @return  Mage_Tax_Model_Calculation | false
+     * @return  Mage_Customer_Model_Customer | false
      */
     public function getCustomer()
     {
@@ -87,6 +87,8 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
             $session = Mage::getSingleton('customer/session');
             if ($session->isLoggedIn()) {
                 $this->_customer = $session->getCustomer();
+            } elseif ($session->getCustomerId()) {
+                $this->_customer = Mage::getModel('customer/customer')->load($session->getCustomerId());
             } else {
                 $this->_customer = false;
             }
@@ -261,7 +263,11 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
      * @param   null|int $store
      * @return  Varien_Object
      */
-    public function getRateRequest($shippingAddress = null, $billingAddress = null, $customerTaxClass = null, $store = null)
+    public function getRateRequest(
+        $shippingAddress = null,
+        $billingAddress = null,
+        $customerTaxClass = null,
+        $store = null)
     {
         if ($shippingAddress === false && $billingAddress === false && $customerTaxClass === false) {
             return $this->getRateOriginRequest($store);
@@ -274,8 +280,11 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
             || ($billingAddress === false && $basedOn == 'billing')) {
             $basedOn = 'default';
         } else {
-            if ((($billingAddress === false || is_null($billingAddress) || !$billingAddress->getCountryId()) && $basedOn == 'billing')
-                || (($shippingAddress === false || is_null($shippingAddress) || !$shippingAddress->getCountryId()) && $basedOn == 'shipping')){
+            if ((($billingAddress === false || is_null($billingAddress) || !$billingAddress->getCountryId())
+                && $basedOn == 'billing')
+                || (($shippingAddress === false || is_null($shippingAddress) || !$shippingAddress->getCountryId())
+                && $basedOn == 'shipping')
+            ){
                 if ($customer) {
                     $defBilling = $customer->getDefaultBillingAddress();
                     $defShipping = $customer->getDefaultShippingAddress();
@@ -304,9 +313,14 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
                 $address = $this->getRateOriginRequest($store);
                 break;
             case 'default':
-                $address->setCountryId(Mage::getStoreConfig(Mage_Tax_Model_Config::CONFIG_XML_PATH_DEFAULT_COUNTRY, $store))
+                $address
+                    ->setCountryId(Mage::getStoreConfig(
+                        Mage_Tax_Model_Config::CONFIG_XML_PATH_DEFAULT_COUNTRY,
+                        $store))
                     ->setRegionId(Mage::getStoreConfig(Mage_Tax_Model_Config::CONFIG_XML_PATH_DEFAULT_REGION, $store))
-                    ->setPostcode(Mage::getStoreConfig(Mage_Tax_Model_Config::CONFIG_XML_PATH_DEFAULT_POSTCODE, $store));
+                    ->setPostcode(Mage::getStoreConfig(
+                        Mage_Tax_Model_Config::CONFIG_XML_PATH_DEFAULT_POSTCODE,
+                        $store));
                 break;
         }
 
@@ -341,7 +355,8 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
     public function compareRequests($first, $second)
     {
         $country = $first->getCountryId() == $second->getCountryId();
-        $region  = (int)$first->getRegionId() == (int)$second->getRegionId(); // "0" support for admin dropdown with --please select--
+        // "0" support for admin dropdown with --please select--
+        $region  = (int)$first->getRegionId() == (int)$second->getRegionId();
         $postcode= $first->getPostcode() == $second->getPostcode();
         $taxClass= $first->getCustomerClassId() == $second->getCustomerClassId();
 
@@ -364,7 +379,8 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
         $productClassId1 = $first->getProductClassId(); // Save to set it back later
         $productClassId2 = $second->getProductClassId(); // Save to set it back later
 
-        $ids = is_array($productClassId1) ? $productClassId1 : array($productClassId1); // Ids are equal for both requests, so take any of them to process
+        // Ids are equal for both requests, so take any of them to process
+        $ids = is_array($productClassId1) ? $productClassId1 : array($productClassId1);
         $identical = true;
         foreach ($ids as $productClassId) {
             $first->setProductClassId($productClassId);
@@ -401,11 +417,11 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
 
     public function getRatesForAllProductTaxClasses($request)
     {
-        return $this->_getRates($request, 'product_class_id', 'PRODUCT');
+        return $this->_getRates($request, 'product_class_id', Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT);
     }
     public function getRatesForAllCustomerTaxClasses($request)
     {
-        return $this->_getRates($request, 'customer_class_id', 'CUSTOMER');
+        return $this->_getRates($request, 'customer_class_id', Mage_Tax_Model_Class::TAX_CLASS_TYPE_CUSTOMER);
     }
 
     /**
@@ -459,9 +475,9 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
 
         if ($round) {
             return $this->round($amount);
-        } else {
-            return $amount;
         }
+
+        return $amount;
     }
 
     /**

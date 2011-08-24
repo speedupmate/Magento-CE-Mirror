@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,11 @@
  */
 class Mage_Bundle_Model_Product_Attribute_Source_Price_View extends Mage_Eav_Model_Entity_Attribute_Source_Abstract
 {
+    /**
+     * Get all options
+     *
+     * @return array
+     */
     public function getAllOptions()
     {
         if (is_null($this->_options)) {
@@ -69,21 +74,29 @@ class Mage_Bundle_Model_Product_Attribute_Source_Price_View extends Mage_Eav_Mod
     }
 
     /**
-     * Get Column(s) names for flat data building
+     * Retrieve flat column definition
      *
      * @return array
      */
     public function getFlatColums()
     {
-        $columns = array();
-        $columns[$this->getAttribute()->getAttributeCode()] = array(
-            'type'      => 'int',
+        $attributeCode = $this->getAttribute()->getAttributeCode();
+        $column = array(
             'unsigned'  => false,
-            'is_null'   => true,
             'default'   => null,
             'extra'     => null
         );
-        return $columns;
+
+        if (Mage::helper('core')->useDbCompatibleMode()) {
+            $column['type']     = 'int';
+            $column['is_null']  = true;
+        } else {
+            $column['type']     = Varien_Db_Ddl_Table::TYPE_INTEGER;
+            $column['nullable'] = true;
+            $column['comment']  = 'Bundle Price View ' . $attributeCode . ' column';
+        }
+
+        return array($attributeCode => $column);
    }
 
     /**

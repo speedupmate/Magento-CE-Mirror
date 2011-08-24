@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -345,5 +345,19 @@ class Mage_Checkout_Block_Cart_Item_Renderer extends Mage_Core_Block_Template
     public function getProductAdditionalInformationBlock()
     {
         return $this->getLayout()->getBlock('additional.product.info');
+    }
+
+    /**
+     * Get html for MAP product enabled
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return string
+     */
+    public function getMsrpHtml($item)
+    {
+        return $this->getLayout()->createBlock('catalog/product_price')
+            ->setTemplate('catalog/product/price_msrp_item.phtml')
+            ->setProduct($item->getProduct())
+            ->toHtml();
     }
 }

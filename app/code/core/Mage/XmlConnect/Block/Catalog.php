@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_XmlConnect_Block_Catalog extends Mage_Core_Block_Template
@@ -32,16 +32,13 @@ class Mage_XmlConnect_Block_Catalog extends Mage_Core_Block_Template
 
     /**
      * Prefix that used in specifing filters on request
-     *
      */
     const REQUEST_FILTER_PARAM_REFIX = 'filter_';
 
     /**
      * Prefix that used in specifing sort order params on request
-     *
      */
     const REQUEST_SORT_ORDER_PARAM_REFIX = 'order_';
-
 
     /**
      * Retrieve product sort fields as xml object
@@ -50,7 +47,7 @@ class Mage_XmlConnect_Block_Catalog extends Mage_Core_Block_Template
      */
     public function getProductSortFeildsXmlObject()
     {
-        $ordersXmlObject    = new Mage_XmlConnect_Model_Simplexml_Element('<orders></orders>');
+        $ordersXmlObject    = Mage::getModel('xmlconnect/simplexml_element', '<orders></orders>');
         /* @var $category Mage_Catalog_Model_Category */
         $category           = Mage::getModel('catalog/category');
         $sortOptions        = $category->getAvailableSortByOptions();
@@ -67,5 +64,4 @@ class Mage_XmlConnect_Block_Catalog extends Mage_Core_Block_Template
 
         return $ordersXmlObject;
     }
-
 }

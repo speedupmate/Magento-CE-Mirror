@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Page
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -41,6 +41,13 @@ class Mage_Page_Block_Template_Links extends Mage_Core_Block_Template
      * @var array
      */
     protected $_links = array();
+
+    /**
+     * Cache key info
+     *
+     * @var null|array
+     */
+    protected $_cacheKeyInfo = null;
 
     /**
      * Set default template
@@ -138,18 +145,22 @@ class Mage_Page_Block_Template_Links extends Mage_Core_Block_Template
      */
     public function getCacheKeyInfo()
     {
-        $links = array();
-        if (!empty($this->_links)) {
-            foreach ($this->_links as $position => $link) {
-                if ($link instanceof Varien_Object) {
-                    $links[$position] = $link->getData();
+        if (is_null($this->_cacheKeyInfo)) {
+            $links = array();
+            if (!empty($this->_links)) {
+                foreach ($this->_links as $position => $link) {
+                    if ($link instanceof Varien_Object) {
+                        $links[$position] = $link->getData();
+                    }
                 }
             }
+            $this->_cacheKeyInfo = parent::getCacheKeyInfo() + array(
+                'links' => base64_encode(serialize($links)),
+                'name' => $this->getNameInLayout()
+            );
         }
-        return parent::getCacheKeyInfo() + array(
-            'links' => base64_encode(serialize($links)),
-            'name' => $this->getNameInLayout()
-        );
+
+        return $this->_cacheKeyInfo;
     }
 
     /**

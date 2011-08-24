@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -36,6 +36,13 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle extends Mage_Catalog_Bl
 {
     protected $_optionRenderers = array();
     protected $_options         = null;
+
+    /**
+     * Default MAP renderer type
+     *
+     * @var string
+     */
+    protected $_mapRenderer = 'msrp_item';
 
     public function getOptions()
     {
@@ -108,20 +115,46 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle extends Mage_Catalog_Bl
                 $taxClassId = $_selection->getTaxClassId();
                 if ($taxClassId) {
                     $request = Mage::getSingleton('tax/calculation')->getRateRequest();
-                    $taxPercent = Mage::getSingleton('tax/calculation')->getRate($request->setProductClassId($taxClassId));
+                    $taxPercent = Mage::getSingleton('tax/calculation')->getRate(
+                        $request->setProductClassId($taxClassId)
+                    );
                 }
-                
+
+                $itemPrice = $_selection->getFinalPrice();
+                if ($_selection->getSelectionPriceValue() != 0) {
+                    if ($_selection->getSelectionPriceType()) { // percent
+                        $itemPrice = $currentProduct->getFinalPrice() * $_selection->getSelectionPriceValue() / 100;
+                    } else { // fixed
+                        $itemPrice = $_selection->getSelectionPriceValue();
+                    }
+                }
+
+                $canApplyMAP = false;
+
+                /* @var $taxHelper Mage_Tax_Helper_Data */
+                $taxHelper = Mage::helper('tax');
+
+                $_priceInclTax = $taxHelper->getPrice($_selection, $itemPrice, true);
+                $_priceExclTax = $taxHelper->getPrice($_selection, $itemPrice);
+
+                if ($currentProduct->getPriceType() == Mage_Bundle_Model_Product_Price::PRICE_TYPE_FIXED) {
+                    $_priceInclTax = $taxHelper->getPrice($currentProduct, $itemPrice, true);
+                    $_priceExclTax = $taxHelper->getPrice($currentProduct, $itemPrice);
+                }
+
                 $selection = array (
                     'qty'       => $_qty,
                     'customQty' => $_selection->getSelectionCanChangeQty(),
                     'price'     => $coreHelper->currency($_selection->getFinalPrice(), false, false),
-                    'taxPercent'=> $taxPercent,
+                    'priceInclTax'  => $coreHelper->currency($_priceInclTax, false, false),
+                    'priceExclTax'  => $coreHelper->currency($_priceExclTax, false, false),
                     'priceValue' => $coreHelper->currency($_selection->getSelectionPriceValue(), false, false),
                     'priceType' => $_selection->getSelectionPriceType(),
                     'tierPrice' => $tierPrices,
                     'name'      => $_selection->getName(),
                     'plusDisposition' => 0,
-                    'minusDisposition' => 0
+                    'minusDisposition' => 0,
+                    'canApplyMAP'      => $canApplyMAP
                 );
 
                 $responseObject = new Varien_Object();
@@ -159,7 +192,9 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle extends Mage_Catalog_Bl
             'basePrice'     => $coreHelper->currency($currentProduct->getPrice(), false, false),
             'priceType'     => $currentProduct->getPriceType(),
             'specialPrice'  => $currentProduct->getSpecialPrice(),
-            'includeTax'    => Mage::helper('tax')->priceIncludesTax() ? 'true' : 'false'
+            'includeTax'    => Mage::helper('tax')->priceIncludesTax() ? 'true' : 'false',
+            'isFixedPrice'  => $this->getProduct()->getPriceType() == Mage_Bundle_Model_Product_Price::PRICE_TYPE_FIXED,
+            'isMAPAppliedDirectly' => Mage::helper('catalog')->canApplyMsrp($this->getProduct(), null, false)
         );
 
         if ($preconfiguredFlag && !empty($defaultValues)) {
@@ -182,5 +217,4 @@ class Mage_Bundle_Block_Catalog_Product_View_Type_Bundle extends Mage_Catalog_Bl
         return $this->getLayout()->createBlock($this->_optionRenderers[$option->getType()])
             ->setOption($option)->toHtml();
     }
-
 }

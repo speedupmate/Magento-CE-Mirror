@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -33,29 +33,42 @@
  */
 class Mage_XmlConnect_Block_Cart_Info extends Mage_XmlConnect_Block_Cart
 {
-   /**
+    /**
      * Render cart summary xml
      *
      * @return string
      */
     protected function _toHtml()
     {
+        /** @var $quote Mage_Sales_Model_Quote */
         $quote = $this->getQuote();
-        $xmlObject  = new Mage_XmlConnect_Model_Simplexml_Element('<cart></cart>');
-        $xmlObject->addChild('is_virtual', (int)$this->helper('checkout/cart')->getIsVirtualQuote());
-        $xmlObject->addChild('summary_qty', (int)$this->helper('checkout/cart')->getSummaryCount());
-        $xmlObject->addChild('virtual_qty', (int)$quote->getItemVirtualQty());
+        /** @var $xmlObject Mage_XmlConnect_Model_Simplexml_Element */
+        $xmlObject  = Mage::getModel('xmlconnect/simplexml_element', '<cart></cart>');
+
+        $xmlObject->addChild(
+            'is_virtual',
+            (int)$this->helper('checkout/cart')->getIsVirtualQuote()
+        );
+        $xmlObject->addChild(
+            'summary_qty',
+            (int)$this->helper('checkout/cart')->getSummaryCount()
+        );
+        $xmlObject->addChild(
+            'virtual_qty',
+            (int)$quote->getItemVirtualQty()
+        );
+
         if (strlen($quote->getCouponCode())) {
             $xmlObject->addChild('has_coupon_code', 1);
         }
 
         $totalsXml = $this->getChildHtml('totals');
         if ($totalsXml) {
-            $totalsXmlObj = new Mage_XmlConnect_Model_Simplexml_Element($totalsXml);
+            /** @var $totalsXmlObj Mage_XmlConnect_Model_Simplexml_Element */
+            $totalsXmlObj = Mage::getModel('xmlconnect/simplexml_element', $totalsXml);
             $xmlObject->appendChild($totalsXmlObj);
         }
 
         return $xmlObject->asNiceXml();
     }
-
 }

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,13 @@
  */
 class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstract
 {
+    /**
+     * Default MAP renderer type
+     *
+     * @var string
+     */
+    protected $_mapRenderer = 'msrp_item';
+
     /**
      * Add meta information from product to head block
      *
@@ -105,9 +112,17 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
      */
     public function getAddToCartUrl($product, $additional = array())
     {
+        if ($this->hasCustomAddToCartUrl()) {
+            return $this->getCustomAddToCartUrl();
+        }
+
         if ($this->getRequest()->getParam('wishlist_next')){
             $additional['wishlist_next'] = 1;
         }
+
+        $addUrlKey = Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED;
+        $addUrlValue = Mage::getUrl('*/*/*', array('_use_rewrite' => true, '_current' => false));
+        $additional[$addUrlKey] = Mage::helper('core')->urlEncode($addUrlValue);
 
         return $this->helper('checkout/cart')->getAddUrl($product, $additional);
     }
@@ -146,6 +161,8 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
             'showBothPrices'      => Mage::helper('tax')->displayBothPrices(),
             'productPrice'        => Mage::helper('core')->currency($_finalPrice, false, false),
             'productOldPrice'     => Mage::helper('core')->currency($_regularPrice, false, false),
+            'priceInclTax'        => Mage::helper('core')->currency($_priceInclTax, false, false),
+            'priceExclTax'        => Mage::helper('core')->currency($_priceExclTax, false, false),
             /**
              * @var skipCalculate
              * @deprecated after 1.5.1.0

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -129,11 +129,14 @@ class Mage_Checkout_CartController extends Mage_Core_Controller_Front_Action
             }
         }
 
+        // Compose array of messages to add
+        $messages = array();
         foreach ($cart->getQuote()->getMessages() as $message) {
             if ($message) {
-                $cart->getCheckoutSession()->addMessage($message);
+                $messages[] = $message;
             }
         }
+        $cart->getCheckoutSession()->addUniqueMessages($messages);
 
         /**
          * if customer enteres shopping cart we should mark quote
@@ -377,7 +380,7 @@ class Mage_Checkout_CartController extends Mage_Core_Controller_Front_Action
                 );
                 foreach ($cartData as $index => $data) {
                     if (isset($data['qty'])) {
-                        $cartData[$index]['qty'] = $filter->filter($data['qty']);
+                        $cartData[$index]['qty'] = $filter->filter(trim($data['qty']));
                     }
                 }
                 $cart = $this->_getCart();

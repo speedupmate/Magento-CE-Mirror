@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -203,9 +203,9 @@ class Mage_Checkout_Model_Api_Resource_Customer extends Mage_Checkout_Model_Api_
     {
         $customer = $quote->getCustomer();
         if ($customer->isConfirmationRequired()) {
-            $customer->sendNewAccountEmail('confirmation');
+            $customer->sendNewAccountEmail('confirmation', '', $quote->getStoreId());
         } else {
-            $customer->sendNewAccountEmail();
+            $customer->sendNewAccountEmail('registered' , '', $quote->getStoreId());
         }
 
         return $this;

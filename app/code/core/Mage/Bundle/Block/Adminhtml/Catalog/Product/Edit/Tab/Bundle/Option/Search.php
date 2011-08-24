@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -49,7 +49,8 @@ class Mage_Bundle_Block_Adminhtml_Catalog_Product_Edit_Tab_Bundle_Option_Search 
     {
         $this->setChild(
             'grid',
-            $this->getLayout()->createBlock('bundle/adminhtml_catalog_product_edit_tab_bundle_option_search_grid')
+            $this->getLayout()->createBlock('bundle/adminhtml_catalog_product_edit_tab_bundle_option_search_grid',
+                'adminhtml.catalog.product.edit.tab.bundle.option.search.grid')
         );
         return parent::_prepareLayout();
     }

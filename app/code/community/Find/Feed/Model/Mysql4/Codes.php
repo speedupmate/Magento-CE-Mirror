@@ -19,8 +19,8 @@
  * needs please refer to http://www.magentocommerce.com for more information.
  *
  * @category    
- * @package     _home
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @package     _storage
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -30,13 +30,6 @@
  * @category    Find
  * @package     Find_Feed
  */
-class Find_Feed_Model_Mysql4_Codes extends Mage_Core_Model_Mysql4_Abstract
+class Find_Feed_Model_Mysql4_Codes extends Find_Feed_Model_Resource_Codes
 {
-    /**
-     * Class local constructor
-     */
-    protected function _construct()
-    {
-        $this->_init('find_feed/feed_import_codes', 'code_id');
-    }
 }

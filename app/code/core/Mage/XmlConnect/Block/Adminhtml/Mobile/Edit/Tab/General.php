@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_XmlConnect_Block_Adminhtml_Mobile_Edit_Tab_General extends Mage_Adminhtml_Block_Widget_Form
@@ -73,7 +73,7 @@ class Mage_XmlConnect_Block_Adminhtml_Mobile_Edit_Tab_General extends Mage_Admin
                 'label'     => $this->__('Store View'),
                 'title'     => $this->__('Store View'),
                 'required'  => true,
-                'values'    => Mage::getSingleton('adminhtml/system_store')->getStoreValuesForForm(true, false),
+                'values'    => Mage::getSingleton('adminhtml/system_store')->getStoreValuesForForm(false, false),
             ));
         } else {
             $storeElement = $fieldset->addField('store_id', 'hidden', array(
@@ -86,6 +86,8 @@ class Mage_XmlConnect_Block_Adminhtml_Mobile_Edit_Tab_General extends Mage_Admin
         if ($model->getId()) {
             $storeElement->setValue($model->getStoreId());
             $storeElement->setDisabled(true);
+        } else if ($model->getStoreId()) {
+            $storeElement->setValue($model->getStoreId());
         }
 
         $fieldset->addField('showdev', 'select', array(

@@ -20,7 +20,7 @@
  *
  * @category    design
  * @package     default_default
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
@@ -46,7 +46,7 @@ $class   = $element->getFieldsetHtmlClass();
         <?php endif ?>
         <script type="text/javascript">
             $('select-all').observe('click', function() {
-                $$('#submission-countries-table input[@type=checkbox]').each(
+                $$('#submission-countries-table input[type=checkbox]').each(
                     function(elm) {
                         if (!elm.checked) {
                             elm.checked = true;
@@ -55,7 +55,7 @@ $class   = $element->getFieldsetHtmlClass();
                 );
             });
             $('deselect-all').observe('click', function() {
-                $$('#submission-countries-table input[@type=checkbox]').each(
+                $$('#submission-countries-table input[type=checkbox]').each(
                     function(elm) {
                         if (elm.checked) {
                             elm.checked = false;

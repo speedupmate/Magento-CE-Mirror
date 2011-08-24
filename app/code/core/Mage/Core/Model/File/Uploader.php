@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,13 @@
  */
 class Mage_Core_Model_File_Uploader extends Varien_File_Uploader
 {
+    /**
+     * Flag, that defines should DB processing be skipped
+     *
+     * @var bool
+     */
+    protected $_skipDbProcessing = false;
+
     /**
      * Save file to storage
      *
@@ -49,7 +56,7 @@ class Mage_Core_Model_File_Uploader extends Varien_File_Uploader
         /** @var $helper Mage_Core_Helper_File_Storage */
         $helper = Mage::helper('core/file_storage');
 
-        if ($helper->isInternalStorage()) {
+        if ($helper->isInternalStorage() || $this->skipDbProcessing()) {
             return $this;
         }
 
@@ -57,6 +64,21 @@ class Mage_Core_Model_File_Uploader extends Varien_File_Uploader
         $dbHelper = Mage::helper('core/file_storage_database');
         $this->_result['file'] = $dbHelper->saveUploadedFile($result);
 
+        return $this;
+    }
+
+    /**
+     * Getter/Setter for _skipDbProcessing flag
+     *
+     * @param null|bool $flag
+     * @return bool|Mage_Core_Model_File_Uploader
+     */
+    public function skipDbProcessing($flag = null)
+    {
+        if (is_null($flag)) {
+            return $this->_skipDbProcessing;
+        }
+        $this->_skipDbProcessing = (bool)$flag;
         return $this;
     }
 

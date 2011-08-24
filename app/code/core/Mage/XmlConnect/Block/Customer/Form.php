@@ -20,16 +20,16 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Customer form xml renderer
  *
- * @category   Mage
- * @package    Mage_XmlConnect
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @category    Mage
+ * @package     Mage_XmlConnect
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_XmlConnect_Block_Customer_Form extends Mage_Core_Block_Template
 {
@@ -42,7 +42,7 @@ class Mage_XmlConnect_Block_Customer_Form extends Mage_Core_Block_Template
     {
         $editFlag = (int)$this->getRequest()->getParam('edit');
         $customer  = $this->getCustomer();
-        $xmlModel  = new Mage_XmlConnect_Model_Simplexml_Element('<node></node>');
+        $xmlModel  = Mage::getModel('xmlconnect/simplexml_element', '<node></node>');
 
         if ($editFlag == 1 && $customer && $customer->getId()) {
             $firstname = $xmlModel->xmlentities(strip_tags($customer->getFirstname()));
@@ -92,5 +92,4 @@ EOT;
 
         return $xml;
     }
-
 }

@@ -20,7 +20,7 @@
  *
  * @category    design
  * @package     default_default
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
@@ -30,8 +30,16 @@ function setSettings(urlTemplate, typeElement, packageThemeElement) {
     templateSyntax = /(^|.|\r|\n)({{(\w+)}})/;
     var template = new Template(urlTemplate, templateSyntax);
     typeElement = $F(typeElement).replace(/\//g, "-");
-    packageThemeElement = $F(packageThemeElement).replace(/\//g, "_");
-    setLocation(template.evaluate({type:typeElement,package_theme:packageThemeElement}));
+    packageThemeElement = $F(packageThemeElement);
+    slashPosition = packageThemeElement.indexOf('/');
+    if (slashPosition !== -1) {
+        mPackage = packageThemeElement.slice(0, slashPosition).replace(/\//g, "_");
+        mTheme = packageThemeElement.slice(slashPosition+1, packageThemeElement.length).replace(/\//g, "_");
+    } else {
+        mPackage = ''
+        mTheme = ''
+    }
+    setLocation(template.evaluate({type:typeElement,mpackage:mPackage,mtheme:mTheme}));
 }
 function saveAndContinueEdit(){
     editForm.submit($('edit_form').action+'back/edit/');

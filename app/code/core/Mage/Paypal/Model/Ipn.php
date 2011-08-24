@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Paypal
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -97,23 +97,22 @@ class Mage_Paypal_Model_Ipn
      */
     public function processIpnRequest(array $request, Zend_Http_Client_Adapter_Interface $httpAdapter = null)
     {
-        $this->_request = $request;
-        $this->_config = Mage::getModel('paypal/config'); // empty config model, without specific payment method
-        if (isset($request['test_ipn']) && 1 == $request['test_ipn']) {
-            $this->_config->sandboxFlag = true;
-        }
-        $this->_config->debug = true;
-
+        $this->_request   = $request;
         $this->_debugData = array('ipn' => $request);
         ksort($this->_debugData['ipn']);
 
         try {
-            if ($httpAdapter) {
-                $this->_postBack($httpAdapter);
-            }
             if (isset($this->_request['txn_type']) && 'recurring_payment' == $this->_request['txn_type']) {
+                $this->_getRecurringProfile();
+                if ($httpAdapter) {
+                    $this->_postBack($httpAdapter);
+                }
                 $this->_processRecurringProfile();
             } else {
+                $this->_getOrder();
+                if ($httpAdapter) {
+                    $this->_postBack($httpAdapter);
+                }
                 $this->_processOrder();
             }
         } catch (Exception $e) {
@@ -230,7 +229,7 @@ class Mage_Paypal_Model_Ipn
             if (!$receiverEmail) {
                 $receiverEmail = $this->getRequestData('receiver_email');
             }
-            if ($merchantEmail != $receiverEmail) {
+            if (strtolower($merchantEmail) != strtolower($receiverEmail)) {
                 throw new Exception(
                     sprintf(
                         'Requested %s and configured %s merchant emails do not match.', $receiverEmail, $merchantEmail
@@ -537,10 +536,14 @@ class Mage_Paypal_Model_Ipn
     {
         $this->_importPaymentInformation();
 
+        $parentTxnId = $this->getRequestData('transaction_entity') == 'auth'
+            ? $this->getRequestData('txn_id') : $this->getRequestData('parent_txn_id');
+
         $this->_order->getPayment()
             ->setPreparedMessage($this->_createIpnComment(''))
-            ->setParentTransactionId($this->getRequestData('txn_id')) // this is the authorization transaction ID
+            ->setParentTransactionId($parentTxnId)
             ->registerVoidNotification();
+
         $this->_order->save();
     }
 

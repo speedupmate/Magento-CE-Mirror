@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_ImportExport
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -165,7 +165,8 @@ class Mage_ImportExport_Model_Import_Entity_Customer_Address extends Mage_Import
         /** @var $resource Mage_Customer_Model_Address */
         $resource       = Mage::getModel('customer/address');
         $strftimeFormat = Varien_Date::convertZendToStrftime(Varien_Date::DATETIME_INTERNAL_FORMAT, true, true);
-        $nextEntityId   = $this->getNextAutoincrement($resource->getResource()->getEntityTable());
+        $table = $resource->getResource()->getEntityTable();
+        $nextEntityId   = Mage::getResourceHelper('importexport')->getNextAutoincrement($table);
         $customerId     = null;
         $regionColName  = self::getColNameForAttrCode('region');
         $countryColName = self::getColNameForAttrCode('country_id');

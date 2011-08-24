@@ -20,13 +20,16 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_Core_Controller_Varien_Router_Admin extends Mage_Core_Controller_Varien_Router_Standard
 {
+    /**
+     * Fetch default path
+     */
     public function fetchDefault()
     {
         // set defaults
@@ -84,6 +87,12 @@ class Mage_Core_Controller_Varien_Router_Admin extends Mage_Core_Controller_Vari
         return true;
     }
 
+    /**
+     * Check whether url should be secure
+     *
+     * @param mixed $path
+     * @return bool
+     */
     protected function _shouldBeSecure($path)
     {
         return substr((string)Mage::getConfig()->getNode('default/web/unsecure/base_url'),0,5)==='https'
@@ -91,8 +100,33 @@ class Mage_Core_Controller_Varien_Router_Admin extends Mage_Core_Controller_Vari
             && substr((string)Mage::getConfig()->getNode('default/web/secure/base_url'),0,5)==='https';
     }
 
+    /**
+     * Retrieve current secure url
+     *
+     * @param Mage_Core_Controller_Request_Http $request
+     * @return string
+     */
     protected function _getCurrentSecureUrl($request)
     {
-        return Mage::app()->getStore(Mage_Core_Model_App::ADMIN_STORE_ID)->getBaseUrl('link', true).ltrim($request->getPathInfo(), '/');
+        return Mage::app()->getStore(Mage_Core_Model_App::ADMIN_STORE_ID)
+            ->getBaseUrl('link', true) . ltrim($request->getPathInfo(), '/');
+    }
+
+    /**
+     * Emulate custom admin url
+     *
+     * @param string $configArea
+     * @param bool $useRouterName
+     */
+    public function collectRoutes($configArea, $useRouterName)
+    {
+        if ((string)Mage::getConfig()->getNode(Mage_Adminhtml_Helper_Data::XML_PATH_USE_CUSTOM_ADMIN_URL)) {
+            $customUrl = (string)Mage::getConfig()->getNode(Mage_Adminhtml_Helper_Data::XML_PATH_CUSTOM_ADMIN_URL);
+            $xmlPath = Mage_Adminhtml_Helper_Data::XML_PATH_ADMINHTML_ROUTER_FRONTNAME;
+            if ((string)Mage::getConfig()->getNode($xmlPath) != $customUrl) {
+                Mage::getConfig()->setNode($xmlPath, $customUrl, true);
+            }
+        }
+        parent::collectRoutes($configArea, $useRouterName);
     }
 }

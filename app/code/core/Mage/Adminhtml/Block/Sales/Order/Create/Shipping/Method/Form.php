@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,7 +31,8 @@
  * @package    Mage_Adminhtml
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
+class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form
+    extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
 {
     protected $_rates;
 
@@ -138,6 +139,16 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
 
     public function getShippingPrice($price, $flag)
     {
-        return $this->getQuote()->getStore()->convertPrice(Mage::helper('tax')->getShippingPrice($price, $flag, $this->getAddress()), true);
+        return $this->getQuote()->getStore()->convertPrice(
+            Mage::helper('tax')->getShippingPrice(
+                $price,
+                $flag,
+                $this->getAddress(),
+                null,
+                //We should send exact quote store to prevent fetching default config for admin store.
+                $this->getAddress()->getQuote()->getStore()
+            ),
+            true
+        );
     }
 }

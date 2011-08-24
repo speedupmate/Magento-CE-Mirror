@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_ImportExport
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -173,6 +173,7 @@ abstract class Mage_ImportExport_Model_Import_Entity_Product_Type_Abstract
                             'for_configurable' => $attribute->getIsConfigurable(),
                             'is_global'        => $attribute->getIsGlobal(),
                             'is_required'      => $attribute->getIsRequired(),
+                            'is_unique'        => $attribute->getIsUnique(),
                             'frontend_label'   => $attribute->getFrontendLabel(),
                             'is_static'        => $attribute->isStatic(),
                             'apply_to'         => $attribute->getApplyTo(),
@@ -293,9 +294,10 @@ abstract class Mage_ImportExport_Model_Import_Entity_Product_Type_Abstract
         foreach ($this->_getProductAttributes($rowData) as $attrCode => $attrParams) {
             if (!$attrParams['is_static']) {
                 if (isset($rowData[$attrCode]) && strlen($rowData[$attrCode])) {
-                    $resultAttrs[$attrCode] = 'select' == $attrParams['type']
-                                              ? $attrParams['options'][strtolower($rowData[$attrCode])]
-                                              : $rowData[$attrCode];
+                    $resultAttrs[$attrCode] =
+                        ('select' == $attrParams['type'] || 'multiselect' == $attrParams['type'])
+                        ? $attrParams['options'][strtolower($rowData[$attrCode])]
+                        : $rowData[$attrCode];
                 } elseif (null !== $attrParams['default_value']) {
                     $resultAttrs[$attrCode] = $attrParams['default_value'];
                 }

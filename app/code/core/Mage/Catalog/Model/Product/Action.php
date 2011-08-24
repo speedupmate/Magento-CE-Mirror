@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -63,6 +63,12 @@ class Mage_Catalog_Model_Product_Action extends Mage_Core_Model_Abstract
      */
     public function updateAttributes($productIds, $attrData, $storeId)
     {
+        Mage::dispatchEvent('catalog_product_attribute_update_before', array(
+            'attributes_data' => &$attrData,
+            'product_ids'   => &$productIds,
+            'store_id'      => &$storeId
+        ));
+
         $this->_getResource()->updateAttributes($productIds, $attrData, $storeId);
         $this->setData(array(
             'product_ids'       => array_unique($productIds),

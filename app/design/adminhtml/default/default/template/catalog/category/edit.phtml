@@ -20,7 +20,7 @@
  *
  * @category    design
  * @package     default_default
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
@@ -87,14 +87,20 @@
             parameters:  params,
             evalScripts: true,
             onComplete: function () {
-                try {
-                    if (refreshTree) {
-                        thisObj.refreshTreeArea();
-                    }
-                    toolbarToggle.start();
-                } catch (e) {
-                    alert(e.message);
-                };
+                /**
+                 * This func depends on variables, that came in response, and were eval'ed in onSuccess() callback.
+                 * Since prototype's Element.update() evals javascripts in 10 msec, we should exec our func after it.
+                 */
+                setTimeout(function() {
+                    try {
+                        if (refreshTree) {
+                            thisObj.refreshTreeArea();
+                        }
+                        toolbarToggle.start();
+                    } catch (e) {
+                        alert(e.message);
+                    };
+                }, 25);
             },
             onSuccess: function(transport) {
                 try {

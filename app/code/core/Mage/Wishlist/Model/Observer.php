@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Wishlist
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -68,10 +68,14 @@ class Mage_Wishlist_Model_Observer extends Mage_Core_Model_Abstract
         foreach ($data as $itemId => $itemInfo) {
             if (!empty($itemInfo['wishlist'])) {
                 if ($item = $cart->getQuote()->getItemById($itemId)) {
-                    $productId = $item->getProductId();
+                    $productId  = $item->getProductId();
+                    $buyRequest = $item->getBuyRequest();
 
-                    $wishlist->addNewItem($productId, $item->getBuyRequest());
-                    
+                    if (isset($itemInfo['qty']) && is_numeric($itemInfo['qty'])) {
+                        $buyRequest->setQty($itemInfo['qty']);
+                    }
+                    $wishlist->addNewItem($productId, $buyRequest);
+
                     $productIds[] = $productId;
                     $cart->getQuote()->removeItem($itemId);
                 }

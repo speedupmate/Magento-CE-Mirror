@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -92,13 +92,23 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Address
     }
 
     /**
+     * Saving shipping address must be turned off, when it is the same as billing
+     *
+     * @return bool
+     */
+    public function getDontSaveInAddressBook()
+    {
+        return $this->getIsAsBilling();
+    }
+
+    /**
      * Return Form Elements values
      *
      * @return array
      */
     public function getFormValues()
     {
-        return $this->getCreateOrderModel()->getShippingAddress()->getData();
+        return $this->getAddress()->getData();
     }
 
     /**
@@ -108,17 +118,22 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Address
      */
     public function getAddressId()
     {
-        return $this->getCreateOrderModel()->getShippingAddress()->getCustomerAddressId();
+        return $this->getAddress()->getCustomerAddressId();
     }
 
     /**
-     * Return billing address object
+     * Return address object
      *
      * @return Mage_Customer_Model_Address
      */
     public function getAddress()
     {
-        return $this->getCreateOrderModel()->getShippingAddress();
+        if ($this->getIsAsBilling()) {
+            $address = $this->getCreateOrderModel()->getBillingAddress();
+        } else {
+            $address = $this->getCreateOrderModel()->getShippingAddress();
+        }
+        return $address;
     }
 
     /**

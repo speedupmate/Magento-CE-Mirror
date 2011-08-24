@@ -20,18 +20,17 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Product search results renderer
  *
- * @category   Mage
- * @package    Mage_XmlConnect
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @category    Mage
+ * @package     Mage_XmlConnect
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-
 class Mage_XmlConnect_Block_Catalog_Search extends Mage_XmlConnect_Block_Catalog
 {
     /**
@@ -43,13 +42,15 @@ class Mage_XmlConnect_Block_Catalog_Search extends Mage_XmlConnect_Block_Catalog
      */
     protected function _toHtml()
     {
-        $searchXmlObject  = new Mage_XmlConnect_Model_Simplexml_Element('<search></search>');
-        $filtersXmlObject = new Mage_XmlConnect_Model_Simplexml_Element('<filters></filters>');
+        $searchXmlObject  = Mage::getModel('xmlconnect/simplexml_element', '<search></search>');
+        $filtersXmlObject = Mage::getModel('xmlconnect/simplexml_element', '<filters></filters>');
 
         $helper = Mage::helper('catalogsearch');
         if (method_exists($helper, 'getEngine')) {
             $engine = Mage::helper('catalogsearch')->getEngine();
-            $isLayeredNavigationAllowed = ($engine instanceof Varien_Object) ? $engine->isLeyeredNavigationAllowed() : true;
+            $isLayeredNavigationAllowed = ($engine instanceof Varien_Object)
+                ? $engine->isLeyeredNavigationAllowed()
+                : true;
         } else {
             $isLayeredNavigationAllowed = true;
         }

@@ -20,16 +20,16 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Check / Money order Payment method xml renderer
  *
- * @category   Mage
- * @package    Mage_XmlConnect
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @category    Mage
+ * @package     Mage_XmlConnect
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_XmlConnect_Block_Checkout_Payment_Method_Purchaseorder extends Mage_Payment_Block_Form_Purchaseorder
 {
@@ -82,7 +82,7 @@ class Mage_XmlConnect_Block_Checkout_Payment_Method_Purchaseorder extends Mage_P
     <field name="payment[po_number]" type="text" label="{$poNumberText}" value="$poNumber" required="true" />
 </fieldset>
 EOT;
-        $fieldsetXmlObj = new Mage_XmlConnect_Model_Simplexml_Element($xml);
+        $fieldsetXmlObj = Mage::getModel('xmlconnect/simplexml_element', $xml);
         $formXmlObj->appendChild($fieldsetXmlObj);
 
         return $paymentItemXmlObj;

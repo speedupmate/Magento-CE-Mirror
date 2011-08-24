@@ -20,12 +20,15 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Catalog product model
+ *
+ * @method Mage_Catalog_Model_Resource_Product getResource()
+ * @method Mage_Catalog_Model_Resource_Product _getResource()
  *
  * @category   Mage
  * @package    Mage_Catalog
@@ -100,11 +103,30 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     protected $_isDuplicable = true;
 
     /**
+     * Flag for get Price function
+     *
+     * @var boolean
+     */
+    protected $_calculatePrice = true;
+
+    /**
      * Initialize resources
      */
     protected function _construct()
     {
         $this->_init('catalog/product');
+    }
+
+    /**
+     * Init mapping array of short fields to
+     * its full names
+     *
+     * @return Varien_Object
+     */
+    protected function _initOldFieldsMap()
+    {
+        $this->_oldFieldsMap = Mage::helper('catalog')->getOldFieldMap();
+        return $this;
     }
 
     /**
@@ -128,7 +150,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     public function getResourceCollection()
     {
         if (empty($this->_resourceCollectionName)) {
-            Mage::throwException(Mage::helper('core')->__('The model collection resource name is not defined.'));
+            Mage::throwException(Mage::helper('catalog')->__('The model collection resource name is not defined.'));
         }
         $collection = Mage::getResourceModel($this->_resourceCollectionName);
         $collection->setStoreId($this->getStoreId());
@@ -185,7 +207,22 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
      */
     public function getPrice()
     {
-        return $this->getPriceModel()->getPrice($this);
+        if ($this->_calculatePrice || !$this->getData('price')) {
+            return $this->getPriceModel()->getPrice($this);
+        } else {
+            return $this->getData('price');
+        }
+    }
+
+    /**
+     * Set Price calculation flag
+     *
+     * @param bool $calculate
+     * @return void
+     */
+    public function setPriceCalculation($calculate = true)
+    {
+        $this->_calculatePrice = $calculate;
     }
 
     /**
@@ -1225,6 +1262,24 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     }
 
     /**
+     * Is product salable detecting by product type
+     *
+     * @return bool
+     */
+    public function getIsSalable()
+    {
+        $productType = $this->getTypeInstance(true);
+        if (is_callable(array($productType, 'getIsSalable'))) {
+            return $productType->getIsSalable($this);
+        }
+        if ($this->hasData('is_salable')) {
+            return $this->getData('is_salable');
+        }
+
+        return $this->isSalable();
+    }
+
+    /**
      * Check is a virtual product
      * Data helper wraper
      *
@@ -1336,10 +1391,12 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     public function fromArray($data)
     {
         if (isset($data['stock_item'])) {
-            $stockItem = Mage::getModel('cataloginventory/stock_item')
-                ->setData($data['stock_item'])
-                ->setProduct($this);
-            $this->setStockItem($stockItem);
+            if (Mage::helper('catalog')->isModuleEnabled('Mage_CatalogInventory')) {
+                $stockItem = Mage::getModel('cataloginventory/stock_item')
+                    ->setData($data['stock_item'])
+                    ->setProduct($this);
+                $this->setStockItem($stockItem);
+            }
             unset($data['stock_item']);
         }
         $this->setData($data);
@@ -1591,29 +1648,51 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
         return $this->getResource()->getEntityType()->getDefaultAttributeSetId();
     }
 
+    /**
+     * Return Catalog Product Image helper instance
+     *
+     * @return Mage_Catalog_Helper_Image
+     */
+    protected function _getImageHelper()
+    {
+        return Mage::helper('catalog/image');
+    }
 
     /**
-     * Deprecated since 1.1.5
+     * Return re-sized image URL
+     *
+     * @deprecated since 1.1.5
+     * @return string
      */
     public function getImageUrl()
     {
-        return (string)Mage::helper('catalog/image')->init($this, 'image')->resize(265);
+        return (string)$this->_getImageHelper()->init($this, 'image')->resize(265);
     }
 
     /**
-     * Deprecated since 1.1.5
+     * Return re-sized small image URL
+     *
+     * @deprecated since 1.1.5
+     * @param int $width
+     * @param int $height
+     * @return string
      */
     public function getSmallImageUrl($width = 88, $height = 77)
     {
-        return (string)Mage::helper('catalog/image')->init($this, 'small_image')->resize($width, $height);
+        return (string)$this->_getImageHelper()->init($this, 'small_image')->resize($width, $height);
     }
 
     /**
-     * Deprecated since 1.1.5
+     * Return re-sized thumbnail image URL
+     *
+     * @deprecated since 1.1.5
+     * @param int $width
+     * @param int $height
+     * @return string
      */
     public function getThumbnailUrl($width = 75, $height = 75)
     {
-        return (string)Mage::helper('catalog/image')->init($this, 'thumbnail')->resize($width, $height);
+        return (string)$this->_getImageHelper()->init($this, 'thumbnail')->resize($width, $height);
     }
 
     /**
@@ -1644,7 +1723,7 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
     /**
      *  Check whether attribute reserved or not
      *
-     *  @param    Mage_Eav_Model_Entity_Attribute $attribute Attribute model object
+     *  @param Mage_Catalog_Model_Entity_Attribute $attribute Attribute model object
      *  @return boolean
      */
     public function isReservedAttribute ($attribute)
@@ -1667,15 +1746,6 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
         }
 
         return $this;
-    }
-
-    /**
-     * @deprecated
-     * @see Mage_Sales_Model_Observer::substractQtyFromQuotes()
-     */
-    protected function _substractQtyFromQuotes()
-    {
-        // kept for legacy purposes
     }
 
     /**
@@ -1839,5 +1909,15 @@ class Mage_Catalog_Model_Product extends Mage_Catalog_Model_Abstract
         }
 
         return $this;
+    }
+
+    /**
+     * Retrieve product entities info as array
+     *
+     * @return array
+     */
+    public function getProductEntitiesInfo($columns = null)
+    {
+        return $this->_getResource()->getProductEntitiesInfo($columns);
     }
 }

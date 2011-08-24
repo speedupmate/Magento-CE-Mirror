@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -296,7 +296,7 @@ abstract class Mage_Catalog_Model_Product_Type_Abstract
             $salable = null;
         }
 
-        return $salable;
+        return (boolean) (int) $salable;
     }
 
     /**
@@ -744,7 +744,7 @@ abstract class Mage_Catalog_Model_Product_Type_Abstract
 
                     $group = $option->groupFactory($option->getType())
                         ->setOption($option)->setListener(new Varien_Object());
-                    
+
                     if ($optionSku = $group->getOptionSku($confItemOption->getValue(), $skuDelimiter)) {
                         $sku .= $skuDelimiter . $optionSku;
                     }
@@ -983,5 +983,17 @@ abstract class Mage_Catalog_Model_Product_Type_Abstract
         }
 
         return $errors;
+    }
+
+    /**
+     * Check if Minimum advertise price is enabled at least in one option
+     *
+     * @param Mage_Catalog_Model_Product $product
+     * @param int $visibility
+     * @return bool
+     */
+    public function isMapEnabledInOptions($product, $visibility = null)
+    {
+        return false;
     }
 }

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Wishlist
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -45,22 +45,27 @@ class Mage_Wishlist_Block_Links extends Mage_Page_Block_Template_Links_Block
      */
     public function __construct()
     {
+        parent::__construct();
+        $this->initLinkProperties();
+    }
+
+    /**
+     * Define label, title and url for wishlist link
+     */
+    public function initLinkProperties()
+    {
         if ($this->helper('wishlist')->isAllow()) {
-            $count = $this->helper('wishlist')->getItemCount();
+            $count = $this->getItemCount() ? $this->getItemCount() : $this->helper('wishlist')->getItemCount();
             if ($count > 1) {
                 $text = $this->__('My Wishlist (%d items)', $count);
-            }
-            else if ($count == 1) {
+            } else if ($count == 1) {
                 $text = $this->__('My Wishlist (%d item)', $count);
-            }
-            else {
+            } else {
                 $text = $this->__('My Wishlist');
             }
             $this->_label = $text;
             $this->_title = $text;
             $this->_url = $this->getUrl('wishlist');
-
-            parent::__construct();
         }
     }
 

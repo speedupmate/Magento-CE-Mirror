@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -178,9 +178,26 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
         }
     }
 
+    /**
+     * Define if specified item has already applied custom price
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return bool
+     */
     public function usedCustomPriceForItem($item)
     {
         return $item->hasCustomPrice();
+    }
+
+    /**
+     * Define if custom price can be applied for specified item
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return bool
+     */
+    public function canApplyCustomPrice($item)
+    {
+        return !$item->isChildrenCalculated();
     }
 
     public function getQtyTitle($item)

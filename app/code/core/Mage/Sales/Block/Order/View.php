@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -65,9 +65,30 @@ class Mage_Sales_Block_Order_View extends Mage_Core_Block_Template
         return Mage::registry('current_order');
     }
 
+    /**
+     * Return back url for logged in and guest users
+     *
+     * @return string
+     */
     public function getBackUrl()
     {
-        return Mage::getUrl('*/*/history');
+        if (Mage::getSingleton('customer/session')->isLoggedIn()) {
+            return Mage::getUrl('*/*/history');
+        }
+        return Mage::getUrl('*/*/form');
+    }
+
+    /**
+     * Return back title for logged in and guest users
+     *
+     * @return string
+     */
+    public function getBackTitle()
+    {
+        if (Mage::getSingleton('customer/session')->isLoggedIn()) {
+            return Mage::helper('sales')->__('Back to My Orders');
+        }
+        return Mage::helper('sales')->__('View Another Order');
     }
 
     public function getInvoiceUrl($order)

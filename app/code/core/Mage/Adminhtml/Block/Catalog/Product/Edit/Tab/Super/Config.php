@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -32,7 +32,8 @@
  * @package    Mage_Adminhtml
  * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Adminhtml_Block_Widget implements Mage_Adminhtml_Block_Widget_Tab_Interface
+class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Adminhtml_Block_Widget
+    implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
     /**
      * Initialize block
@@ -44,6 +45,8 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Ad
         $this->setProductId($this->getRequest()->getParam('id'));
         $this->setTemplate('catalog/product/edit/super/config.phtml');
         $this->setId('config_super_product');
+        $this->setCanEditPrice(true);
+        $this->setCanReadPrice(true);
     }
 
     /**
@@ -74,7 +77,8 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Ad
     protected function _prepareLayout()
     {
         $this->setChild('grid',
-            $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_super_config_grid')
+            $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_super_config_grid',
+                'admin.product.edit.tab.super.config.grid')
         );
 
         $this->setChild('create_empty',
@@ -88,7 +92,8 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Ad
 
         if ($this->_getProduct()->getId()) {
             $this->setChild('simple',
-                $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_super_config_simple')
+                $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_super_config_simple',
+                    'catalog.product.edit.tab.super.config.simple')
             );
 
             $this->setChild('create_from_configurable',
@@ -125,6 +130,20 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Ad
             ->getConfigurableAttributesAsArray($this->_getProduct());
         if(!$attributes) {
             return '[]';
+        } else {
+            // Hide price if needed
+            foreach ($attributes as &$attribute) {
+                if (isset($attribute['values']) && is_array($attribute['values'])) {
+                    foreach ($attribute['values'] as &$attributeValue) {
+                        if (!$this->getCanReadPrice()) {
+                            $attributeValue['pricing_value'] = '';
+                            $attributeValue['is_percent'] = 0;
+                        }
+                        $attributeValue['can_edit_price'] = $this->getCanEditPrice();
+                        $attributeValue['can_read_price'] = $this->getCanReadPrice();
+                    }
+                }
+            }
         }
         return Mage::helper('core')->jsonEncode($attributes);
     }
@@ -249,7 +268,9 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config extends Mage_Ad
     protected function _getRequiredAttributesIds()
     {
         $attributesIds = array();
-        foreach ($this->_getProduct()->getTypeInstance(true)->getConfigurableAttributes($this->_getProduct()) as $attribute) {
+        $configurableAttributes = $this->_getProduct()
+            ->getTypeInstance(true)->getConfigurableAttributes($this->_getProduct());
+        foreach ($configurableAttributes as $attribute) {
             $attributesIds[] = $attribute->getProductAttribute()->getId();
         }
 

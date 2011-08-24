@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -319,6 +319,23 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
     }
 
     /**
+     * Remove existing column
+     *
+     * @param string $columnId
+     * @return Mage_Adminhtml_Block_Widget_Grid
+     */
+    public function removeColumn($columnId)
+    {
+        if (isset($this->_columns[$columnId])) {
+            unset($this->_columns[$columnId]);
+            if ($this->_lastColumnId == $columnId) {
+                $this->_lastColumnId = key($this->_columns);
+            }
+        }
+        return $this;
+    }
+
+    /**
      * Add column to grid after specified column.
      *
      * @param   string $columnId
@@ -425,7 +442,10 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
     protected function _setFilterValues($data)
     {
         foreach ($this->getColumns() as $columnId => $column) {
-            if (isset($data[$columnId]) && (!empty($data[$columnId]) || strlen($data[$columnId]) > 0) && $column->getFilter()) {
+            if (isset($data[$columnId])
+                && (!empty($data[$columnId]) || strlen($data[$columnId]) > 0)
+                && $column->getFilter()
+            ) {
                 $column->getFilter()->setValue($data[$columnId]);
                 $this->_addColumnFilterToCollection($column);
             }
@@ -461,7 +481,7 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
         if ($collection) {
             $columnIndex = $column->getFilterIndex() ?
                 $column->getFilterIndex() : $column->getIndex();
-            $collection->setOrder($columnIndex, $column->getDir());
+            $collection->setOrder($columnIndex, strtoupper($column->getDir()));
         }
         return $this;
     }
@@ -1020,7 +1040,8 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
             $data = array();
             foreach ($this->_columns as $column) {
                 if (!$column->getIsSystem()) {
-                    $data[] = '"'.str_replace(array('"', '\\'), array('""', '\\\\'), $column->getRowFieldExport($item)).'"';
+                    $data[] = '"' . str_replace(array('"', '\\'), array('""', '\\\\'),
+                        $column->getRowFieldExport($item)) . '"';
                 }
             }
             $csv.= implode(',', $data)."\n";
@@ -1031,7 +1052,8 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
             $data = array();
             foreach ($this->_columns as $column) {
                 if (!$column->getIsSystem()) {
-                    $data[] = '"'.str_replace(array('"', '\\'), array('""', '\\\\'), $column->getRowFieldExport($this->getTotals())).'"';
+                    $data[] = '"' . str_replace(array('"', '\\'), array('""', '\\\\'),
+                        $column->getRowFieldExport($this->getTotals())) . '"';
                 }
             }
             $csv.= implode(',', $data)."\n";

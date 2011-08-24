@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_ImportExport
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -92,7 +92,7 @@ abstract class Mage_ImportExport_Model_Import_Adapter_Abstract implements Seekab
             $this->_colQuantity = count($this->_colNames);
 
             if (count(array_unique($this->_colNames)) != $this->_colQuantity) {
-                Mage::throwException(Mage::helper('importexport')->__('Column names has duplicates'));
+                Mage::throwException(Mage::helper('importexport')->__('Column names have duplicates'));
             }
         } else {
             Mage::throwException(Mage::helper('importexport')->__('Column names is empty or is not an array'));

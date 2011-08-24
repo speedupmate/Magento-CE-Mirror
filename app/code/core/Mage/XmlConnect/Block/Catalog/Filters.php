@@ -20,21 +20,19 @@
  *
  * @category    Mage
  * @package     Mage_XmlConnect
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Filters xml renderer
  *
- * @category   Mage
- * @package    Mage_XmlConnect
+ * @category    Mage
+ * @package     Mage_XmlConnect
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-
 class Mage_XmlConnect_Block_Catalog_Filters extends Mage_XmlConnect_Block_Catalog
 {
-
     /**
      * Render filters list xml
      *
@@ -43,7 +41,7 @@ class Mage_XmlConnect_Block_Catalog_Filters extends Mage_XmlConnect_Block_Catalo
     protected function _toHtml()
     {
         $categoryId         = $this->getRequest()->getParam('category_id', null);
-        $categoryXmlObj     = new Mage_XmlConnect_Model_Simplexml_Element('<category></category>');
+        $categoryXmlObj     = Mage::getModel('xmlconnect/simplexml_element', '<category></category>');
         $filtersCollection  = Mage::getResourceModel('xmlconnect/filter_collection')->setCategoryId($categoryId);
 
         $filtersXmlObj = $categoryXmlObj->addChild('filters');
@@ -67,5 +65,4 @@ class Mage_XmlConnect_Block_Catalog_Filters extends Mage_XmlConnect_Block_Catalo
 
         return $categoryXmlObj->asNiceXml();
     }
-
 }

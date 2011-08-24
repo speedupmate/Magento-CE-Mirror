@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Customer
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -38,6 +38,11 @@ class Mage_Customer_Helper_Data extends Mage_Core_Helper_Abstract
      * Query param name for last url visited
      */
     const REFERER_QUERY_PARAM_NAME = 'referer';
+
+    /**
+     * Config name for Redirect Customer to Account Dashboard after Logging in setting
+     */
+    const XML_PATH_CUSTOMER_STARTUP_REDIRECT_TO_DASHBOARD = 'customer/startup/redirect_dashboard';
 
     /**
      * Customer groups collection
@@ -129,7 +134,7 @@ class Mage_Customer_Helper_Data extends Mage_Core_Helper_Abstract
 
         $referer = $this->_getRequest()->getParam(self::REFERER_QUERY_PARAM_NAME);
 
-        if (!$referer && !Mage::getStoreConfigFlag('customer/startup/redirect_dashboard')) {
+        if (!$referer && !Mage::getStoreConfigFlag(self::XML_PATH_CUSTOMER_STARTUP_REDIRECT_TO_DASHBOARD)) {
             if (!Mage::getSingleton('customer/session')->getNoReferer()) {
                 $referer = Mage::getUrl('*/*/*', array('_current' => true, '_use_rewrite' => true));
                 $referer = Mage::helper('core')->urlEncode($referer);

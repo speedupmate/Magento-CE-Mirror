@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -97,8 +97,10 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
             /** @var $helper Mage_Adminhtml_Helper_Data */
             $helper = Mage::helper('adminhtml');
             $ratePost['code'] = $helper->stripTags($ratePost['code']);
-            foreach ($ratePost['title'] as &$title) {
-                $title = $helper->stripTags($title);
+            if (!empty($ratePost['title'])) {
+                foreach ($ratePost['title'] as &$title) {
+                    $title = $helper->stripTags($title);
+                }
             }
 
             $rateId = $this->getRequest()->getParam('tax_calculation_rate_id');
@@ -290,14 +292,17 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
             1   => Mage::helper('tax')->__('Country'),
             2   => Mage::helper('tax')->__('State'),
             3   => Mage::helper('tax')->__('Zip/Post Code'),
-            4   => Mage::helper('tax')->__('Rate')
+            4   => Mage::helper('tax')->__('Rate'),
+            5   => Mage::helper('tax')->__('Zip/Post is Range'),
+            6   => Mage::helper('tax')->__('Range From'),
+            7   => Mage::helper('tax')->__('Range To')
         );
 
 
         $stores = array();
         $unset = array();
         $storeCollection = Mage::getModel('core/store')->getCollection()->setLoadDefault(false);
-        for ($i = 5; $i < count($csvData[0]); $i++) {
+        for ($i = count($csvFields); $i < count($csvData[0]); $i++) {
             $header = $csvData[0][$i];
             $found = false;
             foreach ($storeCollection as $store) {
@@ -367,6 +372,9 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
                         'tax_region_id'  => ($regions[$v[1]][$v[2]] == '*') ? 0 : $regions[$v[1]][$v[2]],
                         'tax_postcode'   => (empty($v[3]) || $v[3]=='*') ? null : $v[3],
                         'rate'           => $v[4],
+                        'zip_is_range'   => $v[5],
+                        'zip_from'       => $v[6],
+                        'zip_to'         => $v[7]
                     );
 
                     $rateModel = Mage::getModel('tax/calculation_rate')->loadByCode($rateData['code']);
@@ -405,9 +413,13 @@ class Mage_Adminhtml_Tax_RateController extends Mage_Adminhtml_Controller_Action
             'country_name' => Mage::helper('tax')->__('Country'),
             'region_name'  => Mage::helper('tax')->__('State'),
             'tax_postcode' => Mage::helper('tax')->__('Zip/Post Code'),
-            'rate'         => Mage::helper('tax')->__('Rate')
+            'rate'         => Mage::helper('tax')->__('Rate'),
+            'zip_is_range' => Mage::helper('tax')->__('Zip/Post is Range'),
+            'zip_from'     => Mage::helper('tax')->__('Range From'),
+            'zip_to'       => Mage::helper('tax')->__('Range To')
         ));
-        $template = '"{{code}}","{{country_name}}","{{region_name}}","{{tax_postcode}}","{{rate}}"';
+        $template = '"{{code}}","{{country_name}}","{{region_name}}","{{tax_postcode}}","{{rate}}"'
+                . ',"{{zip_is_range}}","{{zip_from}}","{{zip_to}}"';
         $content = $headers->toString($template);
 
         $storeTaxTitleTemplate       = array();

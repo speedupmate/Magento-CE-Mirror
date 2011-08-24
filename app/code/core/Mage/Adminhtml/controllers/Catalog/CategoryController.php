@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -417,16 +417,29 @@ class Mage_Adminhtml_Catalog_CategoryController extends Mage_Adminhtml_Controlle
         $this->getResponse()->setRedirect($this->getUrl('*/*/', array('_current'=>true, 'id'=>null)));
     }
 
+    /**
+     * Grid Action
+     * Display list of products related to current category
+     *
+     * @return void
+     */
     public function gridAction()
     {
         if (!$category = $this->_initCategory(true)) {
             return;
         }
         $this->getResponse()->setBody(
-            $this->getLayout()->createBlock('adminhtml/catalog_category_tab_product')->toHtml()
+            $this->getLayout()->createBlock('adminhtml/catalog_category_tab_product', 'category.product.grid')
+                ->toHtml()
         );
     }
 
+    /**
+     * Tree Action
+     * Retrieve category tree
+     *
+     * @return void
+     */
     public function treeAction()
     {
         $storeId = (int) $this->getRequest()->getParam('store');
@@ -474,6 +487,11 @@ class Mage_Adminhtml_Catalog_CategoryController extends Mage_Adminhtml_Controlle
         }
     }
 
+    /**
+     * Check if admin has permissions to visit related pages
+     *
+     * @return boolean
+     */
     protected function _isAllowed()
     {
         return Mage::getSingleton('admin/session')->isAllowed('catalog/categories');

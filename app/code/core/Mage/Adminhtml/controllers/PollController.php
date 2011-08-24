@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -143,8 +143,19 @@ class Mage_Adminhtml_PollController extends Mage_Adminhtml_Controller_Action
 
                 if (is_array($stores)) {
                     $storeIds = array();
-                    foreach ($stores as $storeId) {
-                        $storeIds[] = $storeId;
+                    foreach ($stores as $storeIdList) {
+                        $storeIdList = explode(',', $storeIdList);
+                        if(!$storeIdList) {
+                            continue;
+                        }
+                        foreach($storeIdList as $storeId) {
+                            if( $storeId > 0 ) {
+                                $storeIds[] = $storeId;
+                            }
+                        }
+                    }
+                    if (count($storeIds) === 0) {
+                        Mage::throwException(Mage::helper('adminhtml')->__('Please, select "Visible in Stores" for this poll first.'));
                     }
                     $pollModel->setStoreIds($storeIds);
                 }

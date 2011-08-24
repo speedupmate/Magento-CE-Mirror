@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -123,5 +123,22 @@ class Mage_Checkout_Block_Cart_Totals extends Mage_Checkout_Block_Cart_Abstract
             return Mage::app()->getStore()->getBaseCurrency()->format($total, array(), true);
         }
         return '-';
+    }
+
+    /**
+     * Get active or custom quote
+     *
+     * @return Mage_Sales_Model_Quote
+     */
+    public function getQuote()
+    {
+        if ($this->getCustomQuote()) {
+            return $this->getCustomQuote();
+        }
+
+        if (null === $this->_quote) {
+            $this->_quote = $this->getCheckout()->getQuote();
+        }
+        return $this->_quote;
     }
 }

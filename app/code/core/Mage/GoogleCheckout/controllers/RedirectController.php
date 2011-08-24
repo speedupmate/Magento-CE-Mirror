@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_GoogleCheckout
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,7 +34,7 @@ class Mage_GoogleCheckout_RedirectController extends Mage_Core_Controller_Front_
     /**
      *  Send request to Google Checkout and return Response Api
      *
-     *  @return	  object Mage_GoogleCheckout_Model_Api_Xml_Checkout
+     *  @return Mage_GoogleCheckout_Model_Api_Xml_Checkout
      */
     protected function _getApi ()
     {
@@ -156,11 +156,27 @@ class Mage_GoogleCheckout_RedirectController extends Mage_Core_Controller_Front_
         $url = Mage::getStoreConfig('google/checkout/continue_shopping_url');
         if (empty($url)) {
             $this->_redirect('');
-        } elseif (substr($url, 0, 4)==='http') {
+        } elseif (substr($url, 0, 4) === 'http') {
             $this->getResponse()->setRedirect($url);
         } else {
             $this->_redirect($url);
         }
+    }
+
+    /**
+     * Redirect to login page
+     *
+     */
+    public function redirectLogin()
+    {
+        $this->setFlag('', 'no-dispatch', true);
+        Mage::getSingleton('customer/session')->setBeforeAuthUrl($this->_getRefererUrl());
+        $this->getResponse()->setRedirect(
+            Mage::helper('core/url')->addRequestParam(
+                Mage::helper('customer')->getLoginUrl(),
+                array('context' => 'checkout')
+            )
+        );
     }
 
 }

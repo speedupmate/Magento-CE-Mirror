@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_ImportExport
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -359,7 +359,8 @@ class Mage_ImportExport_Model_Import_Entity_Customer extends Mage_ImportExport_M
         /** @var $resource Mage_Customer_Model_Customer */
         $resource       = Mage::getModel('customer/customer');
         $strftimeFormat = Varien_Date::convertZendToStrftime(Varien_Date::DATETIME_INTERNAL_FORMAT, true, true);
-        $nextEntityId   = $this->getNextAutoincrement($resource->getResource()->getEntityTable());
+        $table = $resource->getResource()->getEntityTable();
+        $nextEntityId   = Mage::getResourceHelper('importexport')->getNextAutoincrement($table);
         $passId         = $resource->getAttribute('password_hash')->getId();
         $passTable      = $resource->getAttribute('password_hash')->getBackend()->getTable();
 

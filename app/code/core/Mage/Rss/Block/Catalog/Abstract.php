@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Rss
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Rss_Block_Catalog_Abstract extends Mage_Rss_Block_Abstract
@@ -49,6 +49,13 @@ class Mage_Rss_Block_Catalog_Abstract extends Mage_Rss_Block_Abstract
      * @var bool
      */
     protected $_useLinkForAsLowAs = true;
+
+    /**
+     * Default MAP renderer type
+     *
+     * @var string
+     */
+    protected $_mapRenderer = 'msrp_rss';
 
     /**
      * Return Price Block renderer for specified product type
@@ -96,8 +103,13 @@ class Mage_Rss_Block_Catalog_Abstract extends Mage_Rss_Block_Abstract
      */
     public function getPriceHtml($product, $displayMinimalPrice = false, $idSuffix='')
     {
-        return $this->_getPriceBlock($product->getTypeId())
-            ->setTemplate($this->_getPriceBlockTemplate($product->getTypeId()))
+        $type_id = $product->getTypeId();
+        if (Mage::helper('catalog')->canApplyMsrp($product)) {
+            $type_id = $this->_mapRenderer;
+        }
+
+        return $this->_getPriceBlock($type_id)
+            ->setTemplate($this->_getPriceBlockTemplate($type_id))
             ->setProduct($product)
             ->setDisplayMinimalPrice($displayMinimalPrice)
             ->setIdSuffix($idSuffix)

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Tax
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -108,8 +108,7 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
         try {
             $value = $product->getPrice();
             $value = Mage::app()->getStore()->convertPrice($value, $format);
-        }
-        catch (Exception $e){
+        } catch (Exception $e){
             $value = $e->getMessage();
         }
         return $value;
@@ -341,7 +340,13 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getPriceFormat($store = null)
     {
-        return Mage::helper('core')->jsonEncode(Mage::app()->getLocale()->getJsPriceFormat());
+        Mage::app()->getLocale()->emulate($store);
+        $priceFormat = Mage::app()->getLocale()->getJsPriceFormat();
+        Mage::app()->getLocale()->revert();
+        if ($store) {
+            $priceFormat['pattern'] = Mage::app()->getStore($store)->getCurrentCurrency()->getOutputFormat();
+        }
+        return Mage::helper('core')->jsonEncode($priceFormat);
     }
 
     /**
@@ -544,10 +549,13 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
      */
     protected function _calculatePrice($price, $percent, $type)
     {
+        $calculator = Mage::getSingleton('tax/calculation');
         if ($type) {
-            return $price * (1+($percent/100));
+            $taxAmount = $calculator->calcTaxAmount($price, $percent, false);
+            return $price + $taxAmount;
         } else {
-            return $price/(1+$percent/100);
+            $taxAmount = $calculator->calcTaxAmount($price, $percent, true);
+            return $price - $taxAmount;
         }
     }
 
@@ -638,7 +646,7 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
                 $$rateVariable = '';
                 foreach ($$rateArray as $classId=>$rate) {
                     if ($rate) {
-                        $$rateVariable .= "WHEN '{$classId}' THEN '".($rate/100)."'";
+                        $$rateVariable .= sprintf("WHEN %d THEN %12.4f ", $classId, $rate/100);
                     }
                 }
                 if ($$rateVariable) {
@@ -666,19 +674,37 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
         return $result;
     }
 
-    public function joinTaxClass($select, $storeId, $priceTable='main_table')
+    /**
+     * Join tax class
+     * @param Varien_Db_Select $select
+     * @param int $storeId
+     * @param string $priceTable
+     * @return Mage_Tax_Helper_Data
+     */
+    public function joinTaxClass($select, $storeId, $priceTable = 'main_table')
     {
-        $taxClassAttribute = Mage::getModel('eav/entity_attribute')->loadByCode('catalog_product', 'tax_class_id');
-        $select->joinLeft(
-            array('tax_class_d'=>$taxClassAttribute->getBackend()->getTable()),
-            "tax_class_d.entity_id = {$priceTable}.entity_id AND tax_class_d.attribute_id = '{$taxClassAttribute->getId()}'
-            AND tax_class_d.store_id = 0",
-             array());
-        $select->joinLeft(
-            array('tax_class_c'=>$taxClassAttribute->getBackend()->getTable()),
-            "tax_class_c.entity_id = {$priceTable}.entity_id AND tax_class_c.attribute_id = '{$taxClassAttribute->getId()}'
-            AND tax_class_c.store_id = '{$storeId}'",
-            array());
+        $taxClassAttribute = Mage::getModel('eav/entity_attribute')->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'tax_class_id');
+        $joinConditionD = implode(' AND ',array(
+            "tax_class_d.entity_id = {$priceTable}.entity_id",
+            $select->getAdapter()->quoteInto('tax_class_d.attribute_id = ?', (int)$taxClassAttribute->getId()),
+            'tax_class_d.store_id = 0'
+        ));
+        $joinConditionC = implode(' AND ',array(
+            "tax_class_c.entity_id = {$priceTable}.entity_id",
+            $select->getAdapter()->quoteInto('tax_class_c.attribute_id = ?', (int)$taxClassAttribute->getId()),
+            $select->getAdapter()->quoteInto('tax_class_c.store_id = ?', (int)$storeId)
+        ));
+        $select
+            ->joinLeft(
+                array('tax_class_d' => $taxClassAttribute->getBackend()->getTable()),
+                $joinConditionD,
+                array())
+            ->joinLeft(
+                array('tax_class_c' => $taxClassAttribute->getBackend()->getTable()),
+                $joinConditionC,
+                array());
+
+        return $this;
     }
 
     /**
@@ -749,3 +775,4 @@ class Mage_Tax_Helper_Data extends Mage_Core_Helper_Abstract
         return $this->_config->getAlgorithm($store);
     }
 }
+

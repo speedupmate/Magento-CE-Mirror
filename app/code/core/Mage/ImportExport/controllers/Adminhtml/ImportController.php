@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_ImportExport
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -200,6 +200,11 @@ class Mage_ImportExport_Adminhtml_ImportController extends Mage_Adminhtml_Contro
                 $resultBlock->addNotice($this->__('Please fix errors and re-upload file'))
                     ->addError($e->getMessage());
             }
+            $this->renderLayout();
+        } elseif ($this->getRequest()->isPost() && empty($_FILES)) {
+            $this->loadLayout(false);
+            $resultBlock = $this->getLayout()->getBlock('import.frame.result');
+            $resultBlock->addError($this->__('File was not uploaded'));
             $this->renderLayout();
         } else {
             $this->_getSession()->addError($this->__('Data is invalid or file is not uploaded'));

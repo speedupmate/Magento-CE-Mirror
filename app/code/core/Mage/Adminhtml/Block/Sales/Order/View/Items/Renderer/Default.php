@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -212,4 +212,33 @@ class Mage_Adminhtml_Block_Sales_Order_View_Items_Renderer_Default extends Mage_
             'order_item', $this->getItem(), $this->getItem()->getOrder()->getStoreId()
         );
     }
+
+    /**
+     * Display susbtotal price including tax
+     *
+     * @param Mage_Sales_Model_Order_Item $item
+     * @return string
+     */
+    public function displaySubtotalInclTax($item)
+    {
+        return $this->displayPrices(
+            $this->helper('checkout')->getBaseSubtotalInclTax($item),
+            $this->helper('checkout')->getSubtotalInclTax($item)
+        );
+    }
+
+    /**
+     * Display item price including tax
+     *
+     * @param Mage_Sales_Model_Order_Item $item
+     * @return string
+     */
+    public function displayPriceInclTax(Varien_Object $item)
+    {
+        return $this->displayPrices(
+            $this->helper('checkout')->getBasePriceInclTax($item),
+            $this->helper('checkout')->getPriceInclTax($item)
+        );
+    }
+
 }

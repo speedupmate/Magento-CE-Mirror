@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Centinel
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -86,12 +86,9 @@ class Mage_Centinel_Model_State_Mastercard extends Mage_Centinel_Model_StateAbst
 
             //Test case 10
             if ($paResStatus == '' && $signatureVerification == '' && $eciFlag == '01' &&
-                $xid == '' && $cavv == '' && $errorNo == '1050') {
-                if ($this->getIsModeStrict()) {
-                    return false;
-                } else {
-                    return true;
-                }
+                $xid == '' && $cavv == '' && $errorNo == '1050'
+            ) {
+                return false;
             }
 
         }
@@ -100,6 +97,9 @@ class Mage_Centinel_Model_State_Mastercard extends Mage_Centinel_Model_StateAbst
         if (!$this->getIsModeStrict() && $this->_isLookupSoftSuccessful()) {
             if ($paResStatus == '' && $signatureVerification == '' && $eciFlag == '' &&
                 $xid == '' && $cavv == '' && $errorNo == '0') {
+                return true;
+            } elseif ($paResStatus == false && $signatureVerification == false && $eciFlag == false &&
+                $xid == false && $cavv == false && $errorNo == false) {
                 return true;
             }
         }

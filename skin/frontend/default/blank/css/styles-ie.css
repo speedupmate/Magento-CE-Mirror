@@ -19,7 +19,7 @@
  *
  * @category    design
  * @package     default_blank
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
@@ -32,6 +32,7 @@
 .block li.item,
 .block-poll li,
 .opc li.section { vertical-align:top; }
+* html .window-overlay {}
 
 /* Doubled Margin Fixes */
 .product-view .product-img-box .more-views li,

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Centinel
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -110,6 +110,9 @@ class Mage_Centinel_Model_State_Visa extends Mage_Centinel_Model_StateAbstract
         if (!$this->getIsModeStrict() && $this->_isLookupSoftSuccessful()) {
             if ($paResStatus == '' && $signatureVerification == '' && $eciFlag == '' &&
                 $xid == '' && $cavv == '' && $errorNo == '0') {
+                return true;
+            } elseif ($paResStatus == false && $signatureVerification == false && $eciFlag == false &&
+                $xid == false && $cavv == false && $errorNo == false) {
                 return true;
             }
         }

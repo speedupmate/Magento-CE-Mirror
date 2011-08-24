@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -98,13 +98,33 @@ class Mage_Sales_Block_Order_Info extends Mage_Core_Block_Template
         }
     }
 
+    /**
+     * Get url for reorder action
+     *
+     * @deprecated after 1.6.0.0, logic moved to new block
+     * @param Mage_Sales_Order $order
+     * @return string
+     */
     public function getReorderUrl($order)
     {
+        if (!Mage::getSingleton('customer/session')->isLoggedIn()) {
+            return $this->getUrl('sales/guest/reorder', array('order_id' => $order->getId()));
+        }
         return $this->getUrl('sales/order/reorder', array('order_id' => $order->getId()));
     }
 
+    /**
+     * Get url for printing order
+     *
+     * @deprecated after 1.6.0.0, logic moved to new block
+     * @param Mage_Sales_Order $order
+     * @return string
+     */
     public function getPrintUrl($order)
     {
+        if (!Mage::getSingleton('customer/session')->isLoggedIn()) {
+            return $this->getUrl('sales/guest/print', array('order_id' => $order->getId()));
+        }
         return $this->getUrl('sales/order/print', array('order_id' => $order->getId()));
     }
 
