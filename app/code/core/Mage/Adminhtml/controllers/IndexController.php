@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -76,15 +76,10 @@ class Mage_Adminhtml_IndexController extends Mage_Adminhtml_Controller_Action
             return;
         }
         $loginData = $this->getRequest()->getParam('login');
-        $data = array();
+        $username = (is_array($loginData) && array_key_exists('username', $loginData)) ? $loginData['username'] : null;
 
-        if(is_array($loginData) && array_key_exists('username', $loginData)) {
-            $data['username'] = $loginData['username'];
-        } else {
-            $data['username'] = null;
-        }
-
-        $this->_outTemplate('login', $data);
+        $this->loadLayout();
+        $this->renderLayout();
     }
 
     /**
@@ -234,40 +229,36 @@ class Mage_Adminhtml_IndexController extends Mage_Adminhtml_Controller_Action
 
         if (!empty($email) && !empty($params)) {
             // Validate received data to be an email address
-            if (!Zend_Validate::is($email, 'EmailAddress')) {
-                $this->_getSession()->addError($this->__('Invalid email address.'));
-                $this->_outTemplate('forgotpassword');
-                return;
-            }
-            $collection = Mage::getResourceModel('admin/user_collection');
-            /** @var $collection Mage_Admin_Model_Mysql4_User_Collection */
-            $collection->addFieldToFilter('email', $email);
-            $collection->load(false);
+            if (Zend_Validate::is($email, 'EmailAddress')) {
+                $collection = Mage::getResourceModel('admin/user_collection');
+                /** @var $collection Mage_Admin_Model_Resource_User_Collection */
+                $collection->addFieldToFilter('email', $email);
+                $collection->load(false);
 
-            if ($collection->getSize() > 0) {
-                foreach ($collection as $item) {
-                    $user = Mage::getModel('admin/user')->load($item->getId());
-                    if ($user->getId()) {
-                        $newResetPasswordLinkToken = Mage::helper('admin')->generateResetPasswordLinkToken();
-                        $user->changeResetPasswordLinkToken($newResetPasswordLinkToken);
-                        $user->save();
-                        $user->sendPasswordResetConfirmationEmail();
+                if ($collection->getSize() > 0) {
+                    foreach ($collection as $item) {
+                        $user = Mage::getModel('admin/user')->load($item->getId());
+                        if ($user->getId()) {
+                            $newResetPasswordLinkToken = Mage::helper('admin')->generateResetPasswordLinkToken();
+                            $user->changeResetPasswordLinkToken($newResetPasswordLinkToken);
+                            $user->save();
+                            $user->sendPasswordResetConfirmationEmail();
+                        }
+                        break;
                     }
-                    break;
                 }
+                $this->_getSession()
+                    ->addSuccess(Mage::helper('adminhtml')->__('If there is an account associated with %s you will receive an email with a link to reset your password.', Mage::helper('adminhtml')->escapeHtml($email)));
+                $this->_redirect('*/*/login');
+                return;
+            } else {
+                $this->_getSession()->addError($this->__('Invalid email address.'));
             }
-            $this->_getSession()
-                ->addSuccess(Mage::helper('adminhtml')->__('If there is an account associated with %s you will receive an email with a link to reset your password.', Mage::helper('adminhtml')->htmlEscape($email)));
-            $this->_redirect('*/*/login');
-            return;
         } elseif (!empty($params)) {
             $this->_getSession()->addError(Mage::helper('adminhtml')->__('The email address is empty.'));
         }
-
-        $data = array(
-            'email' => $email
-        );
-        $this->_outTemplate('forgotpassword', $data);
+        $this->loadLayout();
+        $this->renderLayout();
     }
 
     /**

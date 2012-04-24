@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Catalog_Model_Product_Indexer_Flat extends Mage_Index_Model_Indexer_Abstract
@@ -205,7 +205,7 @@ class Mage_Catalog_Model_Product_Indexer_Flat extends Mage_Index_Model_Indexer_A
      * Register data required by catalog product process in event object
      *
      * @param Mage_Index_Model_Event $event
-     * @return Mage_CatalogSearch_Model_Indexer_Search
+     * @return Mage_Catalog_Model_Product_Indexer_Flat
      */
     protected function _registerCatalogProductEvent(Mage_Index_Model_Event $event)
     {
